@@ -1,8 +1,0 @@
-feat: TiAi IDE RC18 completo (App macOS + Ensemble 2x Gemini + Layout VSCode)
-
-- RC14b: Ensemble 100 por cento GRATIS 2x Gemini em paralelo com voto majoritario
-- RC15: Layout profissional 3-colunas estilo Trae, 4 abas (Code Preview Console Terminal), Tool Cards Accordion coloridos
-- RC16: Fluxo chat completo no painel direito TiAi igual Trae IDE
-- RC17: Resizers manuais tipo VSCode com persistencia localStorage
-- RC18: App macOS NATIVO instalavel CriaSiteTiago.app bundle auto-contido
-- Seguranca: .env / node_modules / .app / .dmg / workspace no .gitignore
