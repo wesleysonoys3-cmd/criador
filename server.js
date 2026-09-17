@@ -21,10 +21,61 @@ const GOOGLE_MODEL = process.env.GOOGLE_MODEL || 'gemini-3.5-flash-lite';
 const WORKSPACE_ROOT = path.resolve(process.env.WORK_DIR || './workspace');
 const DEFAULT_PROJECT = 'default';
 const MAX_STEPS = parseInt(process.env.MAX_STEPS || '15', 10);
+
+function looksLikeValidGoogleKey(k) {
+  if (!k || typeof k !== 'string') return false;
+  const t = k.trim();
+  if (t.length < 20) return false;
+  if (/sua[_ -]?chave|your[_ -]?key|YOUR[_ -]?KEY|xxxx|xxxx/i.test(t)) return false;
+  return /^(AIza|AQ\.|AB\.|AKIA|GOOG)/.test(t) || t.length >= 35;
+}
+const GOOGLE_KEY_OK = looksLikeValidGoogleKey(GOOGLE_API_KEY);
+if (!GOOGLE_KEY_OK) {
+  const box = '='.repeat(68);
+  console.error('\n' + box);
+  console.error('  ⚠️  RC20  GOOGLE_API_KEY ausente, vazia ou com suspeita de inválida.');
+  console.error('     ─ A IA NÃO vai funcionar! Qualquer prompt retorna erro 400/401/403.');
+  console.error('     ─ Onde corrigir: arquivo .env na pasta do projeto:');
+  console.error(`       • ${path.resolve(__dirname, '.env')}`);
+  console.error('     ─ Obter chave: https://aistudio.google.com/  (botão Get API key)');
+  console.error('     ─ Depois de salvar: reinicie o CriaSiteTiago.app / servidor.');
+  console.error(box + '\n');
+} else {
+  console.log(`✅ RC20  Google API key carregada (prefixo: ${(GOOGLE_API_KEY || '').slice(0, 5)}…${(GOOGLE_API_KEY || '').slice(-4)} · looksLikeValid=true)`);
+}
 const COMMAND_TIMEOUT_MS = 60000;
 const API_VERSION = 'v1beta';
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || './uploads');
+
+// ============================================================
+//  RC21  RENDER / LINUX HEADLESS DETECTION (nuvem = single-port, sem osascript, sem preview servers extras)
+//  - Render REALMENTE injeta: RENDER_EXTERNAL_URL, RENDER_SERVICE_ID, RENDER_SERVICE_NAME, RENDER_INSTANCE_ID
+//  - Outras nuvens: K_SERVICE (GCP Cloud Run), RAILWAY_STATIC_URL, VERCEL_URL, HEROKU_APP_ID
+//  - Fallback geral: PORT setada + platform NÃO macOS (darwin) + TRAE_LOCAL ausente => assume nuvem/Linux headless
+// ============================================================
+const IS_RENDER_OR_HEADLESS_LINUX = Boolean(
+  process.env.RENDER ||
+  process.env.RENDER_EXTERNAL_URL ||
+  process.env.RENDER_SERVICE_ID ||
+  process.env.RENDER_SERVICE_NAME ||
+  process.env.RENDER_INSTANCE_ID ||
+  process.env.K_SERVICE ||
+  process.env.RAILWAY_STATIC_URL ||
+  process.env.VERCEL_URL ||
+  process.env.HEROKU_APP_ID ||
+  (process.env.PORT && process.platform !== 'darwin' && !process.env.TRAE_LOCAL)
+);
+const RENDER_BASE_URL = (
+  process.env.RENDER_EXTERNAL_URL ||
+  (IS_RENDER_OR_HEADLESS_LINUX ? '' : '')
+).replace(/\/+$/, '');
+console.log(
+  `🌐 Ambiente: platform=${process.platform} · PORT=${PORT}` +
+  (IS_RENDER_OR_HEADLESS_LINUX
+    ? ` · RC20 modo RENDER/LINUX headless ativado (single-port ${PORT}, preview via /preview/:slug/)`
+    : ' · Desktop macOS/máquina local')
+);
 
 // ===== ENSEMBLE 2 Cabeças GRATUITO · 2x Gemini (Google GenAI · sem custo) =====
 // Usa 2 modelos diferentes do Google (ambos camada gratuita):
@@ -298,10 +349,58 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
 
+function setStaticPreviewHeaders(res, filePath) {
+  if (/\.(html?|htm)$/i.test(filePath || '')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  } else {
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+  }
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
+// ============================================================
+//  RC20  RENDER single-port preview: /preview/:slug/*
+//  No desktop local continua igual (cada projeto com sua porta 3001+),
+//  Mas em nuvem/Render/Linux servemos TUDO dentro da única porta liberada.
+// ============================================================
+app.use('/preview', (req, res, next) => {
+  try {
+    const rel = decodeURIComponent(req.path.replace(/^\/+/, ''));
+    const parts = rel.split('/').filter(Boolean);
+    const slug = parts.shift() || DEFAULT_PROJECT;
+    const base = resolveWritableProjectDir(slug);
+    const restEncoded = '/' + parts.map(encodeURIComponent).join('/');
+    const inside = path.resolve(base, parts.join('/'));
+    if (!inside.startsWith(base)) return res.status(403).type('txt').send('403 Fora do workspace');
+    const origUrl = req.url;
+    const slashIdx = req.originalUrl.indexOf('/preview');
+    const afterPreview = req.originalUrl.slice(slashIdx + '/preview'.length);
+    const afterSlug = afterPreview.replace(/^\/+[^/]+/, '') || '/';
+    req.url = afterSlug || '/';
+    if (req.url === '/' || req.url === '') {
+      const idxHtml = path.join(base, 'index.html');
+      if (fsc.existsSync(idxHtml)) {
+        setStaticPreviewHeaders(res, idxHtml);
+        return res.sendFile(idxHtml);
+      }
+    }
+    const staticHandler = express.static(base, {
+      index: ['index.html', 'index.htm'],
+      setHeaders: (res, filePath) => setStaticPreviewHeaders(res, filePath),
+      extensions: ['html', 'htm'],
+    });
+    staticHandler(req, res, (err) => {
+      req.url = origUrl;
+      if (err) return next(err);
+      res.status(404).type('txt').send(`404 — Página não existe no projeto "${slug}".`);
+    });
+  } catch (e) { next(e); }
+});
 app.use('/workspace', (req, res, next) => {
   const rel = decodeURIComponent(req.path.replace(/^\/+/, ''));
   const parts = rel.split('/').filter(Boolean);
@@ -815,17 +914,24 @@ function setState(ws, session, state, extra = {}) {
 }
 
 // ===== Static preview server separado POR PROJETO =====
-function setStaticPreviewHeaders(res, filePath) {
-  if (/\.(html?|htm)$/i.test(filePath || '')) {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-  } else {
-    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
-  }
-}
 async function startProjectPreviewServer(slug) {
   if (!slug) return null;
+  // RC20 RENDER/Linux headless: NÃO cria servidor em outra porta (Render só libera 1 porta).
+  // Previews são servidos na MESMA porta via rota /preview/:slug/* injetada no app express principal.
+  if (IS_RENDER_OR_HEADLESS_LINUX) {
+    const projectDir = resolveWritableProjectDir(slug);
+    const previewUrl = RENDER_BASE_URL
+      ? `${RENDER_BASE_URL}/preview/${encodeURIComponent(slug)}/`
+      : `/preview/${encodeURIComponent(slug)}/`;
+    return {
+      port: null,
+      running: true,
+      alreadyRunning: projectServers.has(slug) || true,
+      singlePortMode: true,
+      url: previewUrl,
+      path: projectDir,
+    };
+  }
   if (projectServers.has(slug) && projectPorts.has(slug)) {
     return { port: projectPorts.get(slug), running: true, alreadyRunning: true };
   }
@@ -880,13 +986,21 @@ async function listProjects() {
         const st = await fs.stat(full);
         const port = projectPorts.get(e.name) || null;
         if (map.has(e.name)) continue; // mounted=true já entrou antes? pula
+        let previewUrl = null;
+        if (IS_RENDER_OR_HEADLESS_LINUX) {
+          previewUrl = RENDER_BASE_URL
+            ? `${RENDER_BASE_URL}/preview/${encodeURIComponent(e.name)}/`
+            : `/preview/${encodeURIComponent(e.name)}/`;
+        } else {
+          previewUrl = port ? `http://127.0.0.1:${port}/` : null;
+        }
         map.set(e.name, {
           name: e.name,
           displayName: e.name,
           mounted: false,
           path: full,
-          port,
-          previewUrl: port ? `http://127.0.0.1:${port}/` : null,
+          port: IS_RENDER_OR_HEADLESS_LINUX ? null : port,
+          previewUrl,
           createdAt: st.birthtimeMs || st.ctimeMs,
           modifiedAt: st.mtimeMs,
         });
@@ -899,14 +1013,22 @@ async function listProjects() {
       const st = await fs.stat(m.path).catch(() => null);
       const modifiedAt = st ? (st.mtimeMs || m.modifiedAt) : (m.modifiedAt || Date.now());
       const port = projectPorts.get(m.slug) || null;
+      let previewUrl = null;
+      if (IS_RENDER_OR_HEADLESS_LINUX) {
+        previewUrl = RENDER_BASE_URL
+          ? `${RENDER_BASE_URL}/preview/${encodeURIComponent(m.slug)}/`
+          : `/preview/${encodeURIComponent(m.slug)}/`;
+      } else {
+        previewUrl = port ? `http://127.0.0.1:${port}/` : null;
+      }
       map.set(m.slug, {
         name: m.slug,
         displayName: m.displayName || m.slug,
         mounted: true,
         path: m.path,
         fallbackInternal: !!m.fallbackInternal,
-        port,
-        previewUrl: port ? `http://127.0.0.1:${port}/` : null,
+        port: IS_RENDER_OR_HEADLESS_LINUX ? null : port,
+        previewUrl,
         createdAt: m.createdAt || Date.now(),
         modifiedAt,
       });
@@ -1317,6 +1439,12 @@ app.get('/api/status', (req, res) => {
     defaultProject: DEFAULT_PROJECT,
     sessions: sessions.size,
     maxSteps: MAX_STEPS,
+    googleKeyOk: GOOGLE_KEY_OK,
+    googleKeyPrefix: GOOGLE_API_KEY ? (GOOGLE_API_KEY.slice(0, 5) + '…' + GOOGLE_API_KEY.slice(-4)) : null,
+    render: IS_RENDER_OR_HEADLESS_LINUX,
+    renderBaseUrl: RENDER_BASE_URL || null,
+    platform: process.platform,
+    previewMode: IS_RENDER_OR_HEADLESS_LINUX ? 'single-port (/preview/:slug/)' : 'multi-port (3001..4100)',
     ensemble: {
       available: ensembleIsEnabled(),
       mode: ENSEMBLE_MODE,
@@ -1351,8 +1479,13 @@ app.post('/api/projects', async (req, res) => {
 app.get('/api/picker/folder', async (req, res) => {
   try {
     const isMac = process.platform === 'darwin';
-    if (!isMac) {
-      return res.status(501).json({ ok: false, error: 'Picker de pasta nativo disponível apenas no macOS' });
+    if (!isMac || IS_RENDER_OR_HEADLESS_LINUX) {
+      return res.status(501).json({
+        ok: false,
+        error: IS_RENDER_OR_HEADLESS_LINUX
+          ? 'Picker de pasta indisponível em nuvem (Render/Linux headless). Use a criação de projetos ou a pasta workspace padrão.'
+          : 'Picker de pasta nativo disponível apenas no macOS desktop.',
+      });
     }
     const script = `
       set chosenFolder to choose folder with prompt "Selecione a pasta do seu projeto (Desktop, Downloads, etc)" default location (path to desktop folder)
@@ -1755,44 +1888,64 @@ if (!GOOGLE_API_KEY || GOOGLE_API_KEY.includes('sua_chave')) {
   } catch {}
   let started = 0, failed = 0;
   const results = [];
-  for (const slug of Array.from(slugsToStart)) {
-    try {
-      // Garante pasta exista (se fallback interno ou workspace)
-      ensureProject(slug);
-      const r = await startProjectPreviewServer(slug);
-      if (r && r.running) {
-        started++;
-        if (!r.alreadyRunning) {
-          const relPath = r.path && String(r.path).includes(WORKSPACE_ROOT)
-            ? 'workspace/' + path.relative(WORKSPACE_ROOT, r.path)
-            : (r.path ? r.path.split('/').slice(-3).join('/') : '');
-          results.push(`  + ${slug} → porta ${r.port} (${relPath})`);
+  if (IS_RENDER_OR_HEADLESS_LINUX) {
+    // RC20 RENDER: single-port mode, NÃO precisamos ligar NENHUM preview extra
+    // Todos arquivos são servidos via /preview/:slug/ dentro da porta principal
+    const slugsArr = Array.from(slugsToStart);
+    for (const s of slugsArr) ensureProject(s);
+    started = slugsArr.length;
+    results.push(
+      `  ℹ️  Modo single-port ativado: ${slugsArr.length} projetos servidos via /preview/:slug/`,
+      `  ℹ️  URL base: ${RENDER_BASE_URL || 'same-origin'}`
+    );
+  } else {
+    for (const slug of Array.from(slugsToStart)) {
+      try {
+        // Garante pasta exista (se fallback interno ou workspace)
+        ensureProject(slug);
+        const r = await startProjectPreviewServer(slug);
+        if (r && r.running) {
+          started++;
+          if (!r.alreadyRunning) {
+            const relPath = r.path && String(r.path).includes(WORKSPACE_ROOT)
+              ? 'workspace/' + path.relative(WORKSPACE_ROOT, r.path)
+              : (r.path ? r.path.split('/').slice(-3).join('/') : '');
+            results.push(`  + ${slug} → porta ${r.port} (${relPath})`);
+          }
         }
+      } catch (e) {
+        failed++;
+        results.push(`  ✗ ${slug} FALHOU: ${e && e.message ? e.message : String(e)}`);
       }
-    } catch (e) {
-      failed++;
-      results.push(`  ✗ ${slug} FALHOU: ${e && e.message ? e.message : String(e)}`);
     }
   }
   // 2) Startup finalizado: ligar servidor principal
-  server.listen(PORT, () => {
+  // Render obriga 0.0.0.0 + escutar em process.env.PORT (normalmente 10000)
+  // Desktop/macOS local: continua 127.0.0.1:3000 ou localhost
+  const LISTEN_HOST = IS_RENDER_OR_HEADLESS_LINUX ? '0.0.0.0' : '127.0.0.1';
+  const displayUrl = IS_RENDER_OR_HEADLESS_LINUX && RENDER_BASE_URL
+    ? RENDER_BASE_URL
+    : `http://localhost:${PORT}`;
+  server.listen(PORT, LISTEN_HOST, () => {
     const banner = `
 ╔══════════════════════════════════════════════════════╗
 ║   AGENTE AUTÔNOMO · ESTILO TRAE IA                    ║
 ╠══════════════════════════════════════════════════════╣
-║  URL   : http://localhost:${String(PORT).padEnd(37)}║
-║  Modelo: ${GOOGLE_MODEL.padEnd(44)}║
-║  Work  : ${WORKSPACE_ROOT.length > 44 ? WORKSPACE_ROOT.slice(0,41)+'...' : WORKSPACE_ROOT.padEnd(44)}║
-║  Steps : ${String(MAX_STEPS).padEnd(37)}║
+║  URL   : ${displayUrl.length > 50 ? displayUrl.slice(0,47)+'...' : displayUrl.padEnd(53)}║
+║  Host  : ${(LISTEN_HOST+':'+PORT).padEnd(53)}║
+║  Modelo: ${GOOGLE_MODEL.padEnd(53)}║
+║  Work  : ${WORKSPACE_ROOT.length > 53 ? WORKSPACE_ROOT.slice(0,50)+'...' : WORKSPACE_ROOT.padEnd(53)}║
+║  Steps : ${String(MAX_STEPS).padEnd(53)}║
 ╠══════════════════════════════════════════════════════╣
-║  Previews dedicados: ${String(started).padEnd(2)} projetos ligados${failed?` (${failed} falhas)`:''}       ║
+║  Previews: ${String(started).padEnd(3)} projetos · ${String(failed).padEnd(3)} falhas · ${(IS_RENDER_OR_HEADLESS_LINUX?'Single-Port /preview':'Multi-Port 3001+').padEnd(31)}║
 ╚══════════════════════════════════════════════════════╝
-Abra o navegador: http://localhost:${PORT}
+Abra o navegador: ${displayUrl}
 ${results.length?results.join('\n'):''}`;
     console.log(banner);
   });
 })().catch(err => {
   console.error('ERRO STARTUP:', err);
   // De qualquer forma liga servidor principal
-  server.listen(PORT, () => console.log(`Servidor principal ligado porta ${PORT} (com erro startup previews: ${err.message})`));
+  const LISTEN_HOST = IS_RENDER_OR_HEADLESS_LINUX ? '0.0.0.0' : '127.0.0.1';
+  server.listen(PORT, LISTEN_HOST, () => console.log(`Servidor principal ligado ${LISTEN_HOST}:${PORT} (com erro startup: ${err && err.message ? err.message : String(err)})`));
 });

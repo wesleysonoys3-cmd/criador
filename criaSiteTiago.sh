@@ -70,12 +70,18 @@ fi
 echo "✅ Node OK: $("$NODE_BIN" --version)  ($NODE_BIN)" | tee -a "$LOG_FILE"
 
 # 3) Carregar .env (checar GOOGLE_API_KEY avisar se faltar)
+# IMPORTANTE: usar "export" para que subprocesso node herde as vars caso dotenv falhe
 if [ -f "$PROJ_DIR/.env" ]; then
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
       \#*)   continue ;;
-      *\"*)  eval "${line%%=*}"="\"$(echo "${line#*=}" | tr -d '"')\"" ;;
-      *)     eval "${line%%=*}"="'$(echo "${line#*=}" | tr -d "'")'" ;;
+      *=*)
+        KEY="${line%%=*}"
+        VAL="${line#*=}"
+        VAL="${VAL#\"}"; VAL="${VAL%\"}"
+        VAL="${VAL#\'}"; VAL="${VAL%\'}"
+        export "$KEY"="$VAL"
+        ;;
     esac
   done < "$PROJ_DIR/.env" 2>/dev/null
 fi

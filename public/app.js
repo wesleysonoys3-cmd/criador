@@ -122,6 +122,9 @@ const els = {
   openTraePanel: $('#open-trae-panel'),
   closeTraePanel: $('#close-trae-panel'),
   traeScroll: $('#trae-scroll'),
+  // RC19 Mobile TabBar
+  mobileTabbar: $('#mobile-tabbar'),
+  mobileTabs: document.querySelectorAll('.mobile-tab'),
   // Thought block
   traeThoughtSection: $('#trae-thought-section'),
   traeThoughtToggle: $('#trae-thought-toggle'),
@@ -1532,8 +1535,22 @@ function previewBaseUrlFor(projectName) {
     if (p && p.previewUrl) {
       let base = p.previewUrl;
       if (!base.endsWith('/')) base += '/';
+      const isLocalhost = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/i.test(base);
+      const weAreRemote =
+        location.hostname !== '127.0.0.1' &&
+        location.hostname !== 'localhost';
+      if (isLocalhost && weAreRemote) {
+        base = `${location.origin}/preview/${encodeURIComponent(projectName || state.project || 'default')}/`;
+      } else if (base.startsWith('/preview/')) {
+        base = `${location.origin}${base}`;
+      }
       return base;
     }
+  }
+  const weAreRemote =
+    location.hostname !== '127.0.0.1' && location.hostname !== 'localhost';
+  if (weAreRemote) {
+    return `${location.origin}/preview/${encodeURIComponent(projectName || state.project || 'default')}/`;
   }
   return null;
 }
@@ -1550,6 +1567,8 @@ function openPreview(relOrKey, opts) {
     url = `/workspace/${encodeURIComponent(project)}/${safe}`;
     fullUrl = location.origin + url;
   }
+  if (!/^https?:\/\//i.test(url)) url = location.origin + url;
+  if (!/^https?:\/\//i.test(fullUrl)) fullUrl = location.origin + fullUrl;
   els.previewEmpty.classList.add('hidden');
   els.previewIframe.classList.remove('hidden');
   els.previewUrlBar.classList.remove('hidden');
@@ -3093,8 +3112,110 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+/* ========== RC19 📱 MOBILE FIRST: TabBar inferior + switch paineis fullscreen ========== */
+const RC19_MOBILE_BP = 1080;
+let rc19CurrentPanel = 'right';
+let rc19IsMobile = false;
+function applyMobilePanel(panelName) {
+  if (!rc19IsMobile) return;
+  const panels = document.querySelectorAll('[data-mobile-panel]');
+  panels.forEach(p => {
+    const isActive = p.dataset.mobilePanel === panelName;
+    p.classList.toggle('mobile-panel-active', isActive);
+  });
+  const tabs = document.querySelectorAll('.mobile-tab');
+  tabs.forEach(btn => {
+    const isActive = btn.dataset.mobileTarget === panelName;
+    btn.classList.toggle('mobile-tab-active', isActive);
+    btn.setAttribute('aria-selected', String(isActive));
+  });
+  rc19CurrentPanel = panelName;
+  try { localStorage.setItem('tia.mobilePanel.v1', panelName); } catch (_) {}
+  scrollBottom?.();
+}
+function applyIsMobileState() {
+  const wasMobile = rc19IsMobile;
+  rc19IsMobile = window.innerWidth <= RC19_MOBILE_BP;
+  document.body.classList.toggle('is-mobile', rc19IsMobile);
+  if (rc19IsMobile) {
+    if (!wasMobile) {
+      const saved = localStorage.getItem('tia.mobilePanel.v1');
+      const defaultPanel = (saved === 'left' || saved === 'center' || saved === 'right') ? saved : 'right';
+      applyMobilePanel(defaultPanel);
+    } else {
+      applyMobilePanel(rc19CurrentPanel || 'right');
+    }
+  } else {
+    // Desktop: remover classes mobile que estavam bloqueando flex 3-colunas
+    document.querySelectorAll('[data-mobile-panel]').forEach(p => p.classList.remove('mobile-panel-active'));
+  }
+}
+function initRC19Mobile() {
+  // TabBar click
+  document.querySelectorAll('.mobile-tab').forEach(btn => {
+    if (btn.__rc19Bound) return;
+    btn.__rc19Bound = true;
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.mobileTarget;
+      if (!target) return;
+      applyMobilePanel(target);
+    });
+  });
+  // Keypress Enter no input mobile: submit direto (sem shift newline opcional — default newline é opcional, Enter = submit)
+  const tmi = els.traeMessageInput || els.input;
+  if (tmi && !tmi.__rc19KeyBound) {
+    tmi.__rc19KeyBound = true;
+    tmi.addEventListener('keydown', (ev) => {
+      if (!rc19IsMobile) return;
+      // Enter (sem shift) = submit. Shift+Enter = newline (comportamento padrão textarea)
+      if (ev.key === 'Enter' && !ev.shiftKey) {
+        ev.preventDefault();
+        const frm = els.traeChatForm || els.form;
+        frm?.requestSubmit?.();
+        if (!frm) doSubmit({ source: 'trae' });
+      }
+    });
+  }
+  // Keyboard aware iOS: quando input ganha foco, scrollar pro final e adicionar classe
+  const handleKBUp = () => {
+    document.body.classList.add('ti-keyboard-up');
+    setTimeout(() => { scrollBottom?.(); els.traeScroll?.scrollTo?.({ top: 999999, behavior: 'smooth' }); }, 250);
+    setTimeout(() => { scrollBottom?.(); els.traeScroll?.scrollTo?.({ top: 999999 }); }, 900);
+  };
+  const handleKBDown = () => {
+    document.body.classList.remove('ti-keyboard-up');
+  };
+  [els.traeMessageInput, els.input, document.querySelector('.trae-input')].forEach(inp => {
+    if (!inp || inp.__rc19KBBound) return;
+    inp.__rc19KBBound = true;
+    inp.addEventListener('focus', handleKBUp);
+    inp.addEventListener('blur', handleKBDown);
+  });
+  // Detecta teclado via visualViewport resize (funciona em iOS Safari 13+)
+  if (window.visualViewport && !window.__rc19VV) {
+    window.__rc19VV = true;
+    let lastH = window.visualViewport.height;
+    window.visualViewport.addEventListener('resize', () => {
+      if (!rc19IsMobile) return;
+      const h = window.visualViewport.height;
+      if (h < lastH - 120) handleKBUp();
+      if (h > lastH + 80) handleKBDown();
+      lastH = h;
+    });
+  }
+  // resize inicial + listener
+  applyIsMobileState();
+  let rszTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(rszTimer);
+    rszTimer = setTimeout(applyIsMobileState, 120);
+  });
+}
+
 /* ========== INIT ========== */
 (function finalInit(){
+  // RC19 Mobile: rodar ANTES de focar input para não dar zoom iOS
+  try { initRC19Mobile(); } catch(err) { console.warn('rc19 init:', err); }
   autoResize();
   renderHistory();
   // RC17 ↔️ Painéis redimensionáveis: aplicar larguras salvas + drag mousedown/doubleclick reset
@@ -3109,5 +3230,6 @@ document.addEventListener('keydown', (e) => {
   applyModeUI();
   // Sync select serviços (virá via loadProjects)
   populatePreviewServices();
-  els.input.focus();
+  // RC19: em mobile NÃO focar o input — evita zoom forçado e abre teclado sem querer no carregamento
+  if (!rc19IsMobile) els.input.focus();
 })();
