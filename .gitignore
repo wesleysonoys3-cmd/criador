@@ -1,0 +1,90 @@
+# ============================================================
+# TiAi IDE · CriaSiteTiago · .gitignore RC18 v2
+# NÃO ALTERE A MENOS QUE SAIBA O QUE ESTÁ FAZENDO
+# ============================================================
+
+# ---------- Secrets e Variáveis de Ambiente ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+
+# ---------- Runtime Node Portátil (binários gigantes) ----------
+node_modules/
+node-v*-darwin-*/
+node-v*-linux-*/
+node-v*-win-*/
+node.tar.gz
+node*.zip
+node*.tar.xz
+
+# ---------- Apps macOS Buildados (210MB+, NÃO SUBEM NO GIT) ----------
+*.app
+*.app/
+**/*.app
+**/*.app/
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ---------- Instaladores DMG ----------
+*.dmg
+*.dmg.part
+.sparsebundle
+.sparseimage
+.dmg-staging/
+
+# ---------- Workspace Projetos Gerados (dados do usuário) ----------
+workspace/
+_workspace/
+_mock_desktop/
+uploads/
+
+# ---------- Estado Local do TiAi ----------
+mounted_projects.json
+project_ports.json
+server.log
+launcher.log
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- Ícones temporários build ----------
+_icon_master_*.png
+_icon_tmp.iconset/
+_make_icon*.py
+
+# ---------- Editor / IDE ----------
+.trae/documents/
+.trae/snapshots/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+Thumbs.db
+
+# ---------- Screenshots / tmp ----------
+*.png
+!app.icns
+!_icon_master_placeholder_mantem.png
+screenshots/
+tmp/
+.tmp/
+*.bak
+*.old
+*.backup
+
+# ---------- Testes / coverage ----------
+coverage/
+.nyc_output/
+.cache/
+.parcel-cache/
+.next/
+.nuxt/

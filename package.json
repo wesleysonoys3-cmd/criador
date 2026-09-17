@@ -1,0 +1,22 @@
+{
+  "name": "autonomous-agent",
+  "version": "1.0.0",
+  "description": "Agente autônomo com Google GenAI e Function Calling",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "./start.sh",
+    "web": "./start.sh server",
+    "cli": "./start.sh cli",
+    "dev": "./start.sh server",
+    "setup:node": "tar -xzf node.tar.gz"
+  },
+  "dependencies": {
+    "@google/genai": "^0.7.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.7",
+    "express": "^5.2.1",
+    "multer": "^2.4.0",
+    "ws": "^8.21.3"
+  }
+}

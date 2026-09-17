@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0b1020" />
+<title>CriaSiteTiago · IDE TiAi</title>
+<link rel="stylesheet" href="/styles.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'], mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'] },
+        colors: {
+          brand: { 50:'#eef6ff',100:'#d9ebff',200:'#bcd8ff',300:'#8ebbff',400:'#6e9eff',500:'#4f7cff',600:'#3a63ff',700:'#2f4fd9',800:'#263fad',900:'#1b2b6b',950:'#0f1a45' },
+          sidebar: { DEFAULT: '#090d1e' },
+          surface: { DEFAULT: '#0e1430', soft:'#121938', card:'#101733', border:'#1e2850' }
+        },
+        animation: {
+          'fade-in': 'fadeIn .2s ease-out',
+          'slide-up': 'slideUp .25s ease-out',
+          'pulse-dot': 'pulseDot 1.2s ease-in-out infinite',
+          'shimmer': 'shimmer 1.8s linear infinite',
+          'sparkle-burst': 'sparkleBurst 1.4s ease-in-out infinite',
+        },
+        keyframes: {
+          fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+          slideUp: { '0%': { opacity: 0, transform: 'translateY(6px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+          pulseDot: { '0%,100%': { opacity: 1, transform: 'scale(1)' }, '50%': { opacity: .4, transform: 'scale(.85)' } },
+          shimmer: { '0%': { backgroundPosition: '-400px 0' }, '100%': { backgroundPosition: '400px 0' } },
+          sparkleBurst: { '0%,100%': { opacity: .6, transform: 'scale(.9) rotate(-6deg)' }, '50%': { opacity: 1, transform: 'scale(1.15) rotate(8deg)' } },
+        },
+      },
+    },
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/javascript.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/typescript.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/json.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/css.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/xml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/html.min.js"></script>
+</head>
+<body class="bg-sidebar text-slate-200 h-screen w-screen overflow-hidden font-sans antialiased selection:bg-brand-600/40">
+<div id="app" class="flex h-screen w-screen overflow-hidden flex-col">
+
+  <!-- ============ BARRA SUPERIOR GLOBAL (altura confortável, fontes 12px mínimas) ============ -->
+  <header class="h-11 shrink-0 border-b border-surface-border bg-[#060a1a] flex items-center px-3 gap-4 text-slate-300 select-none">
+    <!-- Menu esquerdo (logo + IDE + Project Switcher) -->
+    <div class="flex items-center gap-0.5 shrink-0">
+      <div class="flex items-center gap-2 pr-3 border-r border-surface-border mr-2">
+        <div class="w-6 h-6 rounded-md bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center shadow shadow-brand-600/30">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4"><path d="M12 2L15 8l6 .9-4.5 4.4 1 6.2L12 17l-5.5 2.5 1-6.2L3 8.9 9 8z"/></svg>
+        </div>
+        <span class="text-[12px] font-bold text-white">IDE</span>
+      </div>
+      <!-- Project Switcher (confortável, 12px) -->
+      <div id="project-switcher" class="relative shrink-0">
+        <button id="project-btn" class="flex items-center gap-1.5 h-7 px-2.5 rounded-md hover:bg-white/5 text-slate-200 text-[12px] transition group">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-brand-300 shrink-0 opacity-75"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span id="project-name" class="font-semibold truncate max-w-[180px]">default</span>
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-slate-500 group-hover:text-slate-300 transition shrink-0"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <!-- DROPDOWN PROJETOS -->
+        <div id="project-dropdown" class="hidden absolute left-0 top-[calc(100%+9px)] z-50 w-[340px] rounded-xl bg-surface-card border border-surface-border shadow-2xl shadow-black/60 overflow-hidden animate-fade-in">
+          <div class="p-2 border-b border-surface-border">
+            <div class="text-[10px] uppercase tracking-widest font-bold text-slate-500 px-1.5 py-0.5">Projetos</div>
+            <div class="flex gap-1.5 p-1.5 rounded-md bg-white/[0.03] border border-white/5 mt-1">
+              <input id="new-project-input" type="text" placeholder="Nome do novo projeto…" class="flex-1 bg-transparent outline-none text-[11.5px] text-white placeholder:text-slate-500 px-1.5" />
+              <button id="new-project-create" class="shrink-0 px-2 py-1 rounded bg-brand-600 hover:bg-brand-500 text-white text-[11px] font-semibold transition" title="Criar projeto">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
+            </div>
+            <button id="mount-folder-btn" type="button" class="mt-2 w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-[11.5px] font-semibold text-cyan-200 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 hover:border-cyan-500/40 transition">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-cyan-300 shrink-0"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span class="flex-1 text-left">📂 Importar pasta do Mac / Desktop</span>
+            </button>
+          </div>
+          <div id="project-list" class="max-h-[300px] overflow-y-auto p-1.5 space-y-0.5"></div>
+          <div class="p-2 border-t border-surface-border text-[10px] text-slate-500 px-3">Cada projeto roda em uma porta HTTP própria (3001…).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search bar central (maior e centralizada) -->
+    <div class="flex-1 min-w-0 flex items-center justify-center">
+      <div class="w-[360px] max-w-full h-8 px-2.5 rounded-md bg-white/[0.04] border border-white/5 text-slate-500 flex items-center gap-2 hover:bg-white/[0.06] hover:border-white/10 transition cursor-default">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <span class="text-[11.5px] font-medium">Search</span>
+      </div>
+    </div>
+
+    <!-- Ações direita: ícones status + chat-title + step badge + controles -->
+    <div class="flex items-center gap-2 shrink-0">
+      <span id="status-ring-wrap" class="relative inline-block w-3 h-3">
+        <span class="w-3 h-3 rounded-full bg-amber-400 animate-pulse-dot block absolute inset-0" id="status-dot"></span>
+        <span id="status-ring" class="absolute inset-0 rounded-full border-2 border-amber-400/30 scale-150 opacity-0 animate-ping"></span>
+      </span>
+      <h1 class="text-[12px] font-semibold text-slate-200 truncate max-w-[170px]" id="chat-title">Nova conversa</h1>
+      <span id="step-badge" class="hidden shrink-0 px-2 py-0.5 rounded-full text-[10px] bg-brand-600/20 text-brand-300 border border-brand-500/30">Passo 0/0</span>
+      <div class="w-px h-4 bg-slate-700 mx-0.5"></div>
+      <button id="pause-btn" class="hidden px-2 py-1 rounded text-[10.5px] text-white bg-amber-600 hover:bg-amber-500 transition flex items-center gap-1">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        <span>Pausar</span>
+      </button>
+      <button id="resume-btn" class="hidden px-2 py-1 rounded text-[10.5px] text-white bg-emerald-600 hover:bg-emerald-500 transition flex items-center gap-1">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <span>Continuar</span>
+      </button>
+      <button id="stop-btn" class="hidden px-2 py-1 rounded text-[10.5px] text-white bg-rose-600 hover:bg-rose-500 transition flex items-center gap-1">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+        <span>Parar</span>
+      </button>
+      <button id="new-chat" class="hidden px-2 py-1 rounded text-[10.5px] text-white bg-brand-600 hover:bg-brand-500 transition flex items-center gap-1" title="Nova conversa">
+        <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Nova</span>
+      </button>
+      <button id="clear-chat" class="px-2 py-1 rounded text-[10.5px] text-slate-400 hover:bg-white/5 hover:text-white transition flex items-center gap-1" title="Limpar chat">
+        <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+      </button>
+      <div id="runmode-chip" class="hidden items-center gap-1 px-2 py-0.5 rounded bg-emerald-600/15 text-emerald-300 border border-emerald-500/30">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-dot"></span>
+        <span class="text-[9.5px] font-bold uppercase tracking-wider" id="runmode-chip-text">Solo</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ 3 COLUNAS PRINCIPAIS ABAIXO DO HEADER ============ -->
+  <div class="flex flex-1 min-h-0 overflow-hidden">
+
+    <!-- ============ COL 1 / ESQUERDA: EXPLORER (Sempre visível · largura ajustável via DRAG resizer · RC17 ↔) ============ -->
+    <aside id="left-panel" class="shrink-0 bg-sidebar border-r border-surface-border flex flex-col">
+      <!-- Explorer Header + Tree (única coisa aqui, resto foi removido para ficar simples igual TRAE) -->
+      <div class="flex flex-col flex-1 min-h-0">
+        <div class="h-10 shrink-0 border-b border-surface-border flex items-center px-4 gap-2">
+          <div class="text-[11.5px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Explorer
+          </div>
+          <div class="ml-auto flex items-center gap-1">
+            <button id="mount-folder-btn" class="text-slate-500 hover:text-white p-2 rounded hover:bg-brand-500/10 hover:border hover:border-brand-500/30 transition" title="Selecionar pasta (Finder macOS) · Abrir projeto como workspace">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </button>
+            <button id="expand-tree-btn" class="text-slate-500 hover:text-white p-2 rounded hover:bg-white/5 transition" title="Expandir / Recolher toda a árvore">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="7 10 12 15 17 10"/><polyline points="7 6 12 11 17 6"/></svg>
+            </button>
+            <button id="refresh-tree" class="text-slate-500 hover:text-white p-2 rounded hover:bg-white/5 transition" title="Atualizar">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+            </button>
+            <button id="toggle-left" class="text-slate-500 hover:text-white p-2 rounded hover:bg-white/5 transition" title="Recolher painel">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="file-tree" class="flex-1 overflow-y-auto px-2 py-1.5 text-[12px] min-h-0">
+          <div class="px-2 py-5 text-center text-slate-600 text-[11px]">Carregando…</div>
+        </div>
+      </div>
+
+      <!-- Rodapé Explorer: status conexão + workdir + tokens -->
+      <div class="p-3 border-t border-surface-border bg-[#060a18] space-y-1 text-[10.5px]">
+        <div class="flex items-center gap-2 px-0.5">
+          <div class="flex-1 min-w-0">
+            <div class="text-slate-200 font-semibold leading-tight text-[11.5px]" id="status-text">Conectando…</div>
+            <div class="text-slate-500 leading-tight truncate" id="status-sub">Aguardando</div>
+          </div>
+        </div>
+        <div id="workdir-name" class="truncate text-slate-500 px-0.5 mt-1">Projeto: —</div>
+        <div id="stats-line" class="truncate text-slate-600 px-0.5">Tokens: —</div>
+      </div>
+    </aside>
+
+    <!-- ===== RESIZER ESQUERDO ↔️ Clique e arraste para aumentar/recolher o Explorer (tipo VSCode) ===== -->
+    <div id="left-resizer" class="panel-resizer panel-resizer-left" title="Arraste para ajustar largura do Explorer · Duplo clique: reset 280px"></div>
+
+    <!-- ============ COL 2 / CENTRO: EDITOR C/ 4 ABAS (Code · Preview · Console · Terminal) ============ -->
+    <section id="editor-panel" class="flex-1 min-w-0 flex flex-col bg-[#0a0f22] border-r border-surface-border">
+      <!-- Preview Service Bar (URL + seletor) confortável -->
+      <div class="h-10 shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center gap-2">
+        <div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.04] border border-white/5 text-[11px] text-slate-400 shrink-0 whitespace-nowrap">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+          <span>Service</span>
+        </div>
+        <select id="preview-service-select" class="flex-1 bg-[#0a0e1f] text-[11.5px] text-slate-300 rounded-md px-2 py-1 h-8 border border-white/10 outline-none focus:border-brand-500/50 font-mono min-w-0">
+          <option value="">Enter URL or select a running service…</option>
+        </select>
+        <div class="flex items-center gap-0.5 shrink-0">
+          <button id="preview-back" class="h-8 w-8 grid place-items-center rounded-md hover:bg-white/5 text-slate-500 hover:text-white transition" title="Voltar">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button id="preview-forward" class="h-8 w-8 grid place-items-center rounded-md hover:bg-white/5 text-slate-500 hover:text-white transition" title="Avançar">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <button id="preview-refresh" class="h-8 w-8 grid place-items-center rounded-md hover:bg-white/5 text-slate-500 hover:text-white transition" title="Recarregar">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          </button>
+          <button id="preview-open" class="h-8 w-8 grid place-items-center rounded-md hover:bg-white/5 text-slate-500 hover:text-white transition" title="Abrir em nova aba" target="_blank" rel="noopener">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor Tabs + Ln/Col (barra 40px) — RC15: 4 ABAS SÓ (Chat removido. Interação IA → painel direito TiAi) -->
+      <div class="h-10 shrink-0 bg-sidebar/70 border-b border-surface-border flex items-end gap-0 px-1 overflow-x-auto">
+        <div id="editor-tabs" class="flex items-end gap-0 h-full">
+          <button class="editor-tab active flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="code">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-slate-400 shrink-0"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span class="truncate font-medium" id="code-tab-label">Code</span>
+          </button>
+          <button class="editor-tab flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="preview">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-sky-300 shrink-0"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+            <span class="truncate font-medium">Preview</span>
+          </button>
+          <button class="editor-tab flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="console">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-amber-300 shrink-0"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            <span class="truncate font-medium">Console</span>
+          </button>
+          <button class="editor-tab flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="terminal">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-emerald-300 shrink-0"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            <span class="truncate font-medium">Terminal</span>
+          </button>
+        </div>
+        <!-- Ln/Col info (legível) -->
+        <div class="ml-auto mr-2.5 flex items-center gap-2 text-[10.5px] text-slate-500 font-mono whitespace-nowrap pb-1">
+          <span>Ln 1, Col 1</span>
+          <span class="w-px h-3 bg-slate-700 mx-0.5"></span>
+          <span>Spaces: 2</span>
+          <span class="w-px h-3 bg-slate-700 mx-0.5"></span>
+          <span>UTF-8</span>
+          <span class="w-px h-3 bg-slate-700 mx-0.5"></span>
+          <span class="flex items-center gap-1"><svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> CUE</span>
+        </div>
+      </div>
+
+      <!-- Editor Panels: Code / Chat / Preview / Console / Terminal -->
+      <div id="editor-panels" class="flex-1 min-h-0 flex flex-col bg-[#080c1c]" data-active="code">
+
+        <!-- ===== Code Viewer (aba "Code") ===== -->
+        <div data-editor-panel="code" class="editor-panel hidden flex-1 flex-col min-h-0">
+          <div id="code-empty" class="w-full h-full grid place-items-center p-5 text-center text-[12px] text-slate-500">
+            <div>
+              <div class="w-12 h-12 mx-auto mb-3 rounded-md bg-surface-soft border border-surface-border grid place-items-center opacity-70">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              </div>
+              Abra um arquivo do explorer para ver aqui.
+            </div>
+          </div>
+          <div id="code-viewer" class="hidden w-full h-full flex flex-col min-h-0">
+            <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span id="code-icon" class="shrink-0 w-4 h-4 rounded grid place-items-center bg-surface-soft text-slate-300 text-[9px] font-mono">JS</span>
+                <span id="code-path" class="text-[11px] text-slate-300 font-mono truncate"></span>
+              </div>
+              <button id="code-copy" class="shrink-0 text-[11px] px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 transition">Copiar</button>
+            </div>
+            <div class="flex-1 overflow-auto bg-[#060915]">
+              <pre id="code-pre" class="m-0 p-3.5 text-[12px] leading-relaxed"><code id="code-code" class="font-mono text-slate-200 whitespace-pre"></code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Chat (aba "Chat") — RC15 REMOVIDO do centro. Ficou SÓ no painel direito TiAi. ===== -->
+
+        <!-- ===== Preview (aba "Preview") ===== -->
+        <div data-editor-panel="preview" class="editor-panel hidden flex-1 flex-col min-h-0">
+          <div id="preview-body" class="flex-1 flex flex-col min-h-0 bg-[#070a18]">
+            <div id="preview-empty" class="flex-1 grid place-items-center p-4 text-center">
+              <div class="max-w-[260px]">
+                <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-brand-500/25 to-brand-800/25 border border-brand-500/30 grid place-items-center">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-brand-300"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="6" cy="7" r="0.8" fill="currentColor"/></svg>
+                </div>
+                <div class="font-semibold text-white text-[12.5px] mb-1.5">Preview Your Web Application Here</div>
+                <div class="text-[11.5px] text-slate-400 leading-relaxed">Selecione um serviço (porta) acima, crie um index.html, ou abra um arquivo no explorer.</div>
+              </div>
+            </div>
+            <iframe id="preview-iframe" title="Preview do projeto" class="hidden w-full flex-1 bg-white border-0"></iframe>
+            <div id="preview-url-bar" class="hidden shrink-0 border-t border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center gap-1.5 text-[10.5px] text-slate-400 font-mono">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span id="preview-url" class="truncate"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Console (aba "Console Logs") ===== -->
+        <div data-editor-panel="console" class="editor-panel hidden flex-1 flex-col min-h-0 bg-[#050813]">
+          <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between text-[10.5px]">
+            <div class="flex items-center gap-2 text-slate-400 font-bold uppercase tracking-wider">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-amber-300"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              Console Logs
+            </div>
+            <button id="console-clear" class="text-slate-500 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition">Limpar</button>
+          </div>
+          <div id="console-out" class="flex-1 overflow-auto p-3 text-[12px] font-mono text-slate-400 whitespace-pre-wrap">
+            <div class="text-slate-600">Console pronto. Saídas do agente aparecerão aqui.</div>
+          </div>
+        </div>
+
+        <!-- ===== Terminal (aba "Terminal") ===== -->
+        <div data-editor-panel="terminal" class="editor-panel hidden flex-1 flex-col min-h-0 bg-black/60">
+          <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between text-[10.5px]">
+            <div class="flex items-center gap-2 text-slate-400 font-bold uppercase tracking-wider">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-emerald-300"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              Terminal
+            </div>
+            <button id="terminal-clear" class="text-slate-500 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition">Limpar</button>
+          </div>
+          <div id="terminal-out" class="flex-1 overflow-auto p-3 text-[12px] font-mono text-emerald-300 whitespace-pre-wrap">
+            <div class="text-emerald-500/80">$ zsh -i · CriaSiteTiago agente local</div>
+            <div class="text-slate-600">Saídas de comandos do agente aparecerão aqui.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== RESIZER DIREITO ↔️ Clique e arraste para aumentar/recolher o painel TiAi (tipo VSCode) ===== -->
+    <div id="right-resizer" class="panel-resizer panel-resizer-right" title="Arraste para ajustar largura do TiAi Agente · Duplo clique: reset 360px"></div>
+
+    <!-- ============ COL 3 / DIREITA: PAINEL TiAi AGENTE (largura ajustável via drag resizer · RC17) ============ -->
+    <aside id="trae-agent-panel" class="shrink-0 bg-[#060917] border-l border-surface-border flex flex-col">
+      <!-- Header: TiAi logo + ações -->
+      <div class="h-11 shrink-0 border-b border-surface-border bg-sidebar/80 px-3 py-1.5 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="font-black text-[14px] tracking-[-0.03em] text-white">TiAi</span>
+        </div>
+        <div class="flex items-center gap-0.5">
+          <button id="toggle-right" class="p-1.5 rounded hover:bg-white/5 text-slate-500 hover:text-white transition" title="Minimizar">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14"/></svg>
+          </button>
+          <button id="close-right-tmp" class="p-1.5 rounded hover:bg-white/5 text-slate-500 hover:text-white transition" title="Config">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.61.84 1.03 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <button id="close-trae-panel" class="p-1.5 rounded hover:bg-white/5 text-slate-500 hover:text-white transition" title="Fechar painel">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sub-header: Badge Agent Verde pulsante + Modo -->
+      <div class="shrink-0 border-b border-surface-border/70 px-3 py-2 flex items-center gap-2">
+        <div class="flex items-center gap-2">
+          <span class="relative flex">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 block"></span>
+            <span class="absolute inset-0 rounded-full bg-emerald-400/30 animate-ping"></span>
+          </span>
+          <span class="text-[11.5px] font-bold text-emerald-300 uppercase tracking-wide">Agent</span>
+          <span id="trae-ensemble-badge" class="hidden items-center gap-1 px-1.5 h-[18px] rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/15 border border-emerald-400/40 text-[9.5px] font-bold text-emerald-300 uppercase tracking-wider" title="Ensemble 2x Gemini GRATUITO · Voto Majoritário Paralelo">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-dot"></span>
+            <span>🆓</span>
+            2x Gemini
+          </span>
+        </div>
+        <div class="ml-auto flex items-center gap-1.5">
+          <button id="ensemble-toggle" class="hidden items-center gap-1 px-1.5 h-7 rounded-full bg-[#070b1a] border border-white/10 hover:border-emerald-400/40 hover:bg-emerald-500/5 transition" title="Ensemble GRATUITO: 2x Gemini Flash. Mude FREE_ENSEMBLE_MODE=parallel no .env para ativar.">
+            <span id="ensemble-knob" class="w-4 h-4 rounded-full bg-white/10 border border-white/20 grid place-items-center transition-colors">
+              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-slate-500 transition"><path d="M12 2v20M2 12h20"/></svg>
+            </span>
+            <span class="text-[9.5px] font-bold text-slate-500 pr-1.5 uppercase tracking-wide">Ens</span>
+          </button>
+          <button id="solo-toggle" class="flex items-center gap-1 px-1 h-7 rounded-full bg-surface-soft border border-surface-border overflow-hidden group" aria-pressed="true" title="Alternar Solo / Interactive">
+            <span id="solo-knob" class="px-2 h-full rounded-full bg-gradient-to-br from-brand-500 to-brand-700 shadow grid place-items-center">
+              <span id="mode-label" class="text-[10px] font-bold text-white">SOLO</span>
+            </span>
+            <span class="text-slate-500 text-[9.5px] font-bold pr-1.5">INT</span>
+          </button>
+          <select id="model-select" class="bg-[#070b1a] text-[10.5px] font-semibold text-slate-300 rounded px-2 h-7 border border-white/10 outline-none">
+            <option value="gemini-3.5-flash-lite">3.5 Flash Lite</option>
+            <option value="gemini-3.5-flash">3.5 Flash</option>
+            <option value="gemini-2.5-flash">2.5 Flash</option>
+            <option value="gemini-2.0-flash-exp">2.0 Flash Exp</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Conteúdo rolável: Thought + Checklist + running tool -->
+      <div id="trae-scroll" class="flex-1 overflow-y-auto px-3 py-2.5 space-y-2.5 text-[12px]">
+
+        <!-- Thought Block -->
+        <div id="trae-thought-section" class="rounded-lg border border-white/5 bg-white/[0.025] overflow-hidden">
+          <button id="trae-thought-toggle" type="button" class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 transition">
+            <svg id="trae-thought-chevron" width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-slate-500 transition-transform"><path d="M6 9l6 6 6-6"/></svg>
+            <span class="text-[11.5px] font-bold text-slate-300 uppercase tracking-wider">Thought <span class="text-slate-600">›</span></span>
+            <span class="ml-auto text-[10.5px] text-slate-500 truncate max-w-[180px]" id="trae-thought-summary-trunc">—</span>
+          </button>
+          <div id="trae-thought-content" class="px-3.5 pb-2.5 space-y-1 text-[12px] leading-relaxed text-slate-300 hidden">
+            <div id="trae-thought-body" class="text-slate-400/90">Aguardando primeiro prompt…</div>
+          </div>
+        </div>
+
+        <!-- Checklist TiAi STYLE -->
+        <div class="rounded-lg border border-white/5 bg-white/[0.02] overflow-hidden">
+          <div class="flex items-center justify-between px-3 py-1.5 border-b border-white/5">
+            <div class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider px-0.5">Plano / Steps</div>
+            <span id="trae-tasks-label" class="text-[10.5px] font-mono text-slate-500">0/0</span>
+          </div>
+          <ol id="trae-checklist" class="py-1 space-y-0.5 px-0.5">
+            <li class="flex items-start gap-2 px-2 py-2 rounded text-slate-500">
+              <span class="mt-0.5 w-3.5 h-3.5 shrink-0 rounded-full border border-slate-700 grid place-items-center opacity-60"></span>
+              <span class="text-[12px] leading-snug">Sem plano ativo. Envie uma tarefa no painel abaixo.</span>
+            </li>
+          </ol>
+        </div>
+
+        <!-- ============ STREAM DE CONVERSA (Chat) — AGORA AQUI DENTRO DO PAINEL TiAi! ============ -->
+        <!-- Todo o histórico do usuário e da IA aparece aqui (igual Trae): bolhas + tool cards accordion. -->
+        <div id="messages" class="rounded-lg border border-white/5 bg-[#040816] overflow-hidden max-h-[500px] overflow-y-auto min-h-0 flex-1">
+          <div class="px-3 pt-4 pb-2 text-center animate-fade-in" id="welcome">
+            <div class="w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 grid place-items-center shadow-lg shadow-brand-600/30">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><path d="M12 2L15 8l6 .9-4.5 4.4 1 6.2L12 17l-5.5 2.5 1-6.2L3 8.9 9 8z"/></svg>
+            </div>
+            <h2 class="text-[13px] font-bold text-white mb-1">Escreva sua tarefa abaixo 👇</h2>
+            <p class="text-slate-500 max-w-sm mx-auto leading-relaxed text-[11px]">Agente autônomo TiAi · Você escreve, eu faço: código, arquivos, rodar comandos. Tudo o que estou fazendo aparece aqui em tempo real.</p>
+          </div>
+          <div id="messages-list" class="space-y-2.5 px-2.5 pb-2.5"></div>
+          <div id="typing" class="hidden mb-1.5 px-2.5 animate-slide-up">
+            <div class="flex gap-2">
+              <div class="w-6 h-6 shrink-0 rounded-md bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6"><path d="M12 2L15 8l6 .9-4.5 4.4 1 6.2L12 17l-5.5 2.5 1-6.2L3 8.9 9 8z"/></svg></div>
+              <div class="bg-surface-card border border-surface-border rounded-lg rounded-tl-sm px-2.5 py-1.5 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse-dot" style="animation-delay:0ms"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse-dot" style="animation-delay:120ms"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse-dot" style="animation-delay:240ms"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Última ferramenta em execução -->
+        <div id="trae-running-tool" class="hidden rounded-lg border border-emerald-500/20 bg-emerald-500/[0.04] overflow-hidden">
+          <div class="flex items-center gap-2 px-3 py-1 border-b border-emerald-500/15">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-dot"></span>
+            <span class="text-[10.5px] font-bold uppercase text-emerald-300 tracking-wide" id="trae-running-tool-name">executando…</span>
+          </div>
+          <div class="px-3 py-1.5 text-[11px] font-mono text-slate-400/80 max-h-[130px] overflow-auto whitespace-pre-wrap break-all" id="trae-running-tool-body"></div>
+        </div>
+      </div>
+
+      <!-- Rodapé painel: Barra progresso + X/Y tasks Completed -->
+      <div class="shrink-0 border-t border-surface-border bg-sidebar/80 px-3 py-2 space-y-1.5">
+        <div class="flex items-center gap-2">
+          <div class="flex-1 h-2 bg-[#0a0e1f] rounded-full overflow-hidden border border-white/5">
+            <div id="trae-progress-bar" class="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 w-0 transition-all duration-500 ease-out rounded-full relative overflow-hidden">
+              <div class="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent)] bg-[length:800px_100%] animate-shimmer"></div>
+            </div>
+          </div>
+          <div class="text-[10.5px] font-mono text-slate-300 whitespace-nowrap"><span id="trae-progress-current">0</span>/<span id="trae-progress-total">0</span> tasks Completed</div>
+        </div>
+        <div class="flex items-center gap-1.5 text-[10px] text-slate-500 leading-tight">
+          <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="opacity-60"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="trae-progress-subtitle">Aguardando início</span>
+        </div>
+      </div>
+
+      <!-- IDs OBRIGATÓRIOS HIDDEN (referenciados no app.js via els — substituem o antigo centro removido) -->
+      <div class="hidden">
+        <div id="attachments"></div>
+        <form id="chat-form">
+          <input id="file-input" type="file" />
+          <textarea id="message-input"></textarea>
+          <button id="send-btn" type="submit"></button>
+          <div id="char-count">0</div>
+        </form>
+      </div>
+
+      <!-- Input DENTRO do painel TiAi (play verde) — O PRINCIPAL QUE O USUÁRIO USA -->
+      <div class="shrink-0 border-t border-surface-border bg-[#040612] px-2.5 py-2.5">
+        <form id="trae-chat-form" class="relative">
+          <div class="flex items-end gap-1 bg-[#0a0e1f] border border-white/10 focus-within:border-brand-500/50 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-lg transition p-1">
+            <button type="button" id="trae-add-btn" class="shrink-0 w-8 h-8 grid place-items-center rounded-md hover:bg-white/5 text-slate-400 hover:text-white transition" title="Anexar / ferramentas">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <textarea id="trae-message-input" rows="2" style="min-height:56px" class="flex-1 resize-none bg-transparent focus:outline-none px-2 py-1.5 text-[12px] placeholder:text-slate-500 text-white max-h-32 leading-snug" placeholder="Help you write code, debug, optimize performance and other development work, deliver production-ready code."></textarea>
+            <div class="flex items-center gap-1 shrink-0 pb-0.5 pr-0.5">
+              <select id="trae-auto-select" class="bg-[#070b1a] text-[10.5px] font-semibold text-slate-300 rounded px-2 py-1 border border-white/10 outline-none h-8">
+                <option value="auto" selected>Auto</option>
+                <option value="solo">Solo</option>
+                <option value="interactive">Interactive</option>
+              </select>
+              <button type="submit" id="trae-play-btn" class="shrink-0 w-8 h-8 rounded-md bg-emerald-500 hover:bg-emerald-400 text-black grid place-items-center transition shadow-md shadow-emerald-500/30 active:scale-95" title="Executar / Enviar prompt">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="ml-[1px]"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- ============ LIGHTBOX / TOAST / Botões mobile ============ -->
+<div id="lightbox" class="fixed inset-0 z-[100] bg-black/90 hidden items-center justify-center p-3 sm:p-8">
+  <img src="" alt="" id="lightbox-img" class="max-w-full max-h-full rounded-xl shadow-2xl">
+  <button type="button" id="lightbox-close" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white grid place-items-center backdrop-blur text-sm">✕</button>
+</div>
+<div id="toast" class="fixed bottom-3 right-3 z-[200] hidden animate-slide-up">
+  <div class="bg-surface-card border border-surface-border rounded-lg px-3 py-2 text-[10.5px] shadow-2xl shadow-black/60 flex items-center gap-2">
+    <span id="toast-icon" class="text-emerald-400 text-sm leading-none">✓</span>
+    <span id="toast-text" class="text-slate-200"></span>
+  </div>
+</div>
+<button id="open-left" class="hidden fixed z-30 left-3 top-3 p-1.5 rounded-md bg-surface-card border border-surface-border text-slate-300 lg:hidden">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+</button>
+<button id="open-trae-panel" class="hidden fixed z-30 right-3 top-3 p-1.5 rounded-md bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-lg shadow-brand-600/30 xl:hidden" title="Abrir painel TiAi Agente">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2L15 8l6 .9-4.5 4.4 1 6.2L12 17l-5.5 2.5 1-6.2L3 8.9 9 8z"/></svg>
+</button>
+<script src="/app.js" type="module"></script>
+</body>
+</html>
