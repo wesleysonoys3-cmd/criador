@@ -56,7 +56,11 @@
 <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/css.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/xml.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/html.min.js"></script>
+<script>
+  // highlight.js 11.x não empacota `html` separadamente; ele é alias de xml.
+  // Garante compatibilidade com app.js L6-L12 que procura window.hljsHtml.
+  if (window.hljsXml) window.hljsHtml = window.hljsXml;
+</script>
 </head>
 <body class="bg-sidebar text-slate-200 h-screen w-screen overflow-hidden font-sans antialiased selection:bg-brand-600/40">
 <div id="app" class="flex h-screen w-screen overflow-hidden flex-col">
@@ -236,6 +240,14 @@
             <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-emerald-300 shrink-0"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
             <span class="truncate font-medium">Terminal</span>
           </button>
+          <button class="editor-tab flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="ia-config" title="Configuração das Chaves das IAs (Gemini, Cerebras, Mistral, DeepSeek Free)">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-purple-300 shrink-0"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M5 21a7 7 0 0 1 14 0"/><circle cx="12" cy="7" r="1" fill="currentColor"/></svg>
+            <span class="truncate font-medium">IA Config</span>
+          </button>
+          <button class="editor-tab flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="btc" title="₿ BTC Market Intelligence — Análise Multi-Timeframe + Score + Cenários">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="currentColor" class="text-amber-400 shrink-0"><path d="M17.078 9.817c.325-2.156-1.32-3.31-3.57-4.09l.73-2.932-1.778-.441-.71 2.852c-.466-.116-.94-.225-1.414-.332l.712-2.857L8.57 1.664l-.73 2.933c-3.863.905-6.53 2.886-4.89 6.149.975 1.932 3.04 3.073 5.185 4.075-.06.25-.113.5-.166.744-1.69-.202-4.255-.664-4.484 2.47-.04.557.14 1.071.494 1.506.062.075.128.147.198.217a1 1 0 00.15.143l1.62-.609c1.127 1.193 2.56 1.87 4.196 2.302l-.726 2.915 1.778.441.73-2.932c.481.12.955.23 1.422.339l-.728 2.92 1.779.441.73-2.93c3.908-.916 6.6-2.865 4.956-6.19-.95-1.97-2.998-3.118-5.166-4.145.23-.67.418-1.35.553-2.042zm-3.291 4.684c-.52 2.088-4.059.975-5.192.687l.922-3.704c1.133.289 4.801.848 4.27 3.017zm.525-4.693c-.475 1.902-3.393.922-4.35.675l.83-3.33c.956.248 4.006.701 3.52 2.655z"/></svg>
+            <span class="truncate font-medium">₿ BTC</span>
+          </button>
         </div>
         <!-- Ln/Col info (legível) -->
         <div class="ml-auto mr-2.5 flex items-center gap-2 text-[10.5px] text-slate-500 font-mono whitespace-nowrap pb-1">
@@ -324,6 +336,85 @@
           <div id="terminal-out" class="flex-1 overflow-auto p-3 text-[12px] font-mono text-emerald-300 whitespace-pre-wrap">
             <div class="text-emerald-500/80">$ zsh -i · CriaSiteTiago agente local</div>
             <div class="text-slate-600">Saídas de comandos do agente aparecerão aqui.</div>
+          </div>
+        </div>
+
+        <!-- ===== IA Config (aba "IA Config" · RC23) ===== -->
+        <div data-editor-panel="ia-config" class="editor-panel hidden flex-1 flex-col min-h-0 bg-[#060916]">
+          <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between text-[10.5px]">
+            <div class="flex items-center gap-2 text-purple-300 font-bold uppercase tracking-wider">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M5 21a7 7 0 0 1 14 0"/><circle cx="12" cy="7" r="1" fill="currentColor"/></svg>
+              Configuração das Chaves das IAs
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button id="iac-refresh" class="text-slate-500 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition flex items-center gap-1">
+                <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                <span class="hidden sm:inline">Recarregar</span>
+              </button>
+              <button id="iac-test-all" class="text-slate-500 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition flex items-center gap-1">
+                <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <span class="hidden sm:inline">Testar Todas</span>
+              </button>
+              <button id="iac-save-all" class="text-white px-3 py-1 rounded-md bg-gradient-to-br from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 border border-purple-400/40 shadow transition flex items-center gap-1 font-bold">
+                <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Salvar no .env
+              </button>
+            </div>
+          </div>
+
+          <div id="iac-body" class="flex-1 overflow-auto p-4 md:p-6 space-y-4">
+            <!-- Header / intro card -->
+            <div class="rounded-xl border border-purple-400/20 bg-gradient-to-br from-purple-500/10 via-transparent to-fuchsia-500/5 p-4 text-[11.5px] text-slate-300 leading-relaxed space-y-2">
+              <div class="flex items-start gap-2">
+                <div class="w-7 h-7 shrink-0 rounded-lg bg-purple-500/20 border border-purple-400/30 grid place-items-center">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-purple-300"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-white font-bold text-[12.5px] mb-1">Conecte suas IAs · Nenhuma chave é enviada para fora do seu servidor local</div>
+                  <div>Clique em <span class="text-purple-300 font-semibold">Conectar</span> ao lado de cada campo para validar a chave com a API real (ping). Depois clique em <span class="text-purple-300 font-semibold">Salvar no .env</span> para persistir — um backup automático do .env é criado antes de cada salvamento.</div>
+                  <div id="iac-note" class="mt-1 text-[10.5px] text-slate-500">Status ao carregar: conectando…</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cards dos 4 providers (container de grids) -->
+            <div id="iac-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-3.5"></div>
+          </div>
+        </div>
+
+        <!-- ===== ₿ BTC Market Intelligence (aba "₿ BTC") · Módulo isolado ===== -->
+        <div data-editor-panel="btc" class="editor-panel hidden flex-1 flex-col min-h-0 bg-[#060918]" id="btc-panel">
+          <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between text-[10.5px]">
+            <div class="flex items-center gap-2 text-amber-300 font-bold uppercase tracking-wider">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" class="shrink-0"><path d="M17.078 9.817c.325-2.156-1.32-3.31-3.57-4.09l.73-2.932-1.778-.441-.71 2.852c-.466-.116-.94-.225-1.414-.332l.712-2.857L8.57 1.664l-.73 2.933c-3.863.905-6.53 2.886-4.89 6.149.975 1.932 3.04 3.073 5.185 4.075-.06.25-.113.5-.166.744-1.69-.202-4.255-.664-4.484 2.47-.04.557.14 1.071.494 1.506.062.075.128.147.198.217a1 1 0 00.15.143l1.62-.609c1.127 1.193 2.56 1.87 4.196 2.302l-.726 2.915 1.778.441.73-2.932c.481.12.955.23 1.422.339l-.728 2.92 1.779.441.73-2.93c3.908-.916 6.6-2.865 4.956-6.19-.95-1.97-2.998-3.118-5.166-4.145.23-.67.418-1.35.553-2.042zm-3.291 4.684c-.52 2.088-4.059.975-5.192.687l.922-3.704c1.133.289 4.801.848 4.27 3.017zm.525-4.693c-.475 1.902-3.393.922-4.35.675l.83-3.33c.956.248 4.006.701 3.52 2.655z"/></svg>
+              BTC Market Intelligence · Análise especulativa (NÃO é recomendação financeira)
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button id="btc-history-btn" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition flex items-center gap-1" title="Histórico">
+                <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="hidden sm:inline">Histórico</span>
+              </button>
+              <button id="btc-backtest-btn" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition flex items-center gap-1" title="Backtest">
+                <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+                <span class="hidden sm:inline">Backtest</span>
+              </button>
+              <button id="btc-manual-btn" class="text-white px-3 py-1 rounded-md bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 border border-amber-400/40 shadow transition flex items-center gap-1 font-bold">
+                <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                Coletar agora
+              </button>
+            </div>
+          </div>
+
+          <div id="btc-body" class="flex-1 overflow-auto p-4 md:p-5 space-y-4">
+            <div id="btc-spinner" class="text-[11.5px] text-slate-500 text-center py-10">
+              <div class="inline-flex items-center gap-2">
+                <svg width="16" height="16" class="animate-spin text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <span>Carregando análise BTC… (primeira coleta pode demorar ~5-10s)</span>
+              </div>
+            </div>
+            <div id="btc-dashboard" class="space-y-4 hidden"></div>
+            <div id="btc-backtest-panel" class="hidden rounded-xl border border-sky-400/20 bg-sky-500/5 p-4 space-y-3"></div>
+            <div id="btc-history-panel" class="hidden rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-4 space-y-3"></div>
           </div>
         </div>
       </div>
@@ -417,6 +508,63 @@
           </ol>
         </div>
 
+        <!-- ===== RC27 · Orquestrador Autônomo — Stepper 8 fases ===== -->
+        <div id="rc27-stepper" class="rounded-lg border border-brand-500/20 bg-gradient-to-br from-brand-900/30 via-slate-900/60 to-slate-900/30 overflow-hidden hidden">
+          <div class="flex items-center justify-between px-3 py-1.5 border-b border-brand-500/10">
+            <div class="flex items-center gap-1.5">
+              <div class="w-3.5 h-3.5 rounded-md bg-gradient-to-br from-brand-400 to-brand-700 grid place-items-center">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="text-[10.5px] font-bold text-brand-200 uppercase tracking-wider px-0.5">Orquestrador Autônomo</div>
+            </div>
+            <div id="rc27-stepper-summary" class="text-[10.5px] font-mono text-brand-300/90">Inativo</div>
+          </div>
+          <div class="px-3 py-2 border-b border-white/5">
+            <div class="text-[10.5px] text-slate-400 mb-1 uppercase tracking-wider opacity-80">Objetivo</div>
+            <div id="rc27-stepper-goal" class="text-[11.5px] text-white/95 leading-snug font-medium break-words max-h-[64px] overflow-y-auto pr-1">Aguardando envio da tarefa…</div>
+          </div>
+          <div class="px-3 py-2.5">
+            <div class="flex items-start gap-0 relative">
+              <!-- Linha conectora traseira -->
+              <div class="absolute top-4 left-0 right-0 h-[2px] bg-gradient-to-r from-slate-700/60 via-slate-700/60 to-slate-700/60 z-0" aria-hidden="true"></div>
+              <!-- Passos -->
+              <div class="rc27-step-item flex-1 flex flex-col items-center gap-1.5 relative z-10" id="rc27-step-ANALYSIS" data-phase="ANALYSIS">
+                <div class="rc27-step-dot w-8 h-8 rounded-full grid place-items-center text-[11px] font-bold border-2 border-slate-600 bg-slate-800/80 text-slate-400 transition-all">⌕</div>
+                <div class="rc27-step-label text-[9.5px] leading-tight text-slate-400 font-semibold uppercase tracking-wide text-center">Análise</div>
+              </div>
+              <div class="rc27-step-item flex-1 flex flex-col items-center gap-1.5 relative z-10" id="rc27-step-PLANNING" data-phase="PLANNING">
+                <div class="rc27-step-dot w-8 h-8 rounded-full grid place-items-center text-[11px] font-bold border-2 border-slate-600 bg-slate-800/80 text-slate-400 transition-all">📋</div>
+                <div class="rc27-step-label text-[9.5px] leading-tight text-slate-400 font-semibold uppercase tracking-wide text-center">Planejamento</div>
+              </div>
+              <div class="rc27-step-item flex-1 flex flex-col items-center gap-1.5 relative z-10" id="rc27-step-ARCHITECTURE" data-phase="ARCHITECTURE">
+                <div class="rc27-step-dot w-8 h-8 rounded-full grid place-items-center text-[11px] font-bold border-2 border-slate-600 bg-slate-800/80 text-slate-400 transition-all">🏛</div>
+                <div class="rc27-step-label text-[9.5px] leading-tight text-slate-400 font-semibold uppercase tracking-wide text-center">Arquitetura</div>
+              </div>
+              <div class="rc27-step-item flex-1 flex flex-col items-center gap-1.5 relative z-10" id="rc27-step-IMPLEMENTATION" data-phase="IMPLEMENTATION">
+                <div class="rc27-step-dot w-8 h-8 rounded-full grid place-items-center text-[11px] font-bold border-2 border-slate-600 bg-slate-800/80 text-slate-400 transition-all">⟳</div>
+                <div class="rc27-step-label text-[9.5px] leading-tight text-slate-400 font-semibold uppercase tracking-wide text-center">Implementação</div>
+              </div>
+              <div class="rc27-step-item flex-1 flex flex-col items-center gap-1.5 relative z-10" id="rc27-step-TESTING" data-phase="TESTING">
+                <div class="rc27-step-dot w-8 h-8 rounded-full grid place-items-center text-[11px] font-bold border-2 border-slate-600 bg-slate-800/80 text-slate-400 transition-all">🧪</div>
+                <div class="rc27-step-label text-[9.5px] leading-tight text-slate-400 font-semibold uppercase tracking-wide text-center">Testes</div>
+              </div>
+              <div class="rc27-step-item flex-1 flex flex-col items-center gap-1.5 relative z-10" id="rc27-step-CORRECTION" data-phase="CORRECTION">
+                <div class="rc27-step-dot w-8 h-8 rounded-full grid place-items-center text-[11px] font-bold border-2 border-slate-600 bg-slate-800/80 text-slate-400 transition-all">🛠</div>
+                <div class="rc27-step-label text-[9.5px] leading-tight text-slate-400 font-semibold uppercase tracking-wide text-center">Correções</div>
+              </div>
+              <div class="rc27-step-item flex-1 flex flex-col items-center gap-1.5 relative z-10" id="rc27-step-VALIDATION" data-phase="VALIDATION">
+                <div class="rc27-step-dot w-8 h-8 rounded-full grid place-items-center text-[11px] font-bold border-2 border-slate-600 bg-slate-800/80 text-slate-400 transition-all">✅</div>
+                <div class="rc27-step-label text-[9.5px] leading-tight text-slate-400 font-semibold uppercase tracking-wide text-center">Validação</div>
+              </div>
+              <div class="rc27-step-item flex-1 flex flex-col items-center gap-1.5 relative z-10" id="rc27-step-COMPLETED" data-phase="COMPLETED">
+                <div class="rc27-step-dot w-8 h-8 rounded-full grid place-items-center text-[11px] font-bold border-2 border-slate-600 bg-slate-800/80 text-slate-400 transition-all">🏁</div>
+                <div class="rc27-step-label text-[9.5px] leading-tight text-slate-400 font-semibold uppercase tracking-wide text-center">Concluído</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ===== FIM RC27 Stepper ===== -->
+
         <!-- ============ STREAM DE CONVERSA (Chat) — AGORA AQUI DENTRO DO PAINEL TiAi! ============ -->
         <!-- Todo o histórico do usuário e da IA aparece aqui (igual Trae): bolhas + tool cards accordion. -->
         <div id="messages" class="rounded-lg border border-white/5 bg-[#040816] overflow-hidden max-h-[500px] overflow-y-auto min-h-0 flex-1">
@@ -484,6 +632,11 @@
             <button type="button" id="trae-add-btn" class="shrink-0 w-8 h-8 grid place-items-center rounded-md hover:bg-white/5 text-slate-400 hover:text-white transition" title="Anexar / ferramentas">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
             </button>
+            <button type="button" id="voice-mic-btn" class="relative shrink-0 w-9 h-9 rounded-full grid place-items-center transition-all duration-300 active:scale-95 select-none st--idle" data-state="idle" aria-label="Abrir Voice Mode" title="Abrir Voice Mode · conversa contínua por voz">
+              <div class="voice-mic-ring"></div>
+              <svg id="voice-mic-svg" class="relative z-10" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+              <span id="voice-mic-dot" class="hidden absolute w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] animate-pulse z-20 top-1 right-1"></span>
+            </button>
             <textarea id="trae-message-input" rows="2" style="min-height:56px" class="flex-1 resize-none bg-transparent focus:outline-none px-2 py-1.5 text-[12px] placeholder:text-slate-500 text-white max-h-32 leading-snug" placeholder="Help you write code, debug, optimize performance and other development work, deliver production-ready code."></textarea>
             <div class="flex items-center gap-1 shrink-0 pb-0.5 pr-0.5">
               <select id="trae-auto-select" class="bg-[#070b1a] text-[10.5px] font-semibold text-slate-300 rounded px-2 py-1 border border-white/10 outline-none h-8">
@@ -496,10 +649,36 @@
               </button>
             </div>
           </div>
+          <div id="voice-status-bar" class="hidden mt-2 px-2 py-1.5 rounded-md border border-amber-500/20 bg-amber-500/10 text-[10.5px] flex items-center gap-2 transition">
+            <span id="voice-status-icon" class="text-amber-400 animate-pulse">🎙️</span>
+            <span id="voice-status-text" class="text-amber-200 font-medium truncate flex-1">Escutando… detecção automática do fim da fala.</span>
+            <span id="voice-status-timer" class="tabular-nums text-amber-300/80 font-semibold shrink-0">00:00</span>
+          </div>
         </form>
       </div>
     </aside>
 
+  </div>
+</div>
+
+<!-- ============ Voice Mode Overlay · Central Ball (ChatGPT voice style) ============ -->
+<div id="voice-mode-overlay" aria-hidden="true">
+  <button type="button" id="vm-close-btn" class="vm-close" aria-label="Fechar Voice Mode" title="Fechar Voice Mode">✕</button>
+  <div class="vm-inner">
+    <div class="vm-title">Voice Mode</div>
+    <div class="vm-ball-wrap" aria-hidden="true">
+      <span class="vm-wave"></span>
+      <span class="vm-wave"></span>
+      <span class="vm-wave"></span>
+      <div class="vm-ball" id="vm-ball">
+        <div class="vm-ball-ring"></div>
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+      </div>
+    </div>
+    <div class="vm-state" id="vm-state">Ouvindo…</div>
+    <div class="vm-hint" id="vm-hint">Fale com seu agente — detectamos o início e o fim automaticamente.</div>
+    <div class="vm-transcript" id="vm-transcript" aria-live="polite"></div>
+    <div class="vm-timer" id="vm-timer">00:00</div>
   </div>
 </div>
 
@@ -542,6 +721,66 @@
     <span class="mobile-tab-label mobile-tab-label-accent">TiAi</span>
   </button>
 </nav>
+
+<!-- ===== RC27 · Modal Autorização de Internet ===== -->
+<div id="rc27-internet-modal" class="rc27-modal-backdrop fixed inset-0 z-[9999] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-[2px]">
+  <div class="rc27-modal-card relative w-full max-w-md rounded-xl border border-amber-400/30 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 shadow-2xl shadow-amber-500/10 animate-rc27-modal-in">
+    <div class="flex items-center gap-2.5 px-4 py-3 border-b border-amber-400/20">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 grid place-items-center text-slate-950 text-lg">🌐</div>
+      <div class="flex-1">
+        <div class="text-[13px] font-bold text-amber-200 uppercase tracking-wide">Autorização de Acesso à Internet</div>
+        <div id="rc27-internet-scope" class="text-[10.5px] font-mono text-amber-300/80 mt-0.5">escopo: —</div>
+      </div>
+    </div>
+    <div class="px-4 py-3.5 space-y-3">
+      <div id="rc27-internet-reason" class="text-[12px] leading-relaxed text-white/90 whitespace-pre-wrap break-words"></div>
+      <details class="rounded-md border border-white/5 bg-white/[0.02] overflow-hidden">
+        <summary class="cursor-pointer px-3 py-2 text-[11px] font-semibold text-slate-300 uppercase tracking-wide hover:text-amber-200 transition-colors select-none">
+          Fontes e sites a serem consultados ▾
+        </summary>
+        <div id="rc27-internet-urls" class="px-3 py-2 text-[11px] text-slate-400 border-t border-white/5 space-y-1 max-h-[160px] overflow-y-auto font-mono leading-relaxed break-all">
+          —
+        </div>
+      </details>
+      <div class="rounded-md border border-slate-700 bg-slate-800/40 px-3 py-2 text-[10.5px] leading-relaxed text-slate-400">
+        <span class="text-amber-300 font-semibold">✓</span> Dados sensíveis (chaves, tokens, senhas, dados pessoais) <strong class="text-amber-300">NÃO</strong> são enviados para a internet.
+      </div>
+    </div>
+    <div class="flex items-center justify-end gap-2 px-4 py-3 border-t border-white/5 bg-black/20">
+      <button type="button" id="rc27-internet-no" class="px-4 py-1.5 rounded-md text-[12px] font-semibold text-slate-300 bg-slate-800/80 border border-slate-700 hover:bg-slate-700 hover:text-white transition-all">
+        Não, use só o que temos localmente
+      </button>
+      <button type="button" id="rc27-internet-yes" class="px-4 py-1.5 rounded-md text-[12px] font-bold text-slate-950 bg-gradient-to-br from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 shadow-md shadow-amber-500/20 transition-all">
+        Sim, pode pesquisar ✓
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ===== RC27 · Modal Intervenção Humana ===== -->
+<div id="rc27-human-modal" class="rc27-modal-backdrop fixed inset-0 z-[9999] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-[2px]">
+  <div class="rc27-modal-card relative w-full max-w-md rounded-xl border border-rose-400/30 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 shadow-2xl shadow-rose-500/10 animate-rc27-modal-in">
+    <div class="flex items-center gap-2.5 px-4 py-3 border-b border-rose-400/20">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-400 to-rose-600 grid place-items-center text-white text-lg">🛑</div>
+      <div class="flex-1">
+        <div class="text-[13px] font-bold text-rose-200 uppercase tracking-wide">Intervenção Humana Necessária</div>
+        <div class="text-[10.5px] text-rose-300/80 mt-0.5">O agente autônomo não conseguiu continuar sozinho.</div>
+      </div>
+    </div>
+    <div class="px-4 py-3.5 space-y-3">
+      <div id="rc27-human-reason" class="text-[12.5px] font-semibold leading-relaxed text-white break-words"></div>
+      <div id="rc27-human-details" class="rounded-md border border-white/5 bg-white/[0.02] px-3 py-2.5 text-[11px] leading-relaxed text-slate-400 whitespace-pre-wrap break-words max-h-[220px] overflow-y-auto font-mono"></div>
+    </div>
+    <div class="flex items-center justify-end gap-2 px-4 py-3 border-t border-white/5 bg-black/20">
+      <button type="button" id="rc27-human-ok" class="px-4 py-1.5 rounded-md text-[12px] font-bold text-slate-950 bg-gradient-to-br from-slate-300 to-slate-500 hover:from-white hover:to-slate-300 transition-all">
+        Entendido, vou verificar
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ===== FIM RC27 Modais ===== -->
+<script src="/__ti_config.js"></script>
+<script src="/voice_recorder.js" defer></script>
+<script src="/voice_conversation.js" defer></script>
 <script src="/app.js" type="module"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@ try { if (window.hljs) {
   for (const l of langs) {
     const key = l === 'html' ? 'Html' : l === 'javascript' ? 'Javascript' : l === 'typescript' ? 'Typescript' : l === 'python' ? 'Python' : l === 'json' ? 'Json' : l === 'bash' ? 'Bash' : l === 'css' ? 'Css' : l === 'xml' ? 'Xml' : l[0].toUpperCase()+l.slice(1);
     const mod = window['hljs'+key];
-    if (mod) try { hljs.registerLanguage(l, mod); } catch{}
+    if (mod) try { hljs.registerLanguage(l, mod); } catch(_){}
   }
 }} catch(_) {}
 
@@ -86,6 +86,30 @@ const els = {
   progressLabel: $('#progress-label'),
   planList: $('#plan-list'),
 
+  // ===== RC27 · Orquestrador Autônomo UI =====
+  rc27Stepper: $('#rc27-stepper'),
+  rc27StepperGoal: $('#rc27-stepper-goal'),
+  rc27StepAnalsis: $('#rc27-step-ANALYSIS'),
+  rc27StepPlanning: $('#rc27-step-PLANNING'),
+  rc27StepArch: $('#rc27-step-ARCHITECTURE'),
+  rc27StepImpl: $('#rc27-step-IMPLEMENTATION'),
+  rc27StepTests: $('#rc27-step-TESTING'),
+  rc27StepFix: $('#rc27-step-CORRECTION'),
+  rc27StepVal: $('#rc27-step-VALIDATION'),
+  rc27StepDone: $('#rc27-step-COMPLETED'),
+  rc27Summary: $('#rc27-stepper-summary'),
+  rc27InternetModal: $('#rc27-internet-modal'),
+  rc27InternetScope: $('#rc27-internet-scope'),
+  rc27InternetReason: $('#rc27-internet-reason'),
+  rc27InternetUrls: $('#rc27-internet-urls'),
+  rc27InternetBtnYes: $('#rc27-internet-yes'),
+  rc27InternetBtnNo: $('#rc27-internet-no'),
+  rc27HumanModal: $('#rc27-human-modal'),
+  rc27HumanReason: $('#rc27-human-reason'),
+  rc27HumanDetails: $('#rc27-human-details'),
+  rc27HumanBtnOk: $('#rc27-human-ok'),
+  rc27AuthCurrentScopeId: null,
+
   // Project Mode (TRAE style seletor de pasta)
   projectBtn: $('#project-btn'),
   projectName: $('#project-name'),
@@ -106,6 +130,25 @@ const els = {
   consoleClear: $('#console-clear'),
   terminalOut: $('#terminal-out'),
   terminalClear: $('#terminal-clear'),
+
+  // RC23 · IA Config (nova aba central)
+  iacBody: $('#iac-body'),
+  iacGrid: $('#iac-grid'),
+  iacNote: $('#iac-note'),
+  iacRefresh: $('#iac-refresh'),
+  iacTestAll: $('#iac-test-all'),
+  iacSaveAll: $('#iac-save-all'),
+
+  // ₿ BTC Market Intelligence (aba nova central)
+  btcPanel: document.getElementById('btc-panel'),
+  btcBody: document.getElementById('btc-body'),
+  btcDashboard: document.getElementById('btc-dashboard'),
+  btcSpinner: document.getElementById('btc-spinner'),
+  btcManualBtn: document.getElementById('btc-manual-btn'),
+  btcBacktestBtn: document.getElementById('btc-backtest-btn'),
+  btcHistoryBtn: document.getElementById('btc-history-btn'),
+  btcBacktestPanel: document.getElementById('btc-backtest-panel'),
+  btcHistoryPanel: document.getElementById('btc-history-panel'),
 
   // Preview service bar (acima das abas do editor central)
   previewServiceSelect: $('#preview-service-select'),
@@ -189,6 +232,11 @@ const state = {
   // Project Mode (seletor de pasta)
   project: 'default',
   projects: [],           // [{name, modifiedAt, createdAt}]
+
+  // ₿ BTC Market Intelligence
+  lastBtcReport: null,
+  btcBacktest: null,
+  btcHistory: null,
 };
 
 /* Load saved state */
@@ -868,6 +916,9 @@ async function loadMeta() {
 loadMeta();
 
 /* ========== WEB SOCKET ========== */
+let _kaTimer = null;
+let _backoff = 2000;
+
 function connectWS() {
   setStatus('pending', 'Conectando…', 'Abrindo conexão');
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -877,6 +928,21 @@ function connectWS() {
   ws.addEventListener('open', () => {
     setStatus('ok', 'Conectado', 'Pronto para começar');
     state.connected = true;
+    _backoff = 2000;
+
+    clearInterval(_kaTimer);
+
+    _kaTimer = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(JSON.stringify({
+            type: 'keepalive',
+            t: Date.now()
+          }));
+        } catch {}
+      }
+    }, 15000);
+
     // Ao abrir WS: cria sessao nova JÁ com projeto salvo (se nao usa default) — evita server resetar para default!
     const savedProject = state.project || DEFAULT_PROJECT_NAME;
     const existingSid = sessionForProject(savedProject);
@@ -891,7 +957,13 @@ function connectWS() {
   ws.addEventListener('close', () => {
     setStatus('error', 'Desconectado', 'Reconectando…');
     state.connected = false;
-    setTimeout(connectWS, 2000);
+
+    clearInterval(_kaTimer);
+
+    const delay = _backoff;
+    _backoff = Math.min(_backoff * 2, 20000);
+
+    setTimeout(connectWS, delay);
   });
 
   ws.addEventListener('error', () => {
@@ -930,6 +1002,8 @@ function handleWS(msg) {
       sendConfig();
       renderHistory();
       const projReady = state.project || DEFAULT_PROJECT_NAME;
+      // UNIFY_CONV: após session:ready dispara carregamento do chat persistido (mesmo projeto não-agent__)
+      Promise.resolve().then(() => restoreUIConversationFromDisk(projReady, false)).catch(()=>{});
       const hasPort0 = state.projects && state.projects.find(p => p.name === projReady && typeof p.port === 'number');
       Promise.resolve()
         .then(() => hasPort0 ? Promise.resolve() : fetch(`/api/projects/${encodeURIComponent(projReady)}/preview/start`, { method: 'POST' }).then(r => r.json()).then(d => {
@@ -962,6 +1036,8 @@ function handleWS(msg) {
       setProgress(0, 0);
       renderPlanList();
       els.progressTrack?.classList.add('hidden');
+      // RC27: sessão limpa → reset stepper e modais
+      try { if (typeof window.__rc27ResetStepper === 'function') window.__rc27ResetStepper(); } catch(_) {}
       setAgentState('idle');
       renderHistory();
       break;
@@ -1029,6 +1105,23 @@ function handleWS(msg) {
         sendConfig();
         debouncedRefreshTree();
         if (changed) {
+          // UNIFY_CONV: ao trocar projeto, limpa UI chat e carrega mensagens do disco do projeto novo
+          els.messagesList.innerHTML = '';
+          els.welcome.classList.remove('hidden');
+          state.currentAiMsgId = null;
+          state.currentAiMsgEl = null;
+          state.currentAiText = '';
+          state.currentToolCards.clear();
+          state.plan = [];
+          state.planDone = 0;
+          state.planTotal = 0;
+          setProgress(0, 0);
+          renderPlanList();
+          try { if (typeof window.__rc27ResetStepper === 'function') window.__rc27ResetStepper(); } catch(_) {}
+          setAgentState('idle');
+          renderHistory();
+          // carrega memória persistida do projeto novo em UI
+          Promise.resolve().then(() => restoreUIConversationFromDisk(msg.data.project, true)).catch(()=>{});
           const idx = findIndexHtml(state.currentTree);
           if (idx) {
             switchTab('preview');
@@ -1062,7 +1155,23 @@ function handleWS(msg) {
       setAgentState(msg.data.state || 'idle', { reason: msg.data.reason });
       if (msg.data.mode) { state.mode = msg.data.mode; applyModeUI(); }
       if (msg.data.model) { state.model = msg.data.model; applyModeUI(); }
-      if (msg.data.project) { state.project = msg.data.project; applyProjectUI(); }
+      if (msg.data.project) {
+        state.project = msg.data.project;
+        applyProjectUI();
+        // RC24: trocou projeto → recarrega barra de contexto (se for agente):
+        try {
+          if (/^agent__/.test(String(state.project||''))) {
+            Promise.all([
+              fetch('/api/agent/'+encodeURIComponent(state.project)).then(x=>x.json()).catch(()=>({})),
+              fetch('/api/agent/'+encodeURIComponent(state.project)+'/state').then(x=>x.json()).catch(()=>({}))
+            ]).then(([spec,st])=>{
+              window.__rc24UpdateBar && window.__rc24UpdateBar({ project: state.project, version: spec && spec.version, state: st && st.state && st.state.currentState, lastRc22Run: st && st.state && st.state.lastRc22Run });
+            }).catch(()=>{});
+          } else if (window.__rc24UpdateBar) {
+            window.__rc24UpdateBar({ project: state.project });
+          }
+        } catch {}
+      }
       break;
     case 'agent:plan':
       setPlanSteps(msg.data.steps || []);
@@ -1159,6 +1268,11 @@ function handleWS(msg) {
         updateTraeProgress();
       }
       finalizeCurrentAIMessage();
+      // RC22.4 Voice Conversation: informa o agente de voz que a resposta completa chegou + agent:done
+      try {
+        if (typeof window.__ti_voice_emitMessage === 'function') window.__ti_voice_emitMessage(state.currentAiText || '');
+        if (typeof window.__ti_voice_emitDone === 'function') window.__ti_voice_emitDone(state.currentAiText || '', reason);
+      } catch {}
       // Garante 100% painel TRAE sempre no concluded se finished
       if (els.traeProgressBar && reason === 'finished') {
         els.traeProgressBar.style.transition = 'width 280ms ease';
@@ -1181,6 +1295,159 @@ function handleWS(msg) {
     case 'file:tree:refresh':
       debouncedRefreshTree();
       break;
+    case 'agent:phase': {
+      const d = msg.data || {};
+      const phase = String(d.phase || '').toUpperCase();
+      const status = String(d.status || 'start');
+      const provLabel = d.provider ? `${d.provider}/${d.model || ''}` : '';
+      const phaseName = phase === 'ARCH' ? '🏛️ Arquiteta' : phase === 'QA' ? '🔍 Analista QA' : `⚙️ Fase ${phase}`;
+      const palette = phase === 'ARCH'
+        ? ['#2563eb', '#1d4ed8', '🏛️', 'bg-sky-600/15 border-sky-500/30 text-sky-200']
+        : phase === 'QA'
+          ? ['#10b981', '#047857', '🔍', 'bg-emerald-600/15 border-emerald-500/30 text-emerald-200']
+          : ['#f59e0b', '#b45309', '⚙️', 'bg-amber-600/15 border-amber-500/30 text-amber-200'];
+      const statusTxt =
+        status === 'start' ? `Iniciando ${phaseName}${provLabel ? ' · ' + provLabel : ''}…`
+        : status === 'done'  ? `✅ ${phaseName} concluído${provLabel ? ' · ' + provLabel : ''}${d.tokensIn||d.tokensOut ? ` · ${(d.tokensIn||0)+(d.tokensOut||0)} tok` : ''}${d.counts ? ` · Críticos:${d.counts.critico||0} Avisos:${d.counts.aviso||0} OK:${d.counts.ok||0}` : ''}`
+        : status === 'fallback' ? `⚠️ ${phaseName} fallback local ${d.text ? ' · ' + d.text : ''}`
+        : `${phaseName} · status=${status}`;
+      const msgId = 'phase_' + phase + '_' + status + '_' + Date.now();
+      // Mensagem visual compacta no chat (sem quebrar estrutura)
+      addAIMessage({
+        id: msgId,
+        text: `${palette[2]} **${phaseName}** · ${statusTxt}${d.text ? '\n> _' + d.text + '_' : ''}`,
+        _phase: true, _phaseBadge: palette[3],
+      }, false);
+      // Toast (desktop) ou feedback visual
+      try { toast(`${palette[2]} ${statusTxt}`, status === 'fallback' ? 'warn' : 'ok'); } catch {}
+      // Atualiza step info bar superior (opcional, não destrói)
+      if (els.stepInfo) {
+        els.stepInfo.classList.remove('hidden');
+        els.stepInfo.textContent = `${palette[2]} ${phaseName} · ${status === 'start' ? 'processando…' : (status === 'done' ? 'concluído ✓' : 'fallback ⚠️')}${provLabel ? ' · ' + provLabel : ''}`;
+      }
+      scrollBottom();
+      break;
+    }
+    case 'agent:qa_report': {
+      const d = msg.data || {};
+      const issues = Array.isArray(d.issues) ? d.issues.slice(0, 30) : [];
+      const score = typeof d.overallScore === 'number' ? d.overallScore : null;
+      const counts = d.counts || { critico: 0, aviso: 0, ok: 0 };
+      const scoreColor = score === null ? 'bg-slate-500'
+        : score >= 85 ? 'bg-emerald-500'
+        : score >= 65 ? 'bg-amber-500'
+        : 'bg-rose-500';
+      const reportId = 'qa_' + Date.now();
+      // Header do relatório
+      let html = `
+<div class="my-2 rounded-2xl border border-slate-700/60 bg-slate-900/60 backdrop-blur-sm shadow-md overflow-hidden" data-qa-report="${reportId}">
+  <div class="flex items-center gap-3 px-4 py-3 bg-slate-800/40 border-b border-slate-700/60 cursor-pointer select-none" data-qa-toggle="${reportId}">
+    <div class="w-11 h-11 rounded-xl grid place-items-center bg-gradient-to-br from-emerald-600/40 to-sky-600/40 border border-emerald-500/30 text-xl">🔍</div>
+    <div class="flex-1 min-w-0">
+      <div class="text-[13px] font-bold text-white truncate">Relatório QA · ${escapeHtml(String(d.project || state.project || ''))}${d.provider ? `<span class="ml-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-700/80 text-slate-200 uppercase tracking-wide">${escapeHtml(d.provider)}${d.model ? ' / '+escapeHtml(d.model):''}</span>` : ''}</div>
+      <div class="mt-0.5 text-[11.5px] text-slate-300/80 line-clamp-1">${escapeHtml(String(d.summary || 'Revisão aplicada').slice(0, 180))}</div>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="flex flex-col items-end">
+        <div class="flex items-center gap-1.5">
+          <span class="text-[9.5px] font-bold uppercase tracking-wide text-rose-300 bg-rose-500/15 border border-rose-500/30 px-1.5 py-0.5 rounded">🔴 ${counts.critico||0}</span>
+          <span class="text-[9.5px] font-bold uppercase tracking-wide text-amber-300 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded">🟡 ${counts.aviso||0}</span>
+          <span class="text-[9.5px] font-bold uppercase tracking-wide text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.5 rounded">🟢 ${counts.ok||0}</span>
+        </div>
+      </div>
+      ${score !== null ? `
+      <div class="flex flex-col items-end">
+        <div class="w-14 h-14 rounded-full grid place-items-center border-4 border-slate-700/80 ${scoreColor} shadow-inner">
+          <span class="text-[15px] font-extrabold text-white drop-shadow">${Math.round(score)}</span>
+        </div>
+        <span class="mt-1 text-[9px] text-slate-400 font-semibold tracking-wide">SCORE /100</span>
+      </div>` : ''}
+      <svg data-qa-chevron="${reportId}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-slate-300 transition-transform">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </div>
+  </div>
+  <div class="qa-body hidden px-4 py-3 space-y-2 bg-slate-950/40" data-qa-body="${reportId}">
+`;
+      // Issues
+      for (let i = 0; i < issues.length; i++) {
+        const it = issues[i];
+        const sev = it.severity === 'critico' ? 'critico' : it.severity === 'ok' ? 'ok' : 'aviso';
+        const [sevLabel, sevIcon, sevCls] = sev === 'critico'
+          ? ['CRÍTICO', '🔴', 'border-rose-500/40 bg-rose-600/10 text-rose-100']
+          : sev === 'ok'
+            ? ['APROVADO', '🟢', 'border-emerald-500/40 bg-emerald-600/10 text-emerald-100']
+            : ['AVISO', '🟡', 'border-amber-500/40 bg-amber-600/10 text-amber-100'];
+        const catLabel = ({
+          responsividade: '📱 Responsividade',
+          javascript: '⚡ JavaScript',
+          html_semantico: '🏷️ HTML',
+          acessibilidade: '♿ A11y',
+          seo: '🔎 SEO',
+          paleta_tipografia: '🎨 Design',
+          assets: '🖼️ Assets',
+          performance: '🚀 Perf.',
+          arquitetura_arquivos: '📂 Arq.',
+          outro: '🧩 Outro',
+        })[it.category] || String(it.category || 'outro').slice(0, 18);
+        html += `
+    <div class="rounded-xl border ${sevCls} overflow-hidden" data-qa-severity="${sev}">
+      <div class="flex items-center gap-2 px-3 py-2.5 border-b border-inherit/60 bg-inherit/40 cursor-pointer select-none" data-qa-issue-toggle="${reportId}_${i}">
+        <span class="text-[10px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded border border-inherit bg-inherit/50">${sevIcon} ${sevLabel}</span>
+        <span class="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-slate-900/60 text-slate-200 border border-slate-700/60">${escapeHtml(catLabel)}</span>
+        <span class="text-[11.5px] font-mono text-slate-200/90 truncate ml-1.5">📄 ${escapeHtml(String(it.file || 'N/A').slice(0, 60))}${typeof it.line === 'number' ? `:${it.line}` : ''}</span>
+        <svg data-qa-issue-chevron="${reportId}_${i}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-auto text-slate-300 shrink-0 transition-transform"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="px-3.5 py-2.5 space-y-1.5 text-[12.5px] leading-relaxed hidden" data-qa-issue-body="${reportId}_${i}">
+        <div class="font-bold text-[13px] text-white">${escapeHtml(String(it.title || 'Problema detectado').slice(0, 200))}</div>
+        <div class="text-slate-200/90 whitespace-pre-wrap">${escapeHtml(String(it.description || '').slice(0, 800))}</div>
+        ${it.suggestedFix && String(it.suggestedFix).trim() ? `<div class="mt-1.5 p-2.5 rounded-lg bg-slate-900/70 border border-slate-700/60"><div class="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-0.5">💡 Sugestão de correção</div><div class="text-slate-100 whitespace-pre-wrap">${escapeHtml(String(it.suggestedFix).slice(0, 1000))}</div></div>` : ''}
+        ${it.refArquiteto && String(it.refArquiteto).trim() !== 'N/A' ? `<div class="text-[10.5px] text-slate-400/90">Ref. Arquiteta: <span class="font-mono">${escapeHtml(String(it.refArquiteto).slice(0, 120))}</span></div>` : ''}
+      </div>
+    </div>`;
+      }
+      if (issues.length === 0) html += `<div class="text-center py-5 text-slate-400 text-xs">Nenhum item de QA reportado.</div>`;
+      if (d.fallback) html += `<div class="mt-2 rounded-lg border border-amber-500/30 bg-amber-600/10 px-3 py-2 text-[11.5px] text-amber-100">⚠️ QA usou modo fallback local (provedor de IA externo indisponível ou timeout).</div>`;
+      html += `
+  </div>
+</div>`;
+      // Injetar como card no final do chat
+      const wrap = document.createElement('div');
+      wrap.className = 'px-2 my-1';
+      wrap.innerHTML = html;
+      els.messagesList.appendChild(wrap);
+      // Toggle principal QA accordion
+      const head = wrap.querySelector(`[data-qa-toggle="${reportId}"]`);
+      const body = wrap.querySelector(`[data-qa-body="${reportId}"]`);
+      const chev = wrap.querySelector(`[data-qa-chevron="${reportId}"]`);
+      if (head && body) {
+        // Começa FECHADO se score >=70, ABERTO se score baixo ou tem crítico
+        const defaultOpen = (score === null || score < 70 || (counts.critico||0) > 0);
+        if (defaultOpen) { body.classList.remove('hidden'); if (chev) chev.style.transform = 'rotate(180deg)'; }
+        head.addEventListener('click', () => {
+          const isOpen = !body.classList.contains('hidden');
+          body.classList.toggle('hidden', isOpen);
+          if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+        });
+      }
+      // Toggle issues individuais
+      wrap.querySelectorAll('[data-qa-issue-toggle]').forEach(t => {
+        const id = t.getAttribute('data-qa-issue-toggle');
+        const issueBody = wrap.querySelector(`[data-qa-issue-body="${id}"]`);
+        const issueChev = wrap.querySelector(`[data-qa-issue-chevron="${id}"]`);
+        if (!t || !issueBody) return;
+        t.addEventListener('click', () => {
+          const op = !issueBody.classList.contains('hidden');
+          issueBody.classList.toggle('hidden', op);
+          if (issueChev) issueChev.style.transform = op ? '' : 'rotate(180deg)';
+        });
+      });
+      scrollBottom();
+      // Salva no estado para história (opcional)
+      try { (state.qaReports = state.qaReports || []).push({ id: reportId, data: d, at: Date.now() }); saveState?.(); } catch {}
+      try { toast(`🔍 QA · Score ${score ?? '?'} · ${counts.critico||0} críticos · ${counts.aviso||0} avisos`, (counts.critico||0) > 0 ? 'warn' : 'ok'); } catch {}
+      break;
+    }
     case 'error':
       addAIMessage({ id: 'err_' + Date.now(), text: '❌ ' + (msg.data.message || 'Erro') }, false);
       stopThinking();
@@ -1193,6 +1460,168 @@ function handleWS(msg) {
       finalizeCurrentAIMessage();
       toast(msg.data.message || 'Erro', 'err');
       break;
+    /* ===== RC24 AGENT ORCHESTRATOR CASES ===== */
+    case 'agent:state:changed': {
+      const d = msg.data || {};
+      try {
+        if (window.__rc24UpdateBar) window.__rc24UpdateBar({ state: d.currentState, project: d.projectSlug, history: d.history, lastRc22Run: d.lastRc22Run });
+        toast(`🧭 Estado do agente: ${d.currentState}${d.reason ? ' · ' + d.reason : ''}`, 'ok');
+      } catch {}
+      addAIMessage({ id: 'agent_state_' + Date.now(), text: `🧭 **Estado agente RC24** alterado para **${d.currentState}**${d.reason ? ` · _${escapeHtml(String(d.reason).slice(0,120))}_` : ''}` }, false);
+      scrollBottom();
+      break;
+    }
+    case 'agent:spec:updated': {
+      const d = msg.data || {};
+      addAIMessage({ id: 'agent_spec_' + Date.now(), text: `📄 **Especificação RC24** atualizada · versão **v${d.previousVersion || '?'} → v${d.newVersion || '?'}**` }, false);
+      try { if (window.__rc24UpdateBar) window.__rc24UpdateBar({ version: d.newVersion, project: d.projectSlug }); } catch {}
+      scrollBottom();
+      break;
+    }
+    /* ===== RC24.5 QA AUTOFIX CASES ===== */
+    case 'qa:autofix:start': {
+      const d = msg.data || {};
+      toast(`🔍 QA Autofix: iniciando (máx ${d.maxIter || 3} iterações · backup seguro)`, 'ok');
+      startThinking();
+      state.busy = true; els.sendBtn.disabled = true;
+      break;
+    }
+    case 'qa:autofix:iter': {
+      const d = msg.data || {};
+      let info = d.info || `Iteração ${d.iter||'?'}/${d.maxIter||'?'}`;
+      let extra = '';
+      if (typeof d.scoreAntes === 'number' && typeof d.scoreDepois === 'number') extra = ` · Score ${d.scoreAntes}→${d.scoreDepois}`;
+      if (typeof d.criticosDepois === 'number') extra += ` · Críticos=${d.criticosDepois}`;
+      toast(`🛠️ QA Autofix · ${info}${extra}`, 'ok');
+      break;
+    }
+    case 'qa:autofix:end': {
+      const d = msg.data || {};
+      stopThinking(); state.busy = false; els.sendBtn.disabled = false;
+      finalizeCurrentAIMessage(); setAgentState('idle',{reason:'qa_autofix_end'});
+      if (d && d.resumo) addAIMessage({ id: 'qa_auto_end_' + Date.now(), text: d.resumo }, false);
+      toast(d && d.ok ? '✅ QA Autofix concluído' : '⚠️ QA Autofix finalizado (ver detalhes)', d && d.ok ? 'ok' : 'warn');
+      scrollBottom();
+      break;
+    }
+    /* ===== END RC24.5 ===== */
+    /* ===== RC27 · ORQUESTRADOR AUTÔNOMO CASES ===== */
+    case 'orch:phase': {
+      const d = msg.data || {};
+      if (typeof window.__rc27SetPhase === 'function') {
+        try { window.__rc27SetPhase(d); } catch(_) {}
+      }
+      try {
+        if (d.goalText && els.rc27StepperGoal && (els.rc27StepperGoal.dataset.filledBy !== '1' || !els.rc27StepperGoal.dataset.filledBy)) {
+          els.rc27StepperGoal.textContent = String(d.goalText);
+          els.rc27StepperGoal.dataset.filledBy = '1';
+        }
+        if (d.goalText && d.forceGoalReplace === true) {
+          els.rc27StepperGoal.textContent = String(d.goalText);
+          els.rc27StepperGoal.dataset.filledBy = '2';
+        }
+        if (els.rc27Stepper && els.rc27Stepper.classList.contains('hidden')) els.rc27Stepper.classList.remove('hidden');
+        // Atualiza step atual + status
+        const curPhase = (d.phase || 'ANALYSIS');
+        const status = d.status || 'active';
+        const label = d.label || null;
+        const summary = d.summary || null;
+        if (typeof window.__rc27UpdateStepper === 'function') {
+          try { window.__rc27UpdateStepper({ currentPhase: curPhase, status, label, summary, scopeId: d.scopeId }); } catch(_) {}
+        }
+        if (status === 'active') {
+          const phaseName = typeof window.__rc27PhaseLabel === 'function' ? (window.__rc27PhaseLabel(curPhase) || curPhase) : curPhase;
+          toast(`🧭 RC27 · ${phaseName} · ${label || 'Em execução…'}`, 'ok');
+        }
+      } catch(e) { console.debug('[RC27 UI] orch:phase error', e); }
+      break;
+    }
+    case 'orch:plan': {
+      const d = msg.data || {};
+      try {
+        if (els.rc27Stepper && els.rc27Stepper.classList.contains('hidden')) els.rc27Stepper.classList.remove('hidden');
+        if (d.goalText && els.rc27StepperGoal) els.rc27StepperGoal.textContent = String(d.goalText);
+        if (typeof window.__rc27UpdateStepper === 'function') {
+          try { window.__rc27UpdateStepper({ plan: d, summary: `Plano: ${d.numTasks || 0} tarefas · ${d.numPhases || 8} fases` }); } catch(_) {}
+        }
+        if (d.numTasks) {
+          toast(`📋 RC27 · Plano definido: ${d.numTasks} tarefa(s) · Topológica ${d.hasCycle === true ? '⚠️ com ciclos mantidos' : '✓ sem ciclos'}`, 'ok');
+        }
+      } catch(e) { console.debug('[RC27 UI] orch:plan error', e); }
+      break;
+    }
+    case 'orch:internet_authorization_requested': {
+      const d = msg.data || {};
+      try {
+        if (!d.scopeId) { console.warn('[RC27] internet_auth sem scopeId', d); break; }
+        els.rc27AuthCurrentScopeId = String(d.scopeId);
+        if (els.rc27InternetScope) els.rc27InternetScope.textContent = `escopo: ${d.scopeId.slice(0,14)}…`;
+        if (els.rc27InternetReason) els.rc27InternetReason.textContent = String(d.reason || 'O orquestrador precisa consultar fontes externas para tomar decisões técnicas e continuar.');
+        if (els.rc27InternetUrls) {
+          const urls = Array.isArray(d.urls) && d.urls.length ? d.urls : [];
+          const docs = Array.isArray(d.documents) && d.documents.length ? d.documents : [];
+          const all = [...urls, ...docs].slice(0, 20);
+          if (!all.length) {
+            els.rc27InternetUrls.textContent = 'Serão definidas durante a pesquisa.';
+          } else {
+            els.rc27InternetUrls.innerHTML = all.map(u => {
+              try { const uu = new URL(u); const host = uu.hostname; return `<div class="truncate">↳ <span class="text-amber-300">${host}</span>${uu.pathname.length>1 ? uu.pathname : ''}</div>`; }
+              catch(_) { return `<div class="truncate">↳ ${String(u).slice(0,160)}</div>`; }
+            }).join('\n');
+          }
+        }
+        if (els.rc27InternetModal) {
+          els.rc27InternetModal.classList.remove('hidden');
+          els.rc27InternetModal.classList.add('flex');
+        }
+        if (typeof window.__rc27UpdateStepper === 'function') {
+          try { window.__rc27UpdateStepper({ summary: '⏸ Aguardando autorização internet…', phase: d.phase || 'PLANNING', overrideCurrentStatus: 'awaiting_input' }); } catch(_) {}
+        }
+        toast('🌐 Orquestrador pediu acesso à internet', 'warn');
+      } catch(e) { console.debug('[RC27 UI] internet_auth error', e); }
+      break;
+    }
+    case 'orch:human_intervention_needed': {
+      const d = msg.data || {};
+      try {
+        if (els.rc27HumanReason) els.rc27HumanReason.textContent = String(d.reason || 'Intervenção necessária.');
+        if (els.rc27HumanDetails) {
+          const detailLines = [];
+          if (d.details) detailLines.push(String(d.details));
+          if (d.lastError) detailLines.push('Último erro: ' + String(d.lastError).slice(0,500));
+          if (d.blockedBecause) detailLines.push('Motivo do bloqueio: ' + String(d.blockedBecause));
+          els.rc27HumanDetails.textContent = detailLines.join('\n\n') || 'Sem detalhes adicionais.';
+        }
+        if (els.rc27HumanModal) {
+          els.rc27HumanModal.classList.remove('hidden');
+          els.rc27HumanModal.classList.add('flex');
+        }
+        if (typeof window.__rc27UpdateStepper === 'function') {
+          try { window.__rc27UpdateStepper({ summary: '⛔ Bloqueado · necessita ação humana', phase: d.phase || 'CORRECTION', overrideCurrentStatus: 'blocked' }); } catch(_) {}
+        }
+        toast('🛑 Intervenção humana necessária (RC27)', 'err');
+      } catch(e) { console.debug('[RC27 UI] human error', e); }
+      break;
+    }
+    /* ===== END RC27 ===== */
+    /* ===== END RC24 ===== */
+    /* ===== ₿ BTC MARKET INTELLIGENCE ===== */
+    case 'btc:update': {
+      try {
+        state.lastBtcReport = (msg.data && typeof msg.data === 'object') ? msg.data : null;
+        if (els.editorPanels && els.editorPanels.dataset.active === 'btc') renderBtcDashboard();
+        toast('₿ BTC · análise atualizada (score ' + (state.lastBtcReport?.score?.toFixed?.(0) ?? '?') + '/100 · cenário ' + (state.lastBtcReport?.scenario ?? '?') + ')', 'ok');
+      } catch (e) { console.debug('[BTC UI] update error', e); }
+      break;
+    }
+    case 'btc:alert': {
+      try {
+        const data = msg.data || {};
+        toast('🚨 ₿ BTC Alerta · ' + String(data.message || '').slice(0, 160), 'warn');
+      } catch {}
+      break;
+    }
+    /* ===== END BTC ===== */
   }
 }
 
@@ -1387,9 +1816,10 @@ function switchEditorPanel(name) {
     els.app?.classList.add('right-open');
     try { els.agentInput?.focus(); } catch {}
   }
-  const allowed = ['code','preview','console','terminal'];
+  const allowed = ['code','preview','console','terminal','ia-config','btc'];
   if (allowed.includes(activeKey) || n.startsWith('code:')) {
     if (els.editorPanels) els.editorPanels.dataset.active = activeKey;
+    if (activeKey === 'btc') _btcLoadStatusIfMissing();
   }
   // Sync aba visual ativa
   $$('.editor-tab', els.editorTabs || document).forEach(t => {
@@ -1400,6 +1830,8 @@ function switchEditorPanel(name) {
     else if (n === 'preview')  isActive = tt === 'preview';
     else if (n === 'console')  isActive = tt === 'console';
     else if (n === 'terminal') isActive = tt === 'terminal';
+    else if (n === 'ia-config') isActive = tt === 'ia-config';
+    else if (n === 'btc') isActive = tt === 'btc';
     else                       isActive = tt === activeKey;
     t.classList.toggle('active', !!isActive);
   });
@@ -1666,6 +2098,41 @@ function ensureWelcomeHidden() {
 }
 function hideWelcome() { els.welcome.classList.add('hidden'); }
 
+/* UNIFY_CONV: carrega mensagens do conversation_memory.jsonl do backend e
+   preenche UI via addUserMessage / addAIMessage. Só executa se a lista de
+   mensagens estiver vazia (evita duplicar após refresh parcial da UI). */
+async function restoreUIConversationFromDisk(projectSlug, force=false) {
+  if (!projectSlug) return;
+  if (!force && els.messagesList && els.messagesList.children.length > 0) return;
+  try {
+    const url = '/api/agent/'+encodeURIComponent(projectSlug)+'/conversation/resume?n=200';
+    const r = await fetch(url, { method: 'POST' });
+    const d = await r.json().catch(()=>({}));
+    if (!d || !d.ok || !Array.isArray(d.lines) || d.lines.length === 0) return;
+    // SÓ restaurar se UI realmente estiver vazia ou force=true
+    if (!force && els.messagesList && els.messagesList.children.length > 0) return;
+    let order = 0;
+    for (const l of d.lines) {
+      if (!l || typeof l !== 'object') continue;
+      const role = String(l.role || '').toLowerCase();
+      const text = typeof l.text === 'string' ? l.text : '';
+      if (!text.trim()) continue;
+      order++;
+      const ts = typeof l.ts === 'number' ? l.ts : (Date.now() - (d.lines.length - order));
+      if (role === 'user') {
+        addUserMessage({ id: 'ru_' + ts + '_' + order, text, _restored: true });
+      } else if (role === 'assistant' || role === 'model' || role === 'ai') {
+        addAIMessage({ id: 'ra_' + ts + '_' + order, text, _restored: true }, false);
+      }
+    }
+    finalizeCurrentAIMessage();
+    scrollBottom();
+    if (typeof console !== 'undefined') console.log('[UNIFY_CONV] UI restauradas', order, 'mensagens do projeto', projectSlug);
+  } catch (e) {
+    if (typeof console !== 'undefined') console.warn('[UNIFY_CONV] restore UI falhou (ignorado):', e);
+  }
+}
+
 function startThinking() {
   els.typing.classList.remove('hidden');
   scrollBottom();
@@ -1717,6 +2184,8 @@ function addUserMessage(data) {
   const wrap = document.createElement('div');
   wrap.className = 'msg-user flex gap-3 justify-end animate-slide-up';
   wrap.dataset.id = data.id;
+  // UNIFY_CONV: mensagem restaurada do disco → classe leve para diferenciar visualmente
+  if (data._restored) wrap.style.opacity = '0.92';
 
   const bubbleCol = document.createElement('div');
   bubbleCol.className = 'max-w-[85%] md:max-w-[80%]';
@@ -1777,8 +2246,12 @@ function addAIMessage(data, replace = false) {
   finalizeCurrentAIMessage();
   state.currentAiMsgId = data.id;
   state.currentAiText = data.text || '';
+  // UNIFY_CONV: flag restored = mensagem recuperada do conversation_memory (não atual streaming)
+  const isRestored = !!data._restored;
 
   const wrap = ensureAIMessageWrap(data.id);
+  wrap.dataset.restored = isRestored ? '1' : '0';
+  if (isRestored) wrap.style.opacity = '0.92';
   const col = wrap.querySelector('[data-role="col"]');
 
   if (data.text && data.text.trim()) {
@@ -1809,6 +2282,9 @@ function updateAIMessageDelta(data) {
 
   state.currentAiMsgId = id;
   state.currentAiText = text;
+
+  // RC22.4 Voice Conversation: envia delta incremental para o agente de voz capturar parcial
+  try { if (typeof window.__ti_voice_emitDelta === 'function') window.__ti_voice_emitDelta(text, !!done, usage); } catch {}
 
   let bubble = state.currentAiMsgEl;
   if (!bubble || bubble.closest('#messages-list') == null) {
@@ -2250,6 +2726,201 @@ async function doSubmit(opts = {}) {
   els.stepInfo.classList.remove('hidden');
   els.stepInfo.textContent = 'Enviando…';
   startThinking();
+
+  // ============================================================================
+  // RC24 SLASH COMMANDS (client-side local, chama REST endpoints de agente)
+  //   /build, /audit, /estado <rascunho|construindo|testando|pronto>, /empresa
+  //   /memoria limpar, /resumo, /tools, /versao
+  // Regra: se o projeto NÃO começar com agent__ → avisa e envia como chat normal.
+  // ============================================================================
+  const projSlash = state.project || DEFAULT_PROJECT_NAME;
+  const isAgentProj = /^agent__/.test(String(projSlash || ''));
+  if (text && text.startsWith('/') && text.length > 1) {
+    const slashParts = text.trim().split(/\s+/);
+    const cmd = (slashParts[0] || '').toLowerCase();
+    const args = slashParts.slice(1).join(' ').trim();
+    const slashHandled = await (async () => {
+      if (!isAgentProj && !['/ajuda','/help','/?'].includes(cmd)) {
+        toast('ℹ️ Slash commands RC24 só funcionam em projetos "agent__…" (crie agente via POST /api/agent/create). Enviando como mensagem normal…', 'warn');
+        return false;
+      }
+      try {
+        if (cmd === '/build') {
+          toast('🧭 /build: acionando build via RC22…', 'ok');
+          addUserMessage({ id: 'u_' + Date.now(), text: text });
+          const r = await fetch('/api/agent/' + encodeURIComponent(projSlash) + '/build', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ reason: 'slash build ' + (args||'') }) });
+          const d = await r.json().catch(()=>({ok:false}));
+          addAIMessage({ id: 'slash_build_' + Date.now(), text: r.ok && d.ok ? `🧭 **Build** agendado via RC22.\n· Estado atual: **${d.currentState}**\n· Arquivos planejados: **${(d.forcedPlan?.files||[]).length}**\n· Seções: **${(d.forcedPlan?.sections||[]).length}**\n\n_Para executar o build RC22 real: envie uma mensagem qualquer no chat (ex: "próximo passo") — a pipeline 3-IA vai rodar com plano forçado do agent.json._` : `❌ Falhou: ${JSON.stringify(d)}` }, false);
+          stopThinking(); state.busy=false; els.sendBtn.disabled=false;
+          finalizeCurrentAIMessage(); setAgentState('idle',{reason:'slash_command_handled'}); sendWS({type:'agent:done',reason:'slash_handled'});
+          scrollBottom();
+          return true;
+        }
+        if (cmd === '/audit' || cmd === '/auditar') {
+          toast('🧭 /audit: chamando Security :3400 + whitelist SEC-HC-*…', 'ok');
+          addUserMessage({ id: 'u_' + Date.now(), text: text });
+          const r = await fetch('/api/agent/' + encodeURIComponent(projSlash) + '/audit', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({}) });
+          const d = await r.json().catch(()=>({ok:false}));
+          const sec = d.security || {};
+          const ap = d.applyResult || { ok:false, toApply:[], toManual:[] };
+          addAIMessage({ id: 'slash_audit_' + Date.now(), text: r.ok && d.ok
+            ? `🧭 **Auditoria Security** concluída.\n` +
+              `· Status: **${sec.ok ? 'conectou OK' : (sec.error || 'erro').slice(0,140)}**\n` +
+              `· Findings: **${(sec.findings||[]).length || 0}** · Críticos=${sec.counts?.critico ?? 0} Altos=${sec.counts?.alto ?? 0} Médios=${sec.counts?.medio ?? 0}\n` +
+              `· Whitelist apply: **${ap.toApply?.length||0} SEC-HC-* aplicáveis** · **${ap.toManual?.length||0} exigem aprovação manual**\n` +
+              `· Backup pré-audit: ${d.backup ? '✅ gravado' : '—'}${ap.whitelistRule ? '\n> _' + ap.whitelistRule + '_' : ''}`
+            : `❌ Falhou: ${JSON.stringify(d)}` }, false);
+          stopThinking(); state.busy=false; els.sendBtn.disabled=false;
+          finalizeCurrentAIMessage(); setAgentState('idle',{reason:'slash_command_handled'});
+          scrollBottom();
+          return true;
+        }
+        if (cmd === '/estado' || cmd === '/state') {
+          const target = (args || '').toLowerCase().trim();
+          if (!target) {
+            addUserMessage({ id:'u_'+Date.now(), text });
+            const s = await fetch('/api/agent/'+encodeURIComponent(projSlash)+'/state').then(x=>x.json()).catch(()=>({}));
+            addAIMessage({ id:'slash_estado_get_'+Date.now(), text:`🧭 **Estado atual RC24**: **${s.state?.currentState || 'n/a'}**\n\n_Histórico (ultimas 8):_\n` + ((s.state?.stateHistory||[]).slice(-8).map(t=>`· ${new Date(t.ts).toLocaleString('pt-BR')} · ${t.from||'—'} → **${t.to||'—'}${t.reason?' · '+String(t.reason).slice(0,80):''}${t.by?' · by='+t.by:''}`).join('\n') || '_n/d_') }, false);
+            stopThinking(); state.busy=false; els.sendBtn.disabled=false; finalizeCurrentAIMessage(); setAgentState('idle',{reason:'slash'}); scrollBottom();
+            return true;
+          }
+          if (!['rascunho','construindo','testando','pronto'].includes(target)) {
+            addAIMessage({id:'slash_err_'+Date.now(),text:'❌ /estado: valores válidos: `rascunho`, `construindo`, `testando`, `pronto`.'},false);
+            stopThinking(); state.busy=false; els.sendBtn.disabled=false; finalizeCurrentAIMessage(); setAgentState('stopped',{reason:'slash_erro'}); scrollBottom();
+            return true;
+          }
+          addUserMessage({id:'u_'+Date.now(),text});
+          const r = await fetch('/api/agent/'+encodeURIComponent(projSlash)+'/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({estado:target,flags:'--i-know-risk'})});
+          const d = await r.json().catch(()=>({}));
+          addAIMessage({id:'slash_estado_'+Date.now(),text: r.ok && d.ok ? `🧭 Estado alterado para **${d.newState||target}**` : `❌ ${r.status} — ${d.error || JSON.stringify(d)}` }, false);
+          stopThinking(); state.busy=false; els.sendBtn.disabled=false; finalizeCurrentAIMessage(); setAgentState('idle',{reason:'slash_estado'}); scrollBottom();
+          return true;
+        }
+        if (cmd === '/empresa' || cmd === '/agente' || cmd === '/ag') {
+          addUserMessage({id:'u_'+Date.now(),text});
+          const [spec,state,vers,caps] = await Promise.all([
+            fetch('/api/agent/'+encodeURIComponent(projSlash)).then(x=>x.json()).catch(()=>({})),
+            fetch('/api/agent/'+encodeURIComponent(projSlash)+'/state').then(x=>x.json().catch(()=>({}))),
+            fetch('/api/agent/'+encodeURIComponent(projSlash)+'/versions').then(x=>x.json().catch(()=>({}))),
+            fetch('/api/agent/'+encodeURIComponent(projSlash)+'/capabilities').then(x=>x.json().catch(()=>({}))),
+          ]);
+          const em = (n)=> (spec.company && spec.company[n]) ? `· ${n==='name'?'Empresa':'Segmento'}: ${spec.company[n]}\n` : '';
+          addAIMessage({id:'slash_ag_'+Date.now(),text:
+            `🏢 **Agente RC24** · Projeto: \`${projSlash}\`\n`+
+            em('name') +
+            (spec.company?.segmento?`· Segmento: ${spec.company.segmento}\n`:'') +
+            `· Nome agente: ${spec.metadata?.agentName||'n/a'} · Versão spec: v${spec.version||'?'}\n` +
+            `· Estado atual: **${state.state?.currentState || 'n/d'}**\n` +
+            `· Versões disponíveis: ${(vers.versions||[]).join(', ') || 'n/d'}\n` +
+            `· Capacidades (${Object.keys(caps.capabilitiesAgent||{}).length}): ` +
+            Object.values(caps.capabilitiesAgent||{}).map(c=>`${c.type}(${c.status})`).join(' · ') || 'n/d'
+          },false);
+          stopThinking(); state.busy=false; els.sendBtn.disabled=false; finalizeCurrentAIMessage(); setAgentState('idle',{reason:'slash_agente'}); scrollBottom();
+          return true;
+        }
+        if (cmd === '/memoria') {
+          const arg = (args||'').toLowerCase();
+          addUserMessage({id:'u_'+Date.now(),text});
+          if (arg === 'limpar' || arg === 'clear') {
+            const r = await fetch('/api/agent/'+encodeURIComponent(projSlash)+'/conversation/clear',{method:'POST'});
+            const d = await r.json().catch(()=>({}));
+            addAIMessage({id:'sl_mem_'+Date.now(), text: r.ok && d.ok ? `🧹 **Memória de conversa limpa.** Backup salvo em: \`${d.backupFile||'(nenhum)'}\`\n\n⚠️ **Aviso**: memória de conversa (conversation_memory.jsonl) != estado do agente (agent_state.json). O estado do agente NÃO foi limpo — specs, versões e histórico de builds/QA/Security continuam preservados.` : `❌ ${JSON.stringify(d)}` }, false);
+          } else {
+            const r = await fetch('/api/agent/'+encodeURIComponent(projSlash)+'/conversation/resume?n=15');
+            const d = await r.json().catch(()=>({}));
+            addAIMessage({id:'sl_mem_'+Date.now(),text:`💾 **Memória de conversa** (últimas ${d.count||0} linhas)\n> _Memória ↔ Estado estão em arquivos separados: NÃO há mistura entre texto de chat e currentState._\n\n` + (d.lines||[]).map(l => `· [${(l.role||'?').toUpperCase()}] ${String(l.text||'').slice(0,140)}`).join('\n') || '_sem mensagens_' }, false);
+          }
+          stopThinking(); state.busy=false; els.sendBtn.disabled=false; finalizeCurrentAIMessage(); setAgentState('idle',{reason:'slash_mem'}); scrollBottom();
+          return true;
+        }
+        if (cmd === '/resumo' || cmd === '/sumario') {
+          addUserMessage({id:'u_'+Date.now(),text});
+          const spec = await fetch('/api/agent/'+encodeURIComponent(projSlash)).then(x=>x.json()).catch(()=>({}));
+          addAIMessage({id:'sl_res_'+Date.now(),text:
+            `📋 **Resumo RC24 do Agente**\n` +
+            `· **Problema**: ${(spec.requirements?.problem||'n/d').slice(0,240)}\n` +
+            `· **Requisitos Funcionais** (${(spec.requirements?.functional||[]).length}):\n  - ` + (spec.requirements?.functional||['—']).slice(0,6).map(x=>String(x).slice(0,80)).join('\n  - ') + `\n` +
+            `· **Regras de Negócio** (${(spec.requirements?.businessRules||[]).length}): ` + (spec.requirements?.businessRules||['—']).slice(0,3).map(x=>String(x).slice(0,70)).join(' · ') + `\n` +
+            `· **Integrações**: ${(spec.integrations||[]).map(i => i.type).join(', ') || 'nenhuma'}\n` +
+            `· **Tools** (${(spec.tools||[]).length}): ` + (spec.tools||[]).slice(0,8).map(t=>t.name).join(', ') || 'nenhuma'
+          }, false);
+          stopThinking(); state.busy=false; els.sendBtn.disabled=false; finalizeCurrentAIMessage(); setAgentState('idle',{reason:'slash_resumo'}); scrollBottom();
+          return true;
+        }
+        if (cmd === '/tools' || cmd === '/ferramentas' || cmd === '/capabilities') {
+          addUserMessage({id:'u_'+Date.now(),text});
+          const d = await fetch('/api/agent/'+encodeURIComponent(projSlash)+'/capabilities').then(x=>x.json()).catch(()=>({}));
+          const arr = Object.values(d.capabilitiesAgent||{});
+          addAIMessage({id:'sl_tools_'+Date.now(),text:
+            `🛠️ **Capacidades / Tools / Integrações RC24** (${arr.length})\n\n` +
+            arr.map(c => `· **${c.type}** — status: \`${c.status}\`${c.description?` · ${c.description.slice(0,100)}`:''}${c.missingEnvVars&&c.missingEnvVars.length?`\n    ⚠️ missing env vars: \`${c.missingEnvVars.join(', ')}\``:''}${c.optionalEnvVars&&c.optionalEnvVars.length?`\n    (opcionais: ${c.optionalEnvVars.join(', ')})`:''}`).join('\n') || '_n/d_' +
+            `\n\n> _Apenas ferramentas reais existentes no catálogo: WhatsApp Evolux, Google Calendar, SMTP E-mail, CRM REST genérico, Webhook custom (não inventamos integrações)._`
+          }, false);
+          stopThinking(); state.busy=false; els.sendBtn.disabled=false; finalizeCurrentAIMessage(); setAgentState('idle',{reason:'slash_tools'}); scrollBottom();
+          return true;
+        }
+        if (cmd === '/versao' || cmd === '/version' || cmd === '/versões' || cmd === '/versions') {
+          addUserMessage({id:'u_'+Date.now(),text});
+          const [l,cmp] = await Promise.all([
+            fetch('/api/agent/'+encodeURIComponent(projSlash)+'/versions').then(x=>x.json()).catch(()=>({})),
+            (async()=>{ try { const list = await fetch('/api/agent/'+encodeURIComponent(projSlash)+'/versions').then(x=>x.json()); if ((list.versions||[]).length >= 2) { const a = list.versions[list.versions.length-2]; const b = list.versions[list.versions.length-1]; const r = await fetch('/api/agent/'+encodeURIComponent(projSlash)+'/versions/compare?a='+a+'&b='+b).then(x=>x.json()); return {a,b,changed:r.changed||[]}; } return null; } catch(_){ return null; } })()
+          ]);
+          addAIMessage({id:'sl_ver_'+Date.now(),text:
+            `🧬 **Versões semânticas do agent.json** (${(l.versions||[]).length}): ` + (l.versions||[]).join(', ') +
+            (cmp?`\n\n🔀 Diff **v${cmp.a} → v${cmp.b}** (${cmp.changed.length} campos):\n  - ` + cmp.changed.slice(0,20).map(x=>String(x).slice(0,80)).join('\n  - ') : '')
+          }, false);
+          stopThinking(); state.busy=false; els.sendBtn.disabled=false; finalizeCurrentAIMessage(); setAgentState('idle',{reason:'slash_version'}); scrollBottom();
+          return true;
+        }
+        if (cmd === '/corrige' || cmd === '/corrigir' || cmd === '/arruma' || cmd === '/conserta' || cmd === '/autofix' || cmd === '/fix') {
+          toast('🛠️ /corrige: disparando loop de correção QA real (até 3 iterações com backup)…', 'ok');
+          addUserMessage({ id: 'u_' + Date.now(), text: text });
+          startThinking();
+          const r = await fetch('/api/agent/' + encodeURIComponent(projSlash) + '/qa/autofix', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ maxIter: 3 }) });
+          const d = await r.json().catch(()=>({ok:false}));
+          stopThinking();
+          addAIMessage({ id: 'slash_corrige_' + Date.now(), text: r.ok && d.ok
+            ? (d.resumo || '✅ Loop concluído.')
+            : `❌ ${d.error || JSON.stringify(d)}` }, false);
+          state.busy=false; els.sendBtn.disabled=false; finalizeCurrentAIMessage(); setAgentState('idle',{reason:'slash_corrige'}); sendWS({type:'agent:done',reason:'slash_corrige_handled'});
+          scrollBottom();
+          return true;
+        }
+        if (cmd === '/help' || cmd === '/ajuda' || cmd === '/?') {
+          addAIMessage({id:'sl_help_'+Date.now(),text:
+            `📘 **Slash Commands RC24 Agente Orquestrador**\n` +
+            `  \`/build\`                 — agenda build via RC22 (plano forçado do agent.json)\n` +
+            `  \`/corrige\`               — 🔥 loop de correção QA real (backup + dev fix + re-QA)\n` +
+            `  \`/audit\`                 — auditar via Security :3400 + whitelist SEC-HC-* apenas\n` +
+            `  \`/estado [v]\`            — ver estado OU transitar: rascunho / construindo / testando / pronto\n` +
+            `  \`/agente\`                — info geral do agente (empresa, estado, versões, capabilities)\n` +
+            `  \`/memoria [limpar]\`      — ver últimas 15 linhas OU limpar memória (NÃO toca estado)\n` +
+            `  \`/resumo\`                — resumo estruturado da spec do agente\n` +
+            `  \`/tools\`                 — lista capacidades/ferramentas + status e missing env vars\n` +
+            `  \`/versao\`                — lista versões semânticas + diff últimas duas\n` +
+            `  \`/help\`                  — esta ajuda\n\n` +
+            `_💡 Dica: sem barra também funciona! Basta digitar **"corrige"** no chat._\n` +
+            (isAgentProj ? `_ℹ️ Projeto atual **é agente RC24** (\`${projSlash}\`)._` : `_⚠️ Projeto atual **NÃO é agente RC24** (não prefixo agent__). Crie primeiro com POST /api/agent/create._`)
+          },false);
+          stopThinking(); state.busy=false; els.sendBtn.disabled=false; finalizeCurrentAIMessage(); setAgentState('idle',{reason:'slash_help'}); scrollBottom();
+          return true;
+        }
+      } catch (e) {
+        addAIMessage({id:'slash_err_'+Date.now(),text:'❌ Slash command erro: ' + (e && e.message || String(e))},false);
+        stopThinking(); state.busy=false; els.sendBtn.disabled=false; finalizeCurrentAIMessage(); setAgentState('stopped',{reason:'slash_falhou'}); scrollBottom();
+        return true;
+      }
+      // Unknown slash command em projeto agent__ → avisa:
+      if (isAgentProj) {
+        toast(`Slash command desconhecido "${cmd}" — use /help para listar os válidos.`, 'warn');
+      }
+      return false;  // cai no chat:send normal
+    })();
+    if (slashHandled) {
+      // Limpa imagens pendentes e input (doSubmit já fez no começo) e NÃO envia WS:
+      return;
+    }
+  }
 
   sendWS({ type: 'chat:send', text, images });
 }
@@ -2809,7 +3480,7 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
     else if (!t.dataset.codeFile) t.classList.remove('active');
   });
   // Listeners das 4 abas fixas (Chat removido do centro — foi pro painel direito TiAi)
-  const specials = ['preview','console','terminal','code'];
+  const specials = ['preview','console','terminal','code','ia-config','btc'];
   specials.forEach(key => {
     const tab = els.editorTabs?.querySelector(`[data-editor-tab="${key}"]`);
     if (tab && !tab.__attSp) {
@@ -2824,7 +3495,7 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
 /* switchTab LEGADA (rotas antigas chamam switchTab('preview')) — redireciona para switchEditorPanel moderno */
 const _origSwitchTab = switchTab;
 switchTab = function(name) {
-  if (['preview','console','terminal','chat','code'].includes(String(name))) {
+  if (['preview','console','terminal','chat','code','ia-config','btc'].includes(String(name))) {
     switchEditorPanel(String(name));
   } else if (_origSwitchTab) {
     return _origSwitchTab(name);
@@ -3213,6 +3884,269 @@ function initRC19Mobile() {
 }
 
 /* ========== INIT ========== */
+/* RC23 · Tela Configuração das Chaves das IAs (aba IA Config nova no centro) */
+(function initRC23IAConfig(){
+  if (!els.iacGrid) return;
+
+  // ================= Providers (4 telinhas Gemini, Cerebras, Mistral, DeepSeek Free/OpenRouter)
+  const PROVIDERS = [
+    {
+      id: 'gemini',
+      name: 'Google Gemini',
+      tag: 'Motor principal',
+      icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-brand-300"><path d="M12 2l3 5 5 .6-3.8 3.4 1.3 5.5L12 13.8 6.5 16.5 7.8 11 4 7.6 9 7z"/></svg>`,
+      color: 'brand',
+      link: 'https://aistudio.google.com',
+      env: 'GOOGLE_API_KEY',
+      desc: 'Motor padrão da Desenvolvedora (preservado). Teste rápido antes de criar qualquer site.',
+      placeholder: 'AIza… ou AQ.Ab… (prefixos de chave Google válidas)',
+    },
+    {
+      id: 'cerebras',
+      name: 'Cerebras Cloud',
+      tag: 'IA Arquiteta · Default',
+      icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-cyan-300"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 7h4v4H7zM13 7h4v4h-4zM7 13h4v4H7zM13 13h4v4h-4z"/></svg>`,
+      color: 'cyan',
+      link: 'https://cloud.cerebras.ai',
+      env: 'CEREBRAS_API_KEY',
+      desc: 'Arquiteta rápida (llama3.1-70b). Se vazia cai no Gemini sem erro.',
+      placeholder: 'sk-cerebras-…',
+    },
+    {
+      id: 'mistral',
+      name: 'Mistral API',
+      tag: 'QA · Alternativo',
+      icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-orange-300"><path d="M2 18l5-12 5 10 5-8 5 10"/></svg>`,
+      color: 'orange',
+      link: 'https://console.mistral.ai',
+      env: 'MISTRAL_API_KEY',
+      desc: 'Analista QA leve e rápido. Alternativa ao Gemini para revisão final.',
+      placeholder: 'sk-mistral-…',
+    },
+    {
+      id: 'openrouter',
+      name: 'OpenRouter · DeepSeek Free',
+      tag: 'DeepSeek GRATUITO · Sem cobrança',
+      icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-fuchsia-300"><path d="M21 15a4 4 0 0 1-4 4H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>`,
+      color: 'fuchsia',
+      link: 'https://openrouter.ai',
+      env: 'OPENROUTER_API_KEY',
+      desc: 'DeepSeek via OpenRouter (tem free tier diário). Cuidado com cota; chave vazia cai no Gemini.',
+      placeholder: 'sk-or-v1-…',
+    },
+  ];
+
+  const COLOR_MAP = {
+    brand:   { badge: 'from-brand-600/20 to-fuchsia-600/10 border-brand-400/30 text-brand-300', dot: 'bg-brand-400', btn: 'from-brand-600 to-fuchsia-600 hover:from-brand-500 hover:to-fuchsia-500 border-brand-400/40' },
+    cyan:    { badge: 'from-cyan-500/15 to-sky-500/5 border-cyan-400/30 text-cyan-300',       dot: 'bg-cyan-400',   btn: 'from-cyan-600 to-sky-600 hover:from-cyan-500 hover:to-sky-500 border-cyan-400/40' },
+    orange:  { badge: 'from-orange-500/15 to-amber-500/5 border-orange-400/30 text-orange-300',   dot: 'bg-orange-400', btn: 'from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 border-orange-400/40' },
+    fuchsia: { badge: 'from-fuchsia-500/15 to-pink-500/5 border-fuchsia-400/30 text-fuchsia-300', dot: 'bg-fuchsia-400', btn: 'from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 border-fuchsia-400/40' },
+  };
+
+  // ========== Estado local (NÃO expõe as chaves no state global só aqui por closure)
+  const LOCAL = {};
+  PROVIDERS.forEach(p => { LOCAL[p.id] = { key: '', status: 'idle', error: '', latencyMs: 0, keyPrefix: null, configured: false }; });
+
+  // ========== Render
+  function render() {
+    const parts = [];
+    for (const p of PROVIDERS) {
+      const st = LOCAL[p.id];
+      const c = COLOR_MAP[p.color] || COLOR_MAP.brand;
+      const statusMap = {
+        idle:         { cls: 'bg-white/5 border-white/10 text-slate-500', label: (st.configured ? 'Configurada · não testada' : 'Não configurada'), icon: '◯' },
+        testing:      { cls: 'bg-amber-500/10 border-amber-400/30 text-amber-300', label: 'Testando conexão…', icon: '⏳' },
+        connected:    { cls: 'bg-emerald-500/10 border-emerald-400/30 text-emerald-300', label: `Conectada · ${st.latencyMs ? st.latencyMs + 'ms' : 'ping ok'}`, icon: '✓' },
+        invalid_key:  { cls: 'bg-red-500/10 border-red-400/30 text-red-300', label: 'Chave inválida (401/403)', icon: '✕' },
+        rate_limit:   { cls: 'bg-amber-500/10 border-amber-400/30 text-amber-300', label: 'Cota atingida / rate limit (429)', icon: '⚠' },
+        empty:        { cls: 'bg-white/5 border-white/10 text-slate-500', label: 'Campo vazio', icon: '◯' },
+        network_error:{ cls: 'bg-red-500/5 border-red-400/20 text-red-400/80', label: 'Erro de rede / timeout', icon: '↯' },
+        http_other:   { cls: 'bg-amber-500/10 border-amber-400/30 text-amber-300', label: 'Erro HTTP', icon: '↯' },
+        saved:        { cls: 'bg-emerald-500/10 border-emerald-400/30 text-emerald-300', label: 'Salva no .env · reinicie para aplicar', icon: '💾' },
+      };
+      const status = statusMap[st.status] || statusMap.idle;
+
+      parts.push(`
+      <div class="group rounded-2xl border border-white/[0.06] bg-white/[0.025] hover:bg-white/[0.04] p-4 md:p-5 transition shadow-sm" data-iac-card="${p.id}">
+        <div class="flex items-start justify-between gap-3 mb-3.5">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br ${c.badge} border grid place-items-center">${p.icon}</div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="text-white font-semibold text-[12.5px] leading-tight">${p.name}</div>
+                <span class="text-[9.5px] px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-slate-400 uppercase tracking-wide">${p.tag}</span>
+              </div>
+              <div class="text-[10.5px] text-slate-500 font-mono mt-0.5">${p.env}</div>
+            </div>
+          </div>
+          <div class="shrink-0 flex items-center gap-1.5 px-2 h-6 rounded-full border ${status.cls} text-[10.5px] font-semibold">
+            <span class="w-1.5 h-1.5 rounded-full ${st.status==='testing' ? (c.dot+' animate-pulse') : (st.status==='connected'||st.status==='saved' ? 'bg-emerald-400' : (st.status==='invalid_key'||st.status==='network_error' ? 'bg-red-400' : 'bg-slate-500'))}"></span>
+            <span title="${escapeAttr(status.label)}">${status.label}</span>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-400 leading-relaxed mb-3">
+          ${p.desc}
+          · <a class="underline decoration-dotted underline-offset-2 text-slate-400 hover:text-white" href="${p.link}" target="_blank" rel="noopener noreferrer">Obter chave ↗</a>
+        </div>
+
+        <label class="block text-[10.5px] font-semibold text-slate-300 uppercase tracking-wide mb-1.5">API Key ${st.keyPrefix ? `<span class="ml-1 normal-case text-[10px] text-slate-500 font-mono">(${escapeHtml(st.keyPrefix)})</span>` : ''}</label>
+        <div class="flex items-stretch gap-2">
+          <div class="relative flex-1 min-w-0">
+            <input
+              type="password"
+              class="iac-input w-full h-10 rounded-lg bg-[#080c1d] border border-white/10 focus:border-white/30 outline-none text-[12px] text-slate-200 font-mono px-3 pr-10 placeholder:text-slate-600 transition"
+              data-iac-input="${p.id}"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="${escapeAttr(p.placeholder)}"
+              value="${escapeAttr(st.key)}"
+            />
+            <button type="button" class="iac-toggle-pw absolute right-0 top-0 bottom-0 w-10 grid place-items-center text-slate-500 hover:text-white transition rounded-r-lg" data-iac-toggle="${p.id}" title="Mostrar / ocultar chave" aria-label="Mostrar ou ocultar chave">
+              <svg data-icon="eye" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <button type="button"
+            data-iac-test="${p.id}"
+            class="iac-test h-10 px-3.5 rounded-lg text-white text-[11.5px] font-bold grid place-items-center border shadow transition bg-gradient-to-br ${c.btn} disabled:opacity-50 disabled:cursor-not-allowed"
+            ${st.status === 'testing' ? 'disabled' : ''}>
+            <span class="flex items-center gap-1.5">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              Conectar
+            </span>
+          </button>
+        </div>
+
+        ${(st.status === 'invalid_key' || st.status === 'network_error' || st.status === 'rate_limit' || (st.status && st.status.startsWith('http_'))) && st.error ? `
+          <div class="mt-2 rounded-lg bg-red-500/10 border border-red-400/20 px-3 py-2 text-[10.5px] text-red-300 font-mono whitespace-pre-wrap break-words">
+            ${escapeHtml(String(st.error || '').slice(0, 220))}
+          </div>
+        ` : ''}
+      </div>`);
+    }
+    els.iacGrid.innerHTML = parts.join('');
+    attachLocalListeners();
+  }
+
+  // ========== Attach listeners
+  function attachLocalListeners() {
+    $$('[data-iac-input]', els.iacGrid).forEach(inp => {
+      const id = inp.dataset.iacInput;
+      inp.addEventListener('input', () => {
+        LOCAL[id].key = String(inp.value || '');
+        // Reset para idle quando usuário edita (se estava inválido/conectado)
+        if (['connected','invalid_key','rate_limit','network_error','saved'].includes(LOCAL[id].status)) LOCAL[id].status = 'idle';
+        const badge = inp.closest('[data-iac-card]')?.querySelector('.rounded-full.border');
+        if (badge) {
+          // Re-render rápido só do badge? Por simplicidade, re-render completo é ok pois é curto (4 cards).
+        }
+      });
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); testProvider(inp.dataset.iacInput); }});
+    });
+    $$('[data-iac-toggle]', els.iacGrid).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const inp = document.querySelector(`[data-iac-input="${btn.dataset.iacToggle}"]`);
+        if (!inp) return;
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+      });
+    });
+    $$('[data-iac-test]', els.iacGrid).forEach(btn => {
+      btn.addEventListener('click', () => testProvider(btn.dataset.iacTest));
+    });
+  }
+
+  // ========== Chamadas para API backend
+  async function testProvider(id) {
+    if (!LOCAL[id]) return;
+    LOCAL[id].status = 'testing'; LOCAL[id].error = ''; LOCAL[id].latencyMs = 0;
+    render();
+    try {
+      const res = await fetch('/api/config/test-key', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: id, key: LOCAL[id].key })
+      });
+      const out = await res.json().catch(() => ({}));
+      LOCAL[id].status = out.status || (out.ok ? 'connected' : 'idle');
+      LOCAL[id].latencyMs = out.latencyMs || 0;
+      LOCAL[id].keyPrefix = out.keyPrefix || null;
+      if (!out.ok) LOCAL[id].error = out.error || 'Erro desconhecido';
+    } catch (e) {
+      LOCAL[id].status = 'network_error';
+      LOCAL[id].error = String(e.message || e).slice(0, 180);
+    }
+    render();
+    const msg = LOCAL[id].status === 'connected' ? `${PROVIDERS.find(p=>p.id===id)?.name || id} · Conectada ✓` : `${PROVIDERS.find(p=>p.id===id)?.name || id} · ${LOCAL[id].error || 'falhou'}`;
+    try { toast(msg, LOCAL[id].status === 'connected' ? 'ok' : 'warn'); } catch {}
+  }
+
+  async function refreshFromServer() {
+    if (els.iacNote) els.iacNote.textContent = 'Carregando status das chaves do servidor…';
+    try {
+      const res = await fetch('/api/config/status');
+      const out = await res.json().catch(() => ({}));
+      if (out && out.providers) {
+        for (const [id, info] of Object.entries(out.providers)) {
+          if (!LOCAL[id]) continue;
+          LOCAL[id].configured = !!info.configured;
+          LOCAL[id].keyPrefix = info.keyPrefix || null;
+          if (LOCAL[id].status === 'idle' && info.configured) LOCAL[id].status = 'idle'; // mantém idle mas mostra prefixo
+        }
+        if (els.iacNote) els.iacNote.textContent = `Última atualização: ${new Date().toLocaleTimeString()} · .env em ${out.envFile || '.env'}`;
+      }
+    } catch (e) {
+      if (els.iacNote) els.iacNote.textContent = `Erro ao carregar: ${String(e.message||e).slice(0,120)}`;
+    }
+    render();
+  }
+
+  async function testAll() {
+    els.iacTestAll && els.iacTestAll.setAttribute('disabled', 'true');
+    try { for (const p of PROVIDERS) { if (LOCAL[p.id].key && LOCAL[p.id].key.length >= 10) await testProvider(p.id); } } finally {
+      els.iacTestAll && els.iacTestAll.removeAttribute('disabled');
+    }
+  }
+
+  async function saveAll() {
+    els.iacSaveAll && els.iacSaveAll.setAttribute('disabled', 'true');
+    const keys = {}; PROVIDERS.forEach(p => { keys[p.id] = String(LOCAL[p.id].key || ''); });
+    try {
+      const res = await fetch('/api/config/save', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keys })
+      });
+      const out = await res.json().catch(() => ({}));
+      if (out.ok) {
+        for (const p of PROVIDERS) {
+          const fin = (out.perProvider||{})[p.id];
+          if (fin?.finalStatus === 'saved_pending_reboot') LOCAL[p.id].status = 'saved';
+          else if (fin?.finalStatus === 'not_configured' && !LOCAL[p.id].key) LOCAL[p.id].status = 'idle';
+        }
+        try { toast(`💾 Salvo no .env · ${out.replacedCount||0} atualizada(s) · ${out.addedCount||0} nova(s). Reinicie o servidor para aplicar.`, 'ok'); } catch {}
+        await refreshFromServer();
+      } else {
+        try { toast(`Erro ao salvar: ${out.error || 'desconhecido'}`, 'err'); } catch {}
+      }
+    } catch (e) {
+      try { toast(`Erro ao salvar: ${String(e.message||e).slice(0,160)}`, 'err'); } catch {}
+    } finally {
+      els.iacSaveAll && els.iacSaveAll.removeAttribute('disabled');
+    }
+    render();
+  }
+
+  // ========== Attach globais (refresh / test-all / save-all)
+  els.iacRefresh?.addEventListener('click', refreshFromServer);
+  els.iacTestAll?.addEventListener('click', testAll);
+  els.iacSaveAll?.addEventListener('click', saveAll);
+
+  // Botão Config do header painel TiAi (direito) → agora abre diretamente a aba IA Config
+  els.closeRightTmp?.addEventListener('click', () => { switchEditorPanel('ia-config'); });
+
+  // ========== Boot (render inicial + buscar status servidor)
+  render();
+  refreshFromServer();
+})();
+
 (function finalInit(){
   // RC19 Mobile: rodar ANTES de focar input para não dar zoom iOS
   try { initRC19Mobile(); } catch(err) { console.warn('rc19 init:', err); }
@@ -3232,4 +4166,868 @@ function initRC19Mobile() {
   populatePreviewServices();
   // RC19: em mobile NÃO focar o input — evita zoom forçado e abre teclado sem querer no carregamento
   if (!rc19IsMobile) els.input.focus();
+
+  /* ============================================================
+   *  RC24 AGENT ORCHESTRATOR: agent context bar + update bar
+   *  - Apenas se projeto começar com agent__; senão hidden.
+   * ============================================================ */
+  try {
+    if (els.traeMessageInput && !document.getElementById('rc24-agent-bar')) {
+      const bar = document.createElement('div');
+      bar.id = 'rc24-agent-bar';
+      bar.className = 'hidden mb-3 px-3 py-2 rounded-xl border text-[12px]';
+      bar.innerHTML = `
+        <div class="flex flex-wrap items-center gap-2 justify-between">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="rc24-emoji" class="text-lg">🧭</span>
+            <div class="flex flex-col">
+              <div class="font-bold text-white"><span id="rc24-title">RC24 Agente</span> <span id="rc24-ver" class="ml-1 text-[10px] px-2 py-0.5 rounded bg-slate-700 text-slate-200 align-middle"></span></div>
+              <div class="text-[10.5px] text-slate-300/85"><span id="rc24-projeto"></span></div>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span id="rc24-state-chip" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-slate-700/80 border border-slate-600 text-slate-200 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> <span id="rc24-state">—</span>
+            </span>
+            <span id="rc24-build-chip" class="hidden px-2 py-0.5 rounded-full text-[10px] bg-sky-700/30 border border-sky-500/40 text-sky-200">build RC22</span>
+            <span id="rc24-qa-chip" class="hidden px-2 py-0.5 rounded-full text-[10px] bg-emerald-700/30 border border-emerald-500/40 text-emerald-200">QA</span>
+            <span id="rc24-sec-chip" class="hidden px-2 py-0.5 rounded-full text-[10px] bg-rose-700/30 border border-rose-500/40 text-rose-200">Security</span>
+            <a id="rc24-help-btn" class="ml-1 cursor-pointer px-2 py-0.5 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-[10px] text-slate-200 font-semibold" title="Lista de slash commands RC24">/help</a>
+          </div>
+        </div>
+      `;
+      // Cola acima do textarea chat (TRAE):
+      if (els.traeMessageInput && els.traeMessageInput.parentNode) {
+        els.traeMessageInput.parentNode.insertBefore(bar, els.traeMessageInput);
+      } else if (els.input && els.input.parentNode) {
+        els.input.parentNode.insertBefore(bar, els.input);
+      }
+      // Help link → simula slash /help no submit:
+      const helpBtn = bar.querySelector('#rc24-help-btn');
+      helpBtn && helpBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (els.traeMessageInput) { els.traeMessageInput.value = '/help'; els.traeChatForm?.requestSubmit(); }
+        else if (els.form) { els.input.value = '/help'; els.form.requestSubmit(); }
+      });
+
+      window.__rc24UpdateBar = function (partial = {}) {
+        try {
+          const proj = partial.project || state.project || DEFAULT_PROJECT_NAME;
+          const isAg = /^agent__/.test(String(proj||''));
+          bar.classList.toggle('hidden', !isAg);
+          if (!isAg) return;
+          const isRasc  = (partial.state||'rascunho') === 'rascunho';
+          const isConst = (partial.state||'') === 'construindo';
+          const isTest  = (partial.state||'') === 'testando';
+          const isPronto= (partial.state||'') === 'pronto';
+          const stateColor = isPronto ? ['bg-emerald-700/40 border-emerald-500/40 text-emerald-100','bg-emerald-400']
+                             : isTest ? ['bg-violet-700/40 border-violet-500/40 text-violet-100','bg-violet-400']
+                             : isConst ? ['bg-sky-700/40 border-sky-500/40 text-sky-100','bg-sky-400']
+                             : ['bg-slate-700/80 border-slate-600 text-slate-200','bg-slate-400'];
+          const sc = bar.querySelector('#rc24-state-chip');
+          if (sc) { sc.className = `inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold border uppercase tracking-wide ${stateColor[0]}`;
+            const dot = sc.querySelector('span'); if (dot) dot.className = `w-1.5 h-1.5 rounded-full ${stateColor[1]}`; }
+          bar.querySelector('#rc24-state').textContent = partial.state || '—';
+          bar.querySelector('#rc24-projeto').textContent = `Projeto: ${proj}`;
+          bar.querySelector('#rc24-ver').textContent = partial.version ? ('v'+partial.version) : '';
+          bar.classList.add('bg-slate-900/60','border-slate-700/70','backdrop-blur-sm','shadow-md');
+
+          // Build chip:
+          const rc22 = partial.lastRc22Run || null;
+          if (rc22) {
+            const el = bar.querySelector('#rc24-build-chip');
+            el.classList.remove('hidden');
+            el.textContent = rc22.status === 'queued' ? 'Build: fila' : rc22.status === 'running' ? 'Build: rodando…' : rc22.status === 'done' ? `Build: OK (QA ${rc22.qa?.overallScore ?? '?'})` : `Build: ${rc22.status}`;
+          }
+        } catch {}
+      };
+
+      // Atualiza barra com base no projeto atual (carregamento inicial):
+      const initProject = state.project || DEFAULT_PROJECT_NAME;
+      if (/^agent__/.test(String(initProject||''))) {
+        // Carrega spec + state via REST para preencher barra:
+        Promise.all([
+          fetch('/api/agent/'+encodeURIComponent(initProject)).then(x=>x.json()).catch(()=>({})),
+          fetch('/api/agent/'+encodeURIComponent(initProject)+'/state').then(x=>x.json()).catch(()=>({}))
+        ]).then(([spec,st])=>{
+          window.__rc24UpdateBar && window.__rc24UpdateBar({ project: initProject, version: spec && spec.version, state: st && st.state && st.state.currentState, lastRc22Run: st && st.state && st.state.lastRc22Run });
+        }).catch(()=>{});
+      }
+    }
+  } catch (errRc24) { console.warn('[RC24 bar init WARN]', errRc24); }
+
+  // RC22.4 Voice Conversation: hooks públicos de integração com o agente de voz (precisa vir DEPOIS
+  // que doSubmit e connectWS estarem declarados).
+  window.__ti_voice_ws = (typeof state !== 'undefined' && state.ws) ? state.ws : null;
+  window._ti_getWs = function () { return (typeof state !== 'undefined' && state.ws) ? state.ws : null; };
+  window.__ti_voice_send = function (obj) {
+    if (!obj) return;
+    if (obj.type === 'chat:send' && typeof obj.text === 'string' && typeof doSubmit === 'function') {
+      const tInput = document.getElementById('trae-message-input');
+      if (tInput) {
+        const prev = (tInput.value || '').trim();
+        tInput.value = prev ? (prev + '\n' + obj.text) : obj.text;
+        tInput.style.height = 'auto';
+        try { tInput.dispatchEvent(new Event('input', { bubbles: true })); } catch {}
+      }
+      doSubmit({ source: 'trae' });
+      return;
+    }
+    if (typeof sendWS === 'function') sendWS(obj);
+  };
+
+  /* =========================================================================
+     RC27 · Orquestrador Autônomo UI — funções globais e binds
+     ========================================================================= */
+  try {
+    state.rc27 = { currentPhase: null, currentStatus: null, history: [] };
+
+    const RC27_PHASES = [
+      ['ANALYSIS',        'Análise'],
+      ['PLANNING',        'Planejamento'],
+      ['ARCHITECTURE',    'Arquitetura'],
+      ['IMPLEMENTATION',  'Implementação'],
+      ['TESTING',         'Testes'],
+      ['CORRECTION',      'Correções'],
+      ['VALIDATION',      'Validação'],
+      ['COMPLETED',       'Concluído']
+    ];
+    const PHASE_MAP = Object.fromEntries(RC27_PHASES);
+    window.__rc27PhaseLabel = (phaseKey) => PHASE_MAP[phaseKey] || phaseKey || '—';
+
+    window.__rc27GetStepEl = function (phaseKey) {
+      if (!phaseKey) return null;
+      // Usa as refs definidas no objeto els (camelCase)
+      const key = 'rc27Step' + phaseKey.charAt(0) + phaseKey.slice(1).toLowerCase().replace(/_(.)/g, (_,c)=>c.toUpperCase());
+      if (els && els[key]) return els[key];
+      return document.getElementById('rc27-step-' + phaseKey);
+    };
+
+    window.__rc27ResetStepper = function () {
+      try {
+        state.rc27.currentPhase = null;
+        state.rc27.currentStatus = null;
+        state.rc27.history = [];
+        for (const [key] of RC27_PHASES) {
+          const el = window.__rc27GetStepEl(key);
+          if (el) {
+            el.removeAttribute('data-status');
+            el.setAttribute('data-status', 'pending');
+            const labelEl = el.querySelector('.rc27-step-label');
+            if (labelEl) { labelEl.textContent = window.__rc27PhaseLabel(key); labelEl.title = ''; }
+          }
+        }
+        if (els.rc27Stepper && els.rc27Stepper.classList && !els.rc27Stepper.classList.contains('hidden')) els.rc27Stepper.classList.add('hidden');
+        if (els.rc27StepperGoal) { els.rc27StepperGoal.textContent = 'Aguardando envio da tarefa…'; els.rc27StepperGoal.dataset.filledBy = ''; }
+        if (els.rc27Summary) els.rc27Summary.textContent = 'Inativo';
+        window.__rc27HideInternetAuthModal();
+        window.__rc27HideHumanModal();
+      } catch(e) { console.debug('[RC27 UI] reset error', e); }
+    };
+
+    function rc27MarkDoneUntil_ (phaseKeyInclusive) {
+      // Marca como DONE todas as fases ANTERIORES (inclusive) se ainda não tiver status.
+      if (!phaseKeyInclusive) return;
+      const idx = RC27_PHASES.findIndex(([k]) => k === phaseKeyInclusive);
+      if (idx < 0) return;
+      for (let i = 0; i < idx; i++) {
+        const [key] = RC27_PHASES[i];
+        const el = window.__rc27GetStepEl(key);
+        if (el) {
+          const cur = el.getAttribute('data-status');
+          if (!cur || cur === 'pending') el.setAttribute('data-status', 'done');
+        }
+      }
+    }
+
+    window.__rc27UpdateStepper = function (opts) {
+      opts = opts || {};
+      try {
+        if (els.rc27Stepper && els.rc27Stepper.classList.contains('hidden')) els.rc27Stepper.classList.remove('hidden');
+
+        // Histórico de fases para progresso
+        const summary = opts.summary || opts.label || null;
+        if (summary && els.rc27Summary) els.rc27Summary.textContent = String(summary).slice(0, 100);
+
+        let phaseKey = opts.currentPhase || opts.phase;
+        let status = opts.status || 'active';
+        if (opts.overrideCurrentStatus) status = opts.overrideCurrentStatus;
+
+        if (phaseKey) {
+          rc27MarkDoneUntil_(phaseKey);
+          state.rc27.currentPhase = phaseKey;
+          state.rc27.currentStatus = status;
+          state.rc27.history.push({ phase: phaseKey, status, t: Date.now(), label: opts.label || null });
+          if (state.rc27.history.length > 120) state.rc27.history.shift();
+          const el = window.__rc27GetStepEl(phaseKey);
+          if (el) {
+            el.setAttribute('data-status', status);
+            if (opts.label) {
+              const labelEl = el.querySelector('.rc27-step-label');
+              if (labelEl) { labelEl.title = String(opts.label); }
+            }
+          }
+          // Se COMPLETED/VALIDATION atingida → marca último step done também
+          if (phaseKey === 'COMPLETED' && (status === 'done' || status === 'active')) {
+            for (const [k] of RC27_PHASES) {
+              const e = window.__rc27GetStepEl(k);
+              if (e && !e.getAttribute('data-status') || e.getAttribute('data-status') === 'pending') e.setAttribute('data-status','done');
+            }
+            const e = window.__rc27GetStepEl('COMPLETED');
+            if (e) e.setAttribute('data-status', 'done');
+          }
+        }
+      } catch (e) { console.debug('[RC27 UI] updateStepper error', e); }
+    };
+
+    window.__rc27SetPhase = function (d) {
+      if (!d) return;
+      window.__rc27UpdateStepper({
+        currentPhase: d.phase,
+        status: d.status || 'active',
+        label: d.label || null,
+        summary: d.summary || null,
+        scopeId: d.scopeId || null
+      });
+    };
+
+    window.__rc27HideInternetAuthModal = function () {
+      if (els.rc27InternetModal) {
+        els.rc27InternetModal.classList.add('hidden');
+        els.rc27InternetModal.classList.remove('flex');
+      }
+    };
+    window.__rc27HideHumanModal = function () {
+      if (els.rc27HumanModal) {
+        els.rc27HumanModal.classList.add('hidden');
+        els.rc27HumanModal.classList.remove('flex');
+      }
+    };
+    window.__rc27SendInternetAuth = function (authorized) {
+      const scopeId = (els && els.rc27AuthCurrentScopeId) || null;
+      if (!scopeId) { console.warn('[RC27] send auth sem scopeId'); }
+      const cmd = authorized ? 'RC27_INTERNET_AUTHORIZED' : 'RC27_INTERNET_DENIED';
+      const text = cmd + ' ' + JSON.stringify({ scopeId: scopeId || null, authorized: Boolean(authorized) });
+      window.__rc27HideInternetAuthModal();
+      if (typeof doSubmit === 'function') {
+        const tInput = document.getElementById('trae-message-input') || document.getElementById('message-input');
+        if (tInput) {
+          const prev = (tInput.value || '').trim();
+          tInput.value = prev ? (prev + '\n\n' + text) : text;
+          tInput.style.height = 'auto';
+          try { tInput.dispatchEvent(new Event('input', { bubbles: true })); } catch {}
+        }
+        try { doSubmit({ source: 'rc27' }); } catch {}
+        return;
+      }
+      if (typeof sendWS === 'function') sendWS({ type: 'chat:send', text });
+    };
+
+    // Bind botões dos modais
+    try {
+      if (els.rc27InternetBtnYes) els.rc27InternetBtnYes.addEventListener('click', (e) => { e.preventDefault(); window.__rc27SendInternetAuth(true); });
+      if (els.rc27InternetBtnNo)  els.rc27InternetBtnNo.addEventListener('click',  (e) => { e.preventDefault(); window.__rc27SendInternetAuth(false); });
+      if (els.rc27HumanBtnOk)     els.rc27HumanBtnOk.addEventListener('click',     (e) => { e.preventDefault(); window.__rc27HideHumanModal(); });
+    } catch(_) {}
+
+    // === FALLBACK GARANTIDO · Força abrir modal autorização internet ===
+    // Detecta 3 gatilhos (um deles já basta para abrir):
+    //   (A) texto renderizado no chat contém frase característica do sistema de autorizações;
+    //   (B) mensagem WS chat:message tem campo internetAuthorizationPending;
+    //   (C) polling 2s no localStorage / cookie com scopeId pendente.
+    // Motivo: evento WS `orch:internet_authorization_requested` pode se perder se
+    //         o usuário estiver no chat do agente criado e não no TiAgente central.
+    try {
+      window.__rc27ForceOpenInternetAuth = function (payload) {
+        try {
+          const d = payload || {};
+          const scopeId = String(d.scopeId || els.rc27AuthCurrentScopeId || '');
+          if (!scopeId || scopeId === 'null' || scopeId === 'undefined') return false;
+          els.rc27AuthCurrentScopeId = scopeId;
+          if (els.rc27InternetScope) els.rc27InternetScope.textContent = 'escopo: ' + scopeId.slice(0,14) + (scopeId.length>14?'…':'');
+          if (els.rc27InternetReason) els.rc27InternetReason.textContent = String(d.reason || 'O agente precisa consultar fontes externas para continuar. Verifique abaixo os sites que ele pretende abrir e clique em SIM para permitir.');
+          if (els.rc27InternetUrls) {
+            const urls = Array.isArray(d.urls) && d.urls.length ? d.urls : [];
+            if (!urls.length) els.rc27InternetUrls.textContent = 'Serão definidos durante a pesquisa.';
+            else els.rc27InternetUrls.innerHTML = urls.slice(0,20).map(u=>{try{const uu=new URL(u);return `<div class="truncate">↳ <span class="text-amber-300">${uu.hostname}</span>${uu.pathname.length>1?uu.pathname:''}</div>`;}catch(_){return `<div class="truncate">↳ ${String(u).slice(0,160)}</div>`;}}).join('\n');
+          }
+          if (els.rc27InternetModal) {
+            els.rc27InternetModal.classList.remove('hidden');
+            els.rc27InternetModal.classList.add('flex');
+          }
+          try { window.__rc27UpdateStepper && window.__rc27UpdateStepper({ summary: '⏸ Aguardando autorização internet…', phase: d.phase || 'PLANNING', overrideCurrentStatus: 'awaiting_input' }); } catch(_) {}
+          try { toast && toast('🌐 Autorização necessária · clique em SIM ou NÃO abaixo', 'warn'); } catch(_) {}
+          return true;
+        } catch (e) { console.debug('[RC27 fallback] erro force-open', e); return false; }
+      };
+      // (A) MutationObserver no chat: detecta a frase de autorização escrita como texto e força abrir
+      const _rc27InternetAuthRegex = /(acessei o sistema de autorizações|clique no bot.o sim no modal|aguardando autorização internet|aguardando clique sim.n.o do usu.rio via modal ui|web_request_ask_authorization.*awaitinguser)/i;
+      let _rc27ChatContainer = document.getElementById('trae-messages') || document.getElementById('chat-messages') || document.querySelector('[data-area="messages"]') || document.querySelector('.chat-messages') || document.body;
+      new MutationObserver((mutations) => {
+        const modalAberto = els.rc27InternetModal && !els.rc27InternetModal.classList.contains('hidden');
+        if (modalAberto) return;
+        for (const m of mutations) {
+          if (!m || !m.addedNodes) continue;
+          for (const node of Array.from(m.addedNodes)) {
+            if (!node || node.nodeType !== 1) continue;
+            const txt = (node.textContent || '').slice(0, 8000);
+            if (_rc27InternetAuthRegex.test(txt)) {
+              // Tenta extrair scopeId do texto
+              const mScope = txt.match(/(inet_[a-z0-9_]{4,})/) || txt.match(/scopeId["'`\s:]*([a-z0-9_\-]{6,})/i);
+              const mUrls = Array.from(txt.matchAll(/https?:\/\/[^\s"'<>)]+/gi) || []).map(x => x[0]).slice(0, 10);
+              const scopeId = mScope ? mScope[1] : (els.rc27AuthCurrentScopeId || ('inet_fallback_' + Date.now().toString(36)));
+              els.rc27AuthCurrentScopeId = scopeId;
+              window.__rc27ForceOpenInternetAuth({ scopeId, urls: mUrls });
+              return;
+            }
+          }
+        }
+      }).observe(_rc27ChatContainer, { childList: true, subtree: true, characterData: true });
+
+      // (C) Polling leve a cada 2s: procura pending no estado global / window.state
+      setInterval(() => {
+        try {
+          const modalAberto = els.rc27InternetModal && !els.rc27InternetModal.classList.contains('hidden');
+          if (modalAberto) return;
+          const st = (typeof window.state === 'object' && window.state) ? window.state : {};
+          const pending = st.internetAuthorizationPending || (st.rc27 && st.rc27.internetAuthorizationPending) || null;
+          if (pending && typeof pending === 'object' && pending.scopeId) {
+            window.__rc27ForceOpenInternetAuth(pending);
+          }
+        } catch(_) {}
+      }, 2000);
+    } catch(_) {}
+
+    // Hook: ao enviar mensagem (usuário iniciou tarefa nova), reset suave do stepper
+    try {
+      const origDoSubmit = (typeof doSubmit === 'function') ? doSubmit : null;
+      if (origDoSubmit) {
+        window.doSubmit = function (...args) {
+          try {
+            const text = (() => {
+              const input = document.getElementById('trae-message-input') || document.getElementById('message-input');
+              return input ? (input.value || '').trim() : '';
+            })();
+            if (text && text.length) {
+              // Não reseta se for comandos de autorização/negação (já tratado acima)
+              if (!text.startsWith('RC27_INTERNET_AUTHORIZED') && !text.startsWith('RC27_INTERNET_DENIED')) {
+                if (state.rc27 && !state.rc27.currentPhase) {
+                  // Nada rodando, OK manter default hidden
+                } else {
+                  window.__rc27ResetStepper();
+                }
+                // Atualiza o goal no stepper logo no envio
+                if (els.rc27StepperGoal) {
+                  els.rc27StepperGoal.textContent = text.length > 220 ? text.slice(0,218)+'…' : text;
+                  els.rc27StepperGoal.dataset.filledBy = '0';
+                }
+                if (els.rc27Stepper && els.rc27Stepper.classList.contains('hidden')) els.rc27Stepper.classList.remove('hidden');
+                window.__rc27UpdateStepper({ currentPhase: 'ANALYSIS', status: 'active', summary: 'Análise do objetivo…', label: text.length > 40 ? text.slice(0,38)+'…' : text });
+              }
+            }
+          } catch(_) {}
+          return origDoSubmit.apply(this, args);
+        };
+      }
+    } catch(_) {}
+
+    // Hook: session cleared → reseta RC27 também
+    try {
+      const origSessionClearedHandler = null; // (já inserimos inline abaixo)
+    } catch(_) {}
+
+    console.debug('[RC27 UI] módulo carregado. Stepper refs ok?', Boolean(els && els.rc27Stepper), '; internet modal?', Boolean(els && els.rc27InternetModal), '; human modal?', Boolean(els && els.rc27HumanModal));
+  } catch (rc27InitErr) { console.warn('[RC27 UI] init WARN', rc27InitErr); }
+
+  /* =========================================================
+   * ₿ BTC MARKET INTELLIGENCE UI MODULE
+   * NÃO é recomendação financeira. Não executa compra/venda.
+   * Dados públicos + cálculos locais. IA só quando opcional.
+   * =======================================================*/
+  (function initBtcMi() {
+    try {
+      // -------- Helpers de formatação segura ----------
+      function fmtUsd(v) {
+        if (!Number.isFinite(v)) return '—';
+        return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', maximumFractionDigits: 2 }).format(v);
+      }
+      function fmtUsdShort(v) {
+        if (!Number.isFinite(v)) return '—';
+        const abs = Math.abs(v);
+        if (abs >= 1e9) return (v/1e9).toFixed(2) + 'B';
+        if (abs >= 1e6) return (v/1e6).toFixed(2) + 'M';
+        if (abs >= 1e3) return (v/1e3).toFixed(2) + 'K';
+        return v.toFixed(2);
+      }
+      function fmtPct(v, digits=2) {
+        if (!Number.isFinite(v)) return '—';
+        return (v >= 0 ? '+' : '') + v.toFixed(digits) + '%';
+      }
+      function fmtDate(ts) {
+        const d = new Date(Number(ts) || Date.now());
+        if (Number.isNaN(d.getTime())) return '—';
+        return d.toLocaleString('pt-BR', { hour12: false });
+      }
+      function clsBadgePct(v) {
+        if (!Number.isFinite(v)) return 'bg-white/5 text-slate-300';
+        return v > 0 ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/30'
+                     : v < 0 ? 'bg-rose-500/15 text-rose-300 border border-rose-400/30'
+                     : 'bg-white/5 text-slate-300';
+      }
+      function clsScenario(sc) {
+        if (sc === 'ALTA') return 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/30';
+        if (sc === 'BAIXA') return 'bg-rose-500/15 text-rose-300 border border-rose-400/30';
+        return 'bg-white/5 text-slate-300 border border-slate-500/20';
+      }
+      function clsScoreColor(sc) {
+        if (!Number.isFinite(sc)) return 'text-slate-400';
+        if (sc >= 70) return 'text-emerald-400';
+        if (sc >= 55) return 'text-emerald-300';
+        if (sc <= 30) return 'text-rose-400';
+        if (sc <= 45) return 'text-rose-300';
+        return 'text-sky-300';
+      }
+      function clsRiskLabel(rk) {
+        if (rk === 'ALTO') return 'bg-rose-500/15 text-rose-300 border border-rose-400/30';
+        if (rk === 'MÉDIO' || rk === 'MEDIO') return 'bg-amber-500/15 text-amber-300 border border-amber-400/30';
+        return 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/30';
+      }
+      function newsClsColor(c) {
+        if (c === 'FATO') return 'bg-blue-500/15 text-blue-300 border border-blue-400/30';
+        if (c === 'RUMOR') return 'bg-amber-500/15 text-amber-300 border border-amber-400/30';
+        if (c === 'OPINIÃO') return 'bg-purple-500/15 text-purple-300 border border-purple-400/30';
+        if (c === 'ANÁLISE' || c === 'ANALISE') return 'bg-sky-500/15 text-sky-300 border border-sky-400/30';
+        if (c === 'FONTE_NÃO_CONFIRMADA' || c === 'FONTE_NAO_CONFIRMADA' || c === 'NAO_CONFIRMADO' || c === 'UNCONFIRMED')
+          return 'bg-slate-500/10 text-slate-300 border border-slate-500/20';
+        return 'bg-white/5 text-slate-300';
+      }
+
+      // -------- Carregamento inicial status (se ainda não tem) ----------
+      window._btcLoadStatusIfMissing = _btcLoadStatusIfMissing;
+      function _btcLoadStatusIfMissing() {
+        if (state.lastBtcReport) { renderBtcDashboard(); return true; }
+        if (els.btcSpinner) els.btcSpinner.classList.remove('hidden');
+        if (els.btcDashboard) els.btcDashboard.classList.add('hidden');
+        fetch('/api/btc/status').then(r=>r.json()).then(d=>{
+          if (d && d.latestReport && typeof d.latestReport === 'object') {
+            state.lastBtcReport = d.latestReport;
+            if (els.editorPanels && els.editorPanels.dataset.active === 'btc') renderBtcDashboard();
+          } else {
+            // Sem último report ainda — avisa usuário e deixa botão manual disponível
+            if (els.btcSpinner && els.btcDashboard) {
+              els.btcSpinner.classList.add('hidden');
+              els.btcDashboard.classList.remove('hidden');
+              els.btcDashboard.innerHTML = `<div class="rounded-xl border border-amber-400/20 bg-amber-500/5 p-4 text-[11.5px] text-amber-300 leading-relaxed">
+                <div class="font-bold mb-1.5">ℹ️  Primeira análise ainda não coletada.</div>
+                Clique em <b>Coletar agora</b> no cabeçalho para obter dados reais de BTC. As próximas coletas são automáticas (configurável via variável BTC_MI_INTERVAL_MS, padrão 1 minuto).
+              </div>`;
+            }
+          }
+        }).catch(err=>{
+          console.warn('[BTC UI] status init erro', err);
+          if (els.btcSpinner) els.btcSpinner.innerHTML = `<div class="text-rose-400">⚠️ Erro ao consultar status BTC: ${escapeHtml(String(err?.message || err))}</div>`;
+        });
+        return false;
+      }
+
+      // -------- Render Dashboard ----------
+      window.renderBtcDashboard = renderBtcDashboard;
+      function renderBtcDashboard() {
+        const r = state.lastBtcReport;
+        if (!r || typeof r !== 'object') { _btcLoadStatusIfMissing(); return; }
+        if (els.btcSpinner) els.btcSpinner.classList.add('hidden');
+        if (els.btcDashboard) els.btcDashboard.classList.remove('hidden');
+
+        const ind1d = r.indicators && r.indicators['1d'] ? r.indicators['1d'] : {};
+        const ind1h = r.indicators && r.indicators['1h'] ? r.indicators['1h'] : {};
+        const price = Number(r.price) || 0;
+        const change24h = Number(r.ticker?.change24hPct);
+        const volume = Number(r.ticker?.volumeUsd);
+        const volumeBase = Number(r.ticker?.volumeBase);
+        const score = Number(r.score) || 0;
+        const mtfAlign = r.multiTimeframeAlign?.alignment || 'CONFLICTANTES';
+        const mtfAlignCls = mtfAlign === 'ALINHADOS_ALTA' || mtfAlign === 'BULL' ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/30'
+                           : (mtfAlign === 'ALINHADOS_BAIXA' || mtfAlign === 'BEAR' ? 'bg-rose-500/15 text-rose-300 border border-rose-400/30'
+                                                                             : 'bg-amber-500/15 text-amber-300 border border-amber-400/30');
+        const rsi = Number(ind1d.rsi);
+        const macdHist = Number(ind1d.macd?.histogram);
+        const atr = Number(ind1d.atr);
+        const atrPct = Number(ind1d.volatility?.atrPct);
+        const volLevel = ind1d.volatility?.level || 'NÃO OBSERVADO';
+        const boll = ind1d.bollinger || {};
+        const trend1d = ind1d.trend || {};
+        const sr = r.supportResistance1d || {};
+        const support = Number(sr.support);
+        const resistance = Number(sr.resistance);
+        const sources = (r.sourcesUsed && Array.isArray(r.sourcesUsed)) ? r.sourcesUsed.join(', ') : '—';
+        const duration = Number(r.durationMs);
+        const news = Array.isArray(r.news) ? r.news : [];
+        const positives = Array.isArray(r.positives) ? r.positives : [];
+        const negatives = Array.isArray(r.negatives) ? r.negatives : [];
+        const counts = r.ticker;
+
+        const card = (label, val, extraCls='', hint='') => `
+          <div class="rounded-lg border border-surface-border bg-surface-card/60 p-3 min-w-0 flex flex-col gap-1 ${extraCls}">
+            <div class="text-[9.5px] uppercase tracking-wider text-slate-500 font-semibold">${escapeHtml(label)}</div>
+            <div class="text-[13px] font-bold text-white min-w-0 truncate">${val}</div>
+            ${hint ? `<div class="text-[10.5px] text-slate-500 leading-snug">${hint}</div>` : ''}
+          </div>`;
+
+        // Barra de score estilo gauge
+        const pct = Math.max(0, Math.min(100, Number(score) || 0));
+        const barColor = pct >= 70 ? 'bg-emerald-500' : pct >= 55 ? 'bg-emerald-400' : pct <= 30 ? 'bg-rose-500' : pct <= 45 ? 'bg-rose-400' : 'bg-sky-400';
+        const scenarioTxt = (r.scenarioLabel && typeof r.scenarioLabel === 'string') ? escapeHtml(r.scenarioLabel) : '';
+        const disclaimer = (r.disclaimer && typeof r.disclaimer === 'string') ? escapeHtml(r.disclaimer) : '';
+
+        els.btcDashboard.innerHTML = `
+          <!-- 1. Header Preço / Variação / Cenário -->
+          <div class="rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-500/10 via-transparent to-orange-500/5 p-4 md:p-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <div class="w-9 h-9 shrink-0 rounded-xl grid place-items-center bg-amber-500/20 border border-amber-400/30">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-amber-400"><path d="M17.078 9.817c.325-2.156-1.32-3.31-3.57-4.09l.73-2.932-1.778-.441-.71 2.852c-.466-.116-.94-.225-1.414-.332l.712-2.857L8.57 1.664l-.73 2.933c-3.863.905-6.53 2.886-4.89 6.149.975 1.932 3.04 3.073 5.185 4.075-.06.25-.113.5-.166.744-1.69-.202-4.255-.664-4.484 2.47-.04.557.14 1.071.494 1.506.062.075.128.147.198.217a1 1 0 00.15.143l1.62-.609c1.127 1.193 2.56 1.87 4.196 2.302l-.726 2.915 1.778.441.73-2.932c.481.12.955.23 1.422.339l-.728 2.92 1.779.441.73-2.93c3.908-.916 6.6-2.865 4.956-6.19-.95-1.97-2.998-3.118-5.166-4.145.23-.67.418-1.35.553-2.042zm-3.291 4.684c-.52 2.088-4.059.975-5.192.687l.922-3.704c1.133.289 4.801.848 4.27 3.017zm.525-4.693c-.475 1.902-3.393.922-4.35.675l.83-3.33c.956.248 4.006.701 3.52 2.655z"/></svg>
+                  </div>
+                  <div class="min-w-0">
+                    <div class="text-[11.5px] text-slate-400 font-semibold">${escapeHtml(String(r.symbol || 'BTC/USD'))}</div>
+                    <div class="text-[28px] leading-none font-black tracking-[-0.02em] text-white mt-0.5">${fmtUsd(price)}</div>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 mt-3">
+                  <span class="inline-flex items-center gap-1 rounded-md px-2 py-1 border text-[11px] font-semibold ${clsBadgePct(change24h)}">
+                    ${change24h >= 0 ? '▲' : '▼'} Variação 24h: ${fmtPct(change24h)}
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-md px-2 py-1 border bg-white/5 text-slate-300 border-slate-500/20 text-[11px] font-semibold">
+                    Volume 24h: $${fmtUsdShort(volume)} (${fmtUsdShort(volumeBase)} BTC)
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-md px-2 py-1 border text-[11px] font-semibold ${clsScenario(r.scenario)}">
+                    Cenário: ${escapeHtml(r.scenario || 'NEUTRO')}
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-md px-2 py-1 border text-[11px] font-semibold ${mtfAlignCls}">
+                    MTF: ${escapeHtml(mtfAlign)}
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-md px-2 py-1 border text-[11px] font-semibold ${clsRiskLabel(r.riskLevel)}">
+                    Risco: ${escapeHtml(r.riskLevel || '—')}
+                  </span>
+                </div>
+              </div>
+              <div class="w-full sm:w-[230px] shrink-0 rounded-xl border border-surface-border bg-surface-soft/60 p-3.5 flex flex-col items-center gap-2">
+                <div class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Score 0-100</div>
+                <div class="text-[40px] leading-none font-black ${clsScoreColor(pct)}">${pct.toFixed(0)}<span class="text-[18px] font-bold text-slate-500">/100</span></div>
+                <div class="w-full h-2 rounded-full bg-white/5 overflow-hidden">
+                  <div class="h-full ${barColor} transition-all" style="width:${pct.toFixed(1)}%"></div>
+                </div>
+                <div class="text-[10.5px] text-slate-500 leading-snug text-center">
+                  Força do sinal: <b class="text-slate-300">${escapeHtml(r.scenarioStrength || '—')}</b>
+                </div>
+              </div>
+            </div>
+            <!-- Cenário label + disclaimer obrigatório -->
+            ${scenarioTxt ? `
+              <div class="mt-4 rounded-lg border border-slate-500/20 bg-white/[0.02] p-3 text-[11.5px] text-slate-300 leading-relaxed">
+                <div class="mb-1"><span class="text-amber-300 font-bold">Interpretação:</span> ${scenarioTxt}</div>
+                <div class="text-slate-500 text-[10.5px]">${disclaimer}</div>
+              </div>` : ''}
+          </div>
+
+          <!-- 2. Grid Indicadores Principais -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2.5">
+            ${card('RSI 14 (1D)', Number.isFinite(rsi) ? rsi.toFixed(1) : '—', '',
+              Number.isFinite(rsi) ? (rsi>=70 ? 'Sobrecomprado' : rsi<=30 ? 'Sobrevendido' : 'Neutro') : 'Sem dados')}
+            ${card('MACD Hist (1D)', Number.isFinite(macdHist) ? (macdHist>=0?'+':'') + (atrPct && price ? ((macdHist/price*100).toFixed(3)) : macdHist.toFixed(2)) : '—', '',
+              Number.isFinite(macdHist) ? (macdHist>0 ? 'Histograma positivo' : macdHist<0 ? 'Histograma negativo' : 'Cruzamento neutro') : 'Sem dados')}
+            ${card('ATR (1D)', Number.isFinite(atr) ? fmtUsd(atr) : '—', '',
+              Number.isFinite(atrPct) ? `Volatilidade: ${atrPct.toFixed(2)}% do preço` : '')}
+            ${card('Bollinger %B (1D)', Number.isFinite(boll.pctB) ? (boll.pctB*100).toFixed(1)+'%' : '—', '',
+              Number.isFinite(boll.pctB)
+                ? (boll.pctB<=0 ? 'Fora banda inferior (suporte?)'
+                  : boll.pctB>=1 ? 'Fora banda superior (resistência?)'
+                  : `Posição: banda ${Math.round(boll.pctB*100)}%`)
+                : 'Sem dados')}
+            ${card('Suporte (1D)', Number.isFinite(support) ? fmtUsd(support) : '—', '',
+              Number.isFinite(support) && price ? `Dist: ${((price-support)/price*100).toFixed(2)}% abaixo` : '')}
+            ${card('Resistência (1D)', Number.isFinite(resistance) ? fmtUsd(resistance) : '—', '',
+              Number.isFinite(resistance) && price ? `Dist: ${((resistance-price)/price*100).toFixed(2)}% acima` : '')}
+            ${card('Tendência (1D)', escapeHtml(trend1d.trend || '—'), '',
+              `Força: ${escapeHtml(trend1d.strength || '—')}`)}
+            ${card('Volatilidade', escapeHtml(volLevel), '',
+              Number.isFinite(atrPct) ? `ATR% ${atrPct.toFixed(2)}% · quanto maior, maior incerteza` : '')}
+            ${card('Volume Médio 20', Number.isFinite(ind1d.volume?.avgVol) ? fmtUsdShort(ind1d.volume.avgVol) : '—', '',
+              ind1d.volume?.status ? `Status: ${escapeHtml(ind1d.volume.status)}` : '')}
+            ${card('Volume Relativo', Number.isFinite(ind1d.volume?.relative) ? ind1d.volume.relative.toFixed(2)+'x' : '—', '',
+              Number.isFinite(ind1d.volume?.relative) ? (ind1d.volume.relative>=2.5 ? 'Aumento anormal' : ind1d.volume.relative>=1.2 ? 'Acima da média' : ind1d.volume.relative<=0.5 ? 'Em queda' : 'Normal') : '')}
+            ${card('Momentum ROC (1D,10)', Number.isFinite(ind1d.momentum) ? (ind1d.momentum>=0?'+':'') + ind1d.momentum.toFixed(2)+'%' : '—', '',
+              Number.isFinite(ind1d.momentum) ? (ind1d.momentum>0 ? 'Momentum positivo' : ind1d.momentum<0 ? 'Momentum negativo' : 'Neutro') : '')}
+            ${card('Últ. Candle 1D', escapeHtml(ind1d.lastCandle?.pattern || '—'), '',
+              (counts && Number.isFinite(counts.high24h) && Number.isFinite(counts.low24h)) ? `24h H/L: ${fmtUsd(counts.high24h)} / ${fmtUsd(counts.low24h)}` : '')}
+          </div>
+
+          <!-- 3. Multi-Timeframe table -->
+          <div class="rounded-xl border border-surface-border bg-surface-card/60 p-4 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-[11.5px] font-bold text-white uppercase tracking-wider">Análise Multi-Timeframe</div>
+              <div class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 border text-[10.5px] font-semibold ${mtfAlignCls}">
+                Alinhamento geral: ${escapeHtml(mtfAlign)}
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-[11px]">
+                <thead>
+                  <tr class="text-slate-500 uppercase tracking-wider text-[9.5px]">
+                    <th class="text-left py-1.5 pr-3">TF</th>
+                    <th class="text-left py-1.5 pr-3">Preço</th>
+                    <th class="text-left py-1.5 pr-3">Tendência</th>
+                    <th class="text-left py-1.5 pr-3">RSI</th>
+                    <th class="text-left py-1.5 pr-3">MACD</th>
+                    <th class="text-left py-1.5 pr-3">Volatilidade</th>
+                    <th class="text-left py-1.5 pr-3">Volume Relativo</th>
+                    <th class="text-left py-1.5 pr-3">Velas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                ${['1m','5m','15m','1h','4h','1d'].map(tf => {
+                  const i = r.indicators && r.indicators[tf] ? r.indicators[tf] : {};
+                  const p = Number(i.priceNow);
+                  const t = i.trend || {};
+                  const rs = Number(i.rsi);
+                  const mh = Number(i.macd?.histogram);
+                  const vol = i.volatility?.level || '—';
+                  const vr = Number(i.volume?.relative);
+                  const n = Number(i.count);
+                  return `<tr class="border-t border-white/5">
+                    <td class="py-1.5 pr-3 font-bold text-slate-300">${tf.toUpperCase()}</td>
+                    <td class="py-1.5 pr-3 text-slate-300 font-mono">${p ? fmtUsd(p) : '—'}</td>
+                    <td class="py-1.5 pr-3">${t.trend ? `<span class="inline-flex rounded px-1.5 py-0.5 border text-[10px] font-semibold ${clsScenario(t.trend)}">${escapeHtml(t.trend)}</span>` : '—'}</td>
+                    <td class="py-1.5 pr-3 text-slate-300 font-mono">${Number.isFinite(rs)?rs.toFixed(1):'—'}</td>
+                    <td class="py-1.5 pr-3 text-slate-300 font-mono">${Number.isFinite(mh)?(mh>=0?'+':'') + mh.toFixed(2):'—'}</td>
+                    <td class="py-1.5 pr-3 text-slate-300">${escapeHtml(vol)}</td>
+                    <td class="py-1.5 pr-3 text-slate-300 font-mono">${Number.isFinite(vr)?vr.toFixed(2)+'x':'—'}</td>
+                    <td class="py-1.5 pr-3 text-slate-400">${n || '—'}</td>
+                  </tr>`;
+                }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 4. Fatores Positivos / Negativos -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-4 space-y-2">
+              <div class="text-[11.5px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Fatores positivos (${positives.length})
+              </div>
+              ${positives.length ? `<ul class="space-y-1.5 text-[11px] text-emerald-200/90 leading-relaxed list-disc list-inside marker:text-emerald-400/70">${positives.slice(0,8).map(p=>`<li>${escapeHtml(p)}</li>`).join('')}</ul>`
+                                 : `<div class="text-[10.5px] text-emerald-200/50">Nenhum fator positivo destacado nesta coleta.</div>`}
+            </div>
+            <div class="rounded-xl border border-rose-400/20 bg-rose-500/5 p-4 space-y-2">
+              <div class="text-[11.5px] font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                Fatores negativos / cautelas (${negatives.length})
+              </div>
+              ${negatives.length ? `<ul class="space-y-1.5 text-[11px] text-rose-200/90 leading-relaxed list-disc list-inside marker:text-rose-400/70">${negatives.slice(0,8).map(p=>`<li>${escapeHtml(p)}</li>`).join('')}</ul>`
+                                 : `<div class="text-[10.5px] text-rose-200/50">Nenhum fator de risco destacado nesta coleta.</div>`}
+            </div>
+          </div>
+
+          <!-- 5. Notícias / Eventos consideradas -->
+          <div class="rounded-xl border border-surface-border bg-surface-card/60 p-4 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-[11.5px] font-bold text-white uppercase tracking-wider">Notícias / Eventos considerados (${news.length})</div>
+              <div class="text-[10px] text-slate-500">Conteúdo externo é DADO, não COMANDO.</div>
+            </div>
+            ${news.length === 0
+              ? `<div class="text-[11px] text-slate-500">Nenhuma notícia coletada nesta rodada.</div>`
+              : `<div class="space-y-2">${news.slice(0, 10).map(n => {
+                const impact = Number(n.impactScore);
+                const impCls = impact >= 0.4 ? 'text-emerald-400' : impact <= -0.4 ? 'text-rose-400' : 'text-slate-400';
+                return `<div class="rounded-lg border border-white/5 bg-white/[0.02] p-2.5 text-[11px] space-y-1">
+                  <div class="flex items-start gap-2 min-w-0">
+                    <span class="inline-flex shrink-0 rounded px-1.5 py-0.5 border text-[9.5px] font-bold ${newsClsColor(n.classification)}">${escapeHtml(n.classification || 'NÃO CLASSIFICADO')}</span>
+                    <span class="inline-flex shrink-0 rounded px-1.5 py-0.5 border bg-white/5 text-[9.5px] border-slate-500/20 ${impCls} font-bold">
+                      Impacto ${impact>=0?'+':''}${impact.toFixed(2)}
+                    </span>
+                    <span class="text-[10px] text-slate-500 shrink-0 font-mono">${fmtDate(n.publishedAtMs)}</span>
+                    <span class="text-[10px] text-slate-500 shrink-0 ml-auto truncate max-w-[200px]">${escapeHtml(String(n.source || ''))}</span>
+                  </div>
+                  <div class="text-slate-200 leading-snug">${escapeHtml(String(n.title || ''))}</div>
+                  ${n.url ? `<a href="${escapeHtml(String(n.url))}" target="_blank" rel="noopener noreferrer nofollow" class="text-[10px] text-sky-300 hover:text-sky-200 underline break-all">Fonte</a>` : ''}
+                  <div class="text-[9.5px] text-slate-500">Confiança nesta notícia: ${Math.round((Number(n.trustLevel)||0)*100)}%</div>
+                </div>`;
+              }).join('')}</div>`
+            }
+          </div>
+
+          <!-- 6. Footer: Atualização / Fontes / Debug leve -->
+          <div class="rounded-xl border border-slate-500/20 bg-white/[0.015] p-3.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10.5px] text-slate-500">
+            <div>Atualizado: <span class="text-slate-300 font-semibold">${fmtDate(r.finishedAtMs || r._ts || r.startedAtMs)}</span></div>
+            <div>Duração coleta: <span class="text-slate-300">${Number.isFinite(duration) ? duration + 'ms' : '—'}</span></div>
+            <div>Fontes: <span class="text-slate-300">${escapeHtml(sources)}</span></div>
+            <div>Timeframes OK: <span class="text-slate-300">${(r.timeframeSummary?.available||[]).join(', ') || '0'}</span></div>
+            <div>TFs sem dados: <span class="text-slate-300">${(['1m','5m','15m','1h','4h','1d'].filter(k=>!(r.timeframeSummary?.available||[]).includes(k)).join(', ') || '0')}</span></div>
+            <div>Versão schema: <span class="text-slate-300">${escapeHtml(String(r.version || '?'))}</span></div>
+          </div>
+        `;
+      }
+
+      // -------- Histórico ----------
+      async function _btcOpenHistory() {
+        if (!els.btcHistoryPanel) return;
+        try {
+          const r = await fetch('/api/btc/history?limit=100').then(r=>r.json());
+          state.btcHistory = r && r.items ? r.items : [];
+          els.btcHistoryPanel.classList.remove('hidden');
+          const items = state.btcHistory;
+          els.btcHistoryPanel.innerHTML = `
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <div class="text-[11.5px] font-bold text-emerald-300 uppercase tracking-wider">Histórico (${items.length})</div>
+              <button id="btc-history-close" class="text-[10.5px] px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 border border-white/5 text-slate-300 transition">Fechar</button>
+            </div>
+            ${items.length === 0
+              ? `<div class="text-[11px] text-slate-500">Sem histórico ainda. Realize uma coleta para começar a salvar.</div>`
+              : `<div class="overflow-x-auto">
+                <table class="w-full text-[11px]">
+                  <thead><tr class="text-slate-500 uppercase tracking-wider text-[9.5px]">
+                    <th class="text-left py-1 pr-3">Horário</th>
+                    <th class="text-left py-1 pr-3">Preço</th>
+                    <th class="text-left py-1 pr-3">Score</th>
+                    <th class="text-left py-1 pr-3">Cenário</th>
+                    <th class="text-left py-1 pr-3">TF Alinhamento</th>
+                    <th class="text-left py-1 pr-3">Risco</th>
+                  </tr></thead>
+                  <tbody>
+                  ${items.map(x => `<tr class="border-t border-white/5">
+                    <td class="py-1 pr-3 text-slate-300 font-mono whitespace-nowrap">${fmtDate(x.ts)}</td>
+                    <td class="py-1 pr-3 text-slate-300 font-mono">${fmtUsd(Number(x.price))}</td>
+                    <td class="py-1 pr-3 font-bold ${clsScoreColor(Number(x.score))}">${Number(x.score).toFixed(0)}/100</td>
+                    <td class="py-1 pr-3"><span class="inline-flex rounded px-1.5 py-0.5 border text-[10px] font-semibold ${clsScenario(x.scenario)}">${escapeHtml(x.scenario || '—')}</span></td>
+                    <td class="py-1 pr-3 text-slate-300">${escapeHtml(x.mtfAlign || '—')}</td>
+                    <td class="py-1 pr-3"><span class="inline-flex rounded px-1.5 py-0.5 border text-[10px] font-semibold ${clsRiskLabel(x.riskLevel)}">${escapeHtml(x.riskLevel || '—')}</span></td>
+                  </tr>`).join('')}
+                  </tbody>
+                </table></div>`
+            }
+          `;
+          document.getElementById('btc-history-close')?.addEventListener('click', () => els.btcHistoryPanel?.classList.add('hidden'));
+        } catch (e) {
+          toast('Erro ao carregar histórico: ' + (e?.message || e), 'err');
+        }
+      }
+
+      // -------- Backtest ----------
+      async function _btcOpenBacktest() {
+        if (!els.btcBacktestPanel) return;
+        els.btcBacktestPanel.classList.remove('hidden');
+        els.btcBacktestPanel.innerHTML = `<div class="text-[11px] text-sky-300 inline-flex items-center gap-2"><svg width="14" height="14" class="animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Rodando backtest (coleta dados históricos 1d de Binance/CoinGecko + simulação)… Pode levar ~10s.</div>`;
+        try {
+          const r = await fetch('/api/btc/backtest').then(r=>r.json());
+          state.btcBacktest = r;
+          const s = r && r.summary ? r.summary : {};
+          els.btcBacktestPanel.innerHTML = `
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <div class="text-[11.5px] font-bold text-sky-300 uppercase tracking-wider">Backtest · ${escapeHtml(r.label || '')}</div>
+              <button id="btc-backtest-close" class="text-[10.5px] px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 border border-white/5 text-slate-300 transition">Fechar</button>
+            </div>
+            ${r && r.ok === false
+              ? `<div class="text-[11px] text-rose-300">Erro: ${escapeHtml(String(r.error || ''))}</div>`
+              : `<div class="space-y-2">
+                <div class="text-[11px] text-slate-400 leading-relaxed">${escapeHtml(String(s.note || r.note || ''))}${s.warning ? ` ⚠️ ${escapeHtml(String(s.warning))}` : ''}</div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  ${card('Velas Input', String(s.candlesInput || 0))}
+                  ${card('Sinais Avaliados', String(s.signalsEvaluated || 0))}
+                  ${card('Acurácia (sinais não-neutros)', Number.isFinite(s.accuracyPct) ? s.accuracyPct.toFixed(1)+'%' : '—')}
+                  ${card('Total não-neutros', String(s.counts?.totalNaoNeutro || 0))}
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                  ${card('Alta confirmada (HIT)', String(s.counts?.altaConfirm || 0), 'border-emerald-400/20 bg-emerald-500/5')}
+                  ${card('Alta falhou (MISS)', String(s.counts?.altaFalha || 0), 'border-rose-400/20 bg-rose-500/5')}
+                  ${card('Baixa confirmada (HIT)', String(s.counts?.baixaConfirm || 0), 'border-emerald-400/20 bg-emerald-500/5')}
+                  ${card('Baixa falhou (MISS)', String(s.counts?.baixaFalha || 0), 'border-rose-400/20 bg-rose-500/5')}
+                  ${card('Neutros (ignorados)', String(s.counts?.neutro || 0))}
+                </div>
+                ${r.sample && Array.isArray(r.sample) && r.sample.length ? `
+                <div class="rounded-lg border border-white/5 bg-white/[0.02] p-2.5">
+                  <div class="text-[10.5px] text-slate-500 uppercase tracking-wider font-bold mb-1.5">Últimos ${r.sample.length} sinais do backtest</div>
+                  <div class="overflow-x-auto">
+                  <table class="w-full text-[10.5px]">
+                    <thead><tr class="text-slate-500 uppercase tracking-wider text-[9px]">
+                      <th class="text-left py-1 pr-2">Data</th>
+                      <th class="text-left py-1 pr-2">Preço</th>
+                      <th class="text-left py-1 pr-2">Score</th>
+                      <th class="text-left py-1 pr-2">Cenário</th>
+                      <th class="text-left py-1 pr-2">TF Alinh.</th>
+                      <th class="text-left py-1 pr-2">Δ1</th>
+                      <th class="text-left py-1 pr-2">Δ5</th>
+                      <th class="text-left py-1 pr-2">Δ20</th>
+                      <th class="text-left py-1 pr-2">Resultado</th>
+                    </tr></thead>
+                    <tbody>
+                    ${r.sample.map(x => `<tr class="border-t border-white/5">
+                      <td class="py-1 pr-2 text-slate-300 font-mono whitespace-nowrap">${escapeHtml(String(x.dateISO).slice(0,10))}</td>
+                      <td class="py-1 pr-2 text-slate-300 font-mono">${fmtUsd(Number(x.priceNow))}</td>
+                      <td class="py-1 pr-2 font-bold ${clsScoreColor(Number(x.score))}">${Number(x.score).toFixed(0)}</td>
+                      <td class="py-1 pr-2"><span class="inline-flex rounded px-1 py-0.5 border text-[9.5px] font-semibold ${clsScenario(x.scenario)}">${escapeHtml(x.scenario||'')}</span></td>
+                      <td class="py-1 pr-2 text-slate-300">${escapeHtml(x.mtfAlign||'')}</td>
+                      <td class="py-1 pr-2 text-slate-300 font-mono">${fmtPct(Number(x.delta1Pct),1)}</td>
+                      <td class="py-1 pr-2 text-slate-300 font-mono">${fmtPct(Number(x.delta5Pct),1)}</td>
+                      <td class="py-1 pr-2 text-slate-300 font-mono">${fmtPct(Number(x.delta20Pct),1)}</td>
+                      <td class="py-1 pr-2"><span class="inline-flex rounded px-1 py-0.5 border text-[9.5px] font-semibold ${String(x.resultHIT_MISS||'').startsWith('HIT') ? 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30' : String(x.resultHIT_MISS||'').startsWith('MISS') ? 'bg-rose-500/15 text-rose-300 border-rose-400/30' : 'bg-white/5 text-slate-300'}">${escapeHtml(x.resultHIT_MISS||'—')}</span></td>
+                    </tr>`).join('')}
+                    </tbody>
+                  </table></div>
+                </div>` : ''}
+              </div>`
+            }
+          `;
+          document.getElementById('btc-backtest-close')?.addEventListener('click', () => els.btcBacktestPanel?.classList.add('hidden'));
+        } catch (e) {
+          els.btcBacktestPanel.innerHTML = `<div class="text-[11px] text-rose-300">Erro no backtest: ${escapeHtml(String(e?.message || e))}</div>`;
+          toast('Erro backtest: ' + (e?.message || e), 'err');
+        }
+      }
+
+      // -------- Coleta manual ----------
+      async function _btcManualCollect() {
+        const btn = els.btcManualBtn;
+        if (!btn) return;
+        const origHTML = btn.innerHTML;
+        try {
+          btn.disabled = true;
+          btn.classList.add('opacity-60', 'cursor-wait');
+          btn.innerHTML = `<svg width="10" height="10" class="animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Coletando…</span>`;
+          if (els.btcSpinner) { els.btcSpinner.classList.remove('hidden'); els.btcDashboard?.classList.add('hidden'); }
+          const r = await fetch('/api/btc/manual', { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' }).then(r=>r.json());
+          if (r && r.report && typeof r.report === 'object') {
+            state.lastBtcReport = r.report;
+            renderBtcDashboard();
+            toast(`₿ Coleta manual OK · score ${r.report.score?.toFixed?.(0)??'?'} · ${r.report.scenario ?? '?'} · ${r.alertsFired||0} alertas novos`, 'ok');
+          } else {
+            throw new Error(r && r.error ? String(r.error) : 'Resposta inválida.');
+          }
+        } catch (e) {
+          toast('Erro coleta BTC: ' + (e?.message || e), 'err');
+        } finally {
+          btn.disabled = false;
+          btn.classList.remove('opacity-60','cursor-wait');
+          btn.innerHTML = origHTML;
+        }
+      }
+
+      // -------- Anexar listeners dos 3 botões ----------
+      if (els.btcManualBtn && !els.btcManualBtn.__btcAtt) {
+        els.btcManualBtn.addEventListener('click', () => _btcManualCollect());
+        els.btcManualBtn.__btcAtt = true;
+      }
+      if (els.btcBacktestBtn && !els.btcBacktestBtn.__btcAtt) {
+        els.btcBacktestBtn.addEventListener('click', () => _btcOpenBacktest());
+        els.btcBacktestBtn.__btcAtt = true;
+      }
+      if (els.btcHistoryBtn && !els.btcHistoryBtn.__btcAtt) {
+        els.btcHistoryBtn.addEventListener('click', () => _btcOpenHistory());
+        els.btcHistoryBtn.__btcAtt = true;
+      }
+      console.debug('[BTC UI] módulo carregado. refs: btcPanel=', Boolean(els.btcPanel), ', btcDashboard=', Boolean(els.btcDashboard), ', btcManualBtn=', Boolean(els.btcManualBtn));
+    } catch (btcInitErr) { console.warn('[BTC UI] init WARN', btcInitErr); }
+  })();
+
 })();
