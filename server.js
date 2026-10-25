@@ -43,7 +43,10 @@ import * as BtcMi from './btc_market/scheduler.js';
 import { QuantfurySvc } from './quantfury/service.mjs';
 import { QuantfuryMonitor } from './quantfury/scheduler.mjs';
 import { analyzeQuantfuryPosition } from './quantfury/analysis.mjs';
+import * as JogosSvc from './jogos/service.js';
+import { monteCarlo } from './jogos/motor.js';
 const BTC_MI_DATA_DIR = path.resolve(process.cwd(), 'btc_market/data');
+const JOGOS_DATA_DIR = path.resolve(process.cwd(), 'jogos/data');
 const BTC_MI_INTERVAL_MS = Number(process.env.BTC_MI_INTERVAL_MS || 60000) || 60000;
 
 const execAsync = promisify(exec);
@@ -1044,6 +1047,17 @@ const __BROWSER_AGENT = createBrowserAgent({
   fetchFn: (u, o) => fetch(u, Object.assign({ headers: { 'User-Agent': 'Mozilla/5.0 TiAgente-BrowserAgent/v1 (fetch fallback)' }, signal: (o && o.signal) ? o.signal : (typeof AbortSignal !== 'undefined' ? AbortSignal.timeout(60000) : undefined) }, o || {})),
 });
 console.log(`🌐 BrowserAgent v1: backend=${__BROWSER_AGENT.backend}${__BROWSER_AGENT.backend==='FETCH_PARSE'?' (fallback fetch+html — sem browser real; puppeteer/playwright não instalados)':' (MCP integrated_browser — navegador real)'}`);
+// Jogos · Central de inteligência matemática (módulo isolado · SOMENTE ANÁLISE)
+try {
+  JogosSvc.init({
+    dataDir: JOGOS_DATA_DIR,
+    allowFn: isAllowedOutboundDomain,
+    browserAgent: __BROWSER_AGENT,
+  });
+  console.log(`🎲 Jogos: módulo iniciado · backend=${JogosSvc.status().browser.backend} · dataDir=${JOGOS_DATA_DIR}`);
+} catch (e) {
+  console.warn('[JOGOS] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
+}
 const RC27_SAVE_EVERY_N_TOOL_CALLS = Math.max(1, parseInt(process.env.RC27_SAVE_EVERY_N_TOOL_CALLS || '3', 10));
 
 console.log(
@@ -7472,6 +7486,36 @@ app.post('/api/quantfury/chat', _QF_JSON, _QF_NO_CACHE, async (req, res) => {
     res.status(500).json({ ok: false, error: msg });
   }
 });
+
+/* =============== JOGOS · Central de inteligência matemática (módulo isolado · SOMENTE ANÁLISE) =============== */
+const _JG_JSON = express.json({ limit: '2mb' });
+const _JG_NO_CACHE = (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  next();
+};
+const _jg = (fn) => async (req, res) => {
+  try { res.json(await fn(req)); }
+  catch (e) { res.status(500).json({ ok: false, reason: 'Não foi possível concluir a operação agora.' }); }
+};
+
+app.get('/api/jogos/status', _JG_NO_CACHE, _jg(async () => JogosSvc.status()));
+app.get('/api/jogos/sessions', _JG_NO_CACHE, _jg(async () => JogosSvc.listSessions()));
+app.get('/api/jogos/session/:id', _JG_NO_CACHE, _jg(async (req) => JogosSvc.getSession(req.params.id, { includeRecords: req.query?.records !== '0' })));
+app.post('/api/jogos/session', _JG_JSON, _jg(async (req) => JogosSvc.createSession(req.body || {})));
+app.post('/api/jogos/session/:id/records', _JG_JSON, _jg(async (req) => JogosSvc.appendRecords(req.params.id, req.body?.records || [], req.body || {})));
+app.post('/api/jogos/session/:id/import', _JG_JSON, _jg(async (req) => JogosSvc.importData(req.params.id, req.body || {})));
+app.post('/api/jogos/session/:id/reference', _JG_JSON, _jg(async (req) => JogosSvc.setReference(req.params.id, req.body || {})));
+app.post('/api/jogos/session/:id/analyze', _JG_JSON, _jg(async (req) => JogosSvc.analyze(req.params.id, req.body || {})));
+app.post('/api/jogos/session/:id/state', _JG_JSON, _jg(async (req) => JogosSvc.setSessionState(req.params.id, req.body?.status)));
+app.post('/api/jogos/session/:id/end', _JG_JSON, _jg(async (req) => JogosSvc.endSession(req.params.id)));
+app.post('/api/jogos/session/:id/auto', _JG_JSON, _jg(async (req) => JogosSvc.setAutoMode(req.params.id, req.body || {})));
+app.post('/api/jogos/session/:id/auto/step', _JG_JSON, _jg(async (req) => JogosSvc.autoStep(req.params.id, req.body || {})));
+app.delete('/api/jogos/session/:id', _JG_JSON, _jg(async (req) => JogosSvc.deleteSession(req.params.id)));
+app.post('/api/jogos/browser/open', _JG_JSON, _jg(async (req) => JogosSvc.openBrowser(req.body?.url)));
+app.post('/api/jogos/montecarlo', _JG_JSON, _jg(async (req) => {
+  const sim = monteCarlo(req.body || {});
+  return sim.ok ? { ok: true, simulation: sim } : sim;
+}));
 
 // =============== STARTUP: Garante TODOS projetos (mounted e workspace) têm SERVIDOR PREVIEW DEDICADO RODANDO ANTES do listen ===============
 // Isso RESOLVE o bug do usuário "preview em branco / porta não abre após restart servidor" — antes startProjectPreviewServer só era chamado no endpoint mount, nunca no startup!

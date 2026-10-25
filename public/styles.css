@@ -1534,6 +1534,7 @@ body.ti-keyboard-up .trae-chat-form {
 #editor-panels[data-active="ia-config"] [data-editor-panel="ia-config"] { display: flex; }
 #editor-panels[data-active="btc"]      [data-editor-panel="btc"]      { display: flex; }
 #editor-panels[data-active="quantfury"] [data-editor-panel="quantfury"] { display: flex; }
+#editor-panels[data-active="jogos"]    [data-editor-panel="jogos"]    { display: flex; }
 
 /* ---------- Editor Tabs (VSCode / TiAi style) ---------- */
 .editor-tab {

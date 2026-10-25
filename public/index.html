@@ -252,6 +252,10 @@
             <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-cyan-300 shrink-0"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-6"/><circle cx="12" cy="12" r="0.4" fill="currentColor"/></svg>
             <span class="truncate font-medium">Q Quantfury</span>
           </button>
+          <button class="editor-tab flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="jogos" title="Jogos · Central de inteligência matemática (ANÁLISE — não prevê resultados aleatórios)">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-violet-300 shrink-0"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/></svg>
+            <span class="truncate font-medium">Jogos</span>
+          </button>
         </div>
         <!-- Ln/Col info (legível) -->
         <div class="ml-auto mr-2.5 flex items-center gap-2 text-[10.5px] text-slate-500 font-mono whitespace-nowrap pb-1">
@@ -512,6 +516,194 @@
             <div id="qtf-empty-state" class="rounded-xl border border-slate-500/20 bg-white/[0.02] p-5 text-center space-y-2">
               <div class="text-[11px] text-slate-500">Conecte-se à sua conta Quantfury para visualizar posições, saldo e análises.</div>
               <div class="text-[9.5px] text-slate-600">MODO SOMENTE LEITURA · Nenhuma operação de compra/venda será executada</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Jogos · Central de inteligência matemática (aba "Jogos") · Módulo isolado · SOMENTE ANÁLISE ===== -->
+        <div data-editor-panel="jogos" class="editor-panel hidden flex-1 flex-col min-h-0 bg-[#060918]" id="jogos-panel">
+          <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between gap-2 text-[10.5px]">
+            <div class="flex items-center gap-2 text-violet-300 font-bold uppercase tracking-wider truncate">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="shrink-0"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/></svg>
+              <span class="truncate">Central de inteligência matemática · ANÁLISE (não prevê resultados aleatórios)</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 border border-violet-400/20 bg-white/5 text-[10.5px] font-bold text-violet-200" title="Backend real do coletor">
+                <span id="jg-backend-dot">⚪</span>
+                <span id="jg-backend-label">verificando…</span>
+              </span>
+              <button id="jg-refresh-btn" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition font-bold disabled:opacity-50" title="Atualizar dados da sessão">
+                <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+              </button>
+              <button id="jg-end-btn" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Encerrar sessão">
+                <span class="hidden sm:inline">Encerrar</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="jg-body" class="flex-1 overflow-auto p-3 md:p-4 space-y-3">
+
+            <!-- Barra de sessão: site + jogo + controles -->
+            <div class="rounded-xl border border-violet-400/20 bg-violet-500/[0.04] p-3 space-y-2.5">
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+                <label class="md:col-span-5 flex flex-col gap-1">
+                  <span class="text-[9.5px] uppercase tracking-wider text-slate-400 font-bold">URL do site</span>
+                  <input id="jg-site-url" type="url" inputmode="url" placeholder="https://…" class="bg-[#0a0e1f] text-[11.5px] text-slate-200 rounded-md px-2 py-1.5 h-8 border border-white/10 outline-none focus:border-violet-400/50 font-mono min-w-0">
+                </label>
+                <label class="md:col-span-3 flex flex-col gap-1">
+                  <span class="text-[9.5px] uppercase tracking-wider text-slate-400 font-bold">Jogo</span>
+                  <input id="jg-game-name" type="text" placeholder="ex.: Crash / Roleta / Slots" class="bg-[#0a0e1f] text-[11.5px] text-slate-200 rounded-md px-2 py-1.5 h-8 border border-white/10 outline-none focus:border-violet-400/50 min-w-0">
+                </label>
+                <label class="md:col-span-2 flex flex-col gap-1">
+                  <span class="text-[9.5px] uppercase tracking-wider text-slate-400 font-bold">Versão</span>
+                  <input id="jg-game-version" type="text" placeholder="opcional" class="bg-[#0a0e1f] text-[11.5px] text-slate-200 rounded-md px-2 py-1.5 h-8 border border-white/10 outline-none focus:border-violet-400/50 min-w-0">
+                </label>
+                <label class="md:col-span-2 flex flex-col gap-1">
+                  <span class="text-[9.5px] uppercase tracking-wider text-slate-400 font-bold">Modo</span>
+                  <select id="jg-mode-select" class="bg-[#0a0e1f] text-[11.5px] text-slate-200 rounded-md px-2 py-1.5 h-8 border border-white/10 outline-none focus:border-violet-400/50 min-w-0">
+                    <option value="">não informado</option>
+                    <option value="normal">normal</option>
+                    <option value="turbo">turbo</option>
+                  </select>
+                </label>
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button id="jg-open-btn" class="text-white px-3 py-1.5 rounded-md bg-gradient-to-br from-violet-500 to-indigo-600 hover:from-violet-400 hover:to-indigo-500 border border-violet-400/40 shadow transition font-bold text-[10.5px] flex items-center gap-1.5">
+                  <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  Abrir no navegador
+                </button>
+                <button id="jg-new-session-btn" class="text-white px-3 py-1.5 rounded-md bg-gradient-to-br from-fuchsia-500 to-violet-600 hover:from-fuchsia-400 hover:to-violet-500 border border-fuchsia-400/40 shadow transition font-bold text-[10.5px]">Nova sessão</button>
+                <button id="jg-start-btn" class="text-slate-200 px-3 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 transition font-bold text-[10.5px] disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Iniciar observação">Iniciar observação</button>
+                <button id="jg-pause-btn" class="text-slate-200 px-3 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 transition font-bold text-[10.5px] disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Pausar observação">Pausar</button>
+                <div class="ml-auto flex items-center gap-1.5 min-w-0">
+                  <span class="text-[9.5px] uppercase tracking-wider text-slate-500 font-bold shrink-0">Sessão</span>
+                  <select id="jg-session-select" class="bg-[#0a0e1f] text-[11px] text-slate-300 rounded-md px-2 py-1 h-8 border border-white/10 outline-none focus:border-violet-400/50 max-w-[240px] min-w-0"></select>
+                </div>
+              </div>
+              <div id="jg-msg" class="hidden rounded-md border border-amber-400/25 bg-amber-500/[0.07] px-2.5 py-1.5 text-[10.5px] text-amber-200 leading-relaxed"></div>
+            </div>
+
+            <!-- Navegador integrado + análise -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+              <div class="lg:col-span-7 rounded-xl border border-white/10 bg-black/25 overflow-hidden flex flex-col min-h-[280px]">
+                <div class="shrink-0 flex items-center gap-2 px-2.5 py-1.5 border-b border-white/5 bg-white/[0.02]">
+                  <span class="text-[9.5px] uppercase tracking-wider text-slate-500 font-bold">Navegador integrado</span>
+                  <span id="jg-browser-host" class="text-[10px] font-mono text-slate-500 truncate">—</span>
+                  <button id="jg-expand-btn" class="ml-auto text-slate-400 hover:text-white px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition text-[10px] font-bold" title="Ampliar/reduzir área do jogo">Ampliar</button>
+                  <a id="jg-browser-external" href="#" target="_blank" rel="noopener noreferrer nofollow" class="text-slate-400 hover:text-white px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition text-[10px] font-bold">Nova aba</a>
+                </div>
+                <div class="relative flex-1 bg-[#04060f] min-h-[240px]">
+                  <iframe id="jg-browser-frame" class="absolute inset-0 w-full h-full hidden bg-white" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" title="Navegador integrado do módulo Jogos"></iframe>
+                  <div id="jg-browser-empty" class="absolute inset-0 grid place-items-center p-5 text-center">
+                    <div class="space-y-1.5 max-w-[420px]">
+                      <div class="text-[11.5px] text-slate-400">Informe a URL de um site e clique em <strong class="text-violet-300">Abrir no navegador</strong>.</div>
+                      <div class="text-[10px] text-slate-600 leading-relaxed">Somente endereços acessíveis e autorizados. Endereços locais/internos são bloqueados. Muitos sites recusam exibição em frame — nesse caso a página não é contornada, apenas informada.</div>
+                    </div>
+                  </div>
+                </div>
+                <div id="jg-browser-notice" class="hidden shrink-0 border-t border-white/5 bg-black/20 px-2.5 py-1.5 text-[10px] text-slate-400 leading-relaxed"></div>
+              </div>
+
+              <div class="lg:col-span-5 space-y-3">
+                <div class="rounded-xl border border-indigo-400/20 bg-indigo-500/[0.05] p-3 space-y-2.5">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-[9.5px] uppercase tracking-wider text-slate-400 font-bold shrink-0">Estado do agente</span>
+                    <span id="jg-state-badge" class="inline-flex items-center rounded-md px-2 py-0.5 border text-[10.5px] font-bold border-slate-500/30 bg-white/5 text-slate-300">—</span>
+                  </div>
+                  <div class="rounded-lg border border-white/10 bg-black/25 px-2.5 py-2">
+                    <div class="text-[9.5px] uppercase tracking-wider text-slate-500 font-bold">Decisão</div>
+                    <div id="jg-decision-badge" class="text-[12.5px] font-bold text-slate-200 mt-0.5">—</div>
+                    <div id="jg-decision-reason" class="text-[10.5px] text-slate-400 leading-relaxed mt-1"></div>
+                  </div>
+                  <div id="jg-kpis" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+                  <div id="jg-data-version" class="text-[9.5px] text-slate-600"></div>
+                </div>
+                <div class="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
+                  <div class="text-[9.5px] uppercase tracking-wider text-slate-400 font-bold">Alertas e hipóteses</div>
+                  <div id="jg-hypotheses" class="space-y-2"><div class="text-[10.5px] text-slate-600">Nenhuma análise executada.</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Coleta autorizada + referência -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              <div class="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-2.5">
+                <div class="text-[9.5px] uppercase tracking-wider text-slate-400 font-bold">Importação autorizada de dados</div>
+                <div class="text-[10px] text-slate-500 leading-relaxed">Use quando a leitura ao vivo não for possível/confiável. Cole dados que você tem direito de usar (CSV com cabeçalho ou JSON de registros). Nada é inventado: campos ausentes ficam ausentes.</div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <select id="jg-import-format" class="bg-[#0a0e1f] text-[11px] text-slate-300 rounded-md px-2 py-1 h-7 border border-white/10 outline-none">
+                    <option value="auto">formato automático</option>
+                    <option value="csv">CSV</option>
+                    <option value="json">JSON</option>
+                  </select>
+                  <select id="jg-import-dataset" class="bg-[#0a0e1f] text-[11px] text-slate-300 rounded-md px-2 py-1 h-7 border border-white/10 outline-none">
+                    <option value="discovery">amostra de descoberta</option>
+                    <option value="validation">amostra independente (validação)</option>
+                  </select>
+                  <button id="jg-import-btn" class="text-white px-3 py-1 rounded-md bg-gradient-to-br from-violet-500 to-indigo-600 hover:from-violet-400 hover:to-indigo-500 border border-violet-400/40 transition font-bold text-[10.5px]">Importar</button>
+                  <button id="jg-csv-help-btn" class="text-slate-400 hover:text-white px-2 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition text-[10px] font-bold">Cabeçalhos aceitos</button>
+                </div>
+                <textarea id="jg-import-content" rows="5" spellcheck="false" placeholder="roundId,outcome,multiplier,bet,timestamp&#10;1,vermelho,0,10,2026-10-24T10:00:00Z" class="w-full bg-[#04060f] text-[11px] text-slate-200 rounded-md px-2 py-1.5 border border-white/10 outline-none focus:border-violet-400/50 font-mono resize-y min-h-[92px]"></textarea>
+                <div id="jg-import-msg" class="hidden text-[10.5px] leading-relaxed"></div>
+              </div>
+
+              <div class="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-2.5">
+                <div class="text-[9.5px] uppercase tracking-wider text-slate-400 font-bold">Tabela de referência (p_i e r_i verificáveis)</div>
+                <div class="text-[10px] text-slate-500 leading-relaxed">Sem esta tabela, o EV teórico <strong>não é calculado</strong> e a comparação com a distribuição teórica fica indisponível. <code class="text-violet-300">r</code> = retorno TOTAL por unidade apostada (inclui a aposta).</div>
+                <textarea id="jg-ref-content" rows="5" spellcheck="false" placeholder='{"probabilities":{"vermelho":0.4865,"preto":0.4865,"verde":0.027},"payouts":{"vermelho":2,"preto":2,"verde":14},"source":"regras publicadas do jogo v1"}' class="w-full bg-[#04060f] text-[11px] text-slate-200 rounded-md px-2 py-1.5 border border-white/10 outline-none focus:border-violet-400/50 font-mono resize-y min-h-[92px]"></textarea>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <button id="jg-ref-btn" class="text-white px-3 py-1 rounded-md bg-gradient-to-br from-fuchsia-500 to-violet-600 hover:from-fuchsia-400 hover:to-violet-500 border border-fuchsia-400/40 transition font-bold text-[10.5px]">Salvar referência</button>
+                  <button id="jg-analysis-btn" class="text-white px-3 py-1 rounded-md bg-gradient-to-br from-violet-500 to-indigo-600 hover:from-violet-400 hover:to-indigo-500 border border-violet-400/40 transition font-bold text-[10.5px]">Analisar agora</button>
+                  <button id="jg-mc-btn" class="text-slate-200 px-3 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 transition font-bold text-[10.5px]">Simulação Monte Carlo</button>
+                </div>
+                <div id="jg-ref-msg" class="hidden text-[10.5px] leading-relaxed"></div>
+                <div id="jg-mc-out" class="hidden rounded-lg border border-violet-400/20 bg-violet-500/[0.06] px-2.5 py-2 text-[10.5px] text-slate-300 leading-relaxed font-mono whitespace-pre-wrap break-words"></div>
+              </div>
+            </div>
+
+            <!-- Gestão de risco -->
+            <div class="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-2.5">
+              <div class="text-[9.5px] uppercase tracking-wider text-slate-400 font-bold">Gestão de risco e valor da aposta</div>
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                <label class="flex flex-col gap-1"><span class="text-[9.5px] text-slate-500 font-bold uppercase tracking-wider">Orçamento</span><input id="jg-risk-budget" type="number" min="0" step="0.01" placeholder="100" class="bg-[#0a0e1f] text-[11.5px] text-slate-200 rounded-md px-2 py-1.5 h-8 border border-white/10 outline-none focus:border-violet-400/50"></label>
+                <label class="flex flex-col gap-1"><span class="text-[9.5px] text-slate-500 font-bold uppercase tracking-wider">Perda máx.</span><input id="jg-risk-maxloss" type="number" min="0" step="0.01" placeholder="30" class="bg-[#0a0e1f] text-[11.5px] text-slate-200 rounded-md px-2 py-1.5 h-8 border border-white/10 outline-none focus:border-violet-400/50"></label>
+                <label class="flex flex-col gap-1"><span class="text-[9.5px] text-slate-500 font-bold uppercase tracking-wider">Tempo máx. (min)</span><input id="jg-risk-maxmin" type="number" min="0" step="1" placeholder="30" class="bg-[#0a0e1f] text-[11.5px] text-slate-200 rounded-md px-2 py-1.5 h-8 border border-white/10 outline-none focus:border-violet-400/50"></label>
+                <label class="flex flex-col gap-1"><span class="text-[9.5px] text-slate-500 font-bold uppercase tracking-wider">Aposta base</span><input id="jg-risk-bet" type="number" min="0" step="0.01" placeholder="1" class="bg-[#0a0e1f] text-[11.5px] text-slate-200 rounded-md px-2 py-1.5 h-8 border border-white/10 outline-none focus:border-violet-400/50"></label>
+                <button id="jg-risk-save" class="self-end h-8 text-white px-3 rounded-md bg-gradient-to-br from-violet-500 to-indigo-600 hover:from-violet-400 hover:to-indigo-500 border border-violet-400/40 transition font-bold text-[10.5px]">Aplicar limites</button>
+              </div>
+              <div id="jg-risk-out" class="hidden rounded-lg border border-white/10 bg-black/25 px-2.5 py-2 text-[10.5px] text-slate-300 leading-relaxed whitespace-pre-wrap break-words"></div>
+            </div>
+
+            <!-- Modo automático (demo) + histórico -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              <div class="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-2.5">
+                <div class="text-[9.5px] uppercase tracking-wider text-slate-400 font-bold">Modo automático (somente demonstração/simulação)</div>
+                <div class="text-[10px] text-slate-500 leading-relaxed">Só é habilitado em ambiente de demonstração sem dinheiro real. Para jogos com dinheiro real, o módulo permanece em análise, recomendação, simulação e acompanhamento de risco. Não executa apostas, depósitos ou saques.</div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <select id="jg-auto-env" class="bg-[#0a0e1f] text-[11px] text-slate-300 rounded-md px-2 py-1 h-7 border border-white/10 outline-none">
+                    <option value="demo">demonstração (sem dinheiro real)</option>
+                    <option value="real_money">dinheiro real (bloqueia execução)</option>
+                  </select>
+                  <button id="jg-auto-toggle" class="text-slate-200 px-3 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 transition font-bold text-[10.5px]">Ligar modo automático</button>
+                  <button id="jg-auto-step" class="text-white px-3 py-1 rounded-md bg-gradient-to-br from-violet-500 to-indigo-600 hover:from-violet-400 hover:to-indigo-500 border border-violet-400/40 transition font-bold text-[10.5px] disabled:opacity-50 disabled:cursor-not-allowed" disabled>Passo de teste</button>
+                </div>
+                <div id="jg-auto-log" class="rounded-lg border border-white/5 bg-black/25 px-2.5 py-2 text-[10px] text-slate-400 leading-relaxed max-h-[160px] overflow-auto font-mono whitespace-pre-wrap break-words">—</div>
+              </div>
+
+              <div class="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="text-[9.5px] uppercase tracking-wider text-slate-400 font-bold">Histórico de resultados e relatórios</span>
+                  <button id="jg-report-btn" class="ml-auto text-slate-400 hover:text-white px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition text-[10px] font-bold">Relatório da sessão</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div id="jg-history" class="rounded-lg border border-white/5 bg-black/25 px-2.5 py-2 text-[10px] text-slate-400 leading-relaxed max-h-[200px] overflow-auto font-mono whitespace-pre-wrap break-words">—</div>
+                  <div id="jg-sessions-report" class="rounded-lg border border-white/5 bg-black/25 px-2.5 py-2 text-[10px] text-slate-400 leading-relaxed max-h-[200px] overflow-auto whitespace-pre-wrap break-words">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-slate-500/20 bg-white/[0.02] px-3 py-2.5 text-[10px] text-slate-500 leading-relaxed">
+              <strong class="text-slate-400">Limites declarados:</strong> este módulo não prevê resultados aleatórios, não contorna autenticação/proteções de sites, não executa apostas com dinheiro real, não recomenda aumentar apostas para recuperar perdas e identifica claramente todo dado simulado. "Validada" significa apenas que o teste documentado foi reproduzido em dados independentes.
             </div>
           </div>
         </div>
@@ -880,5 +1072,6 @@
 <script src="/voice_recorder.js" defer></script>
 <script src="/voice_conversation.js" defer></script>
 <script src="/app.js" type="module"></script>
+<script src="/jogos.js" type="module"></script>
 </body>
 </html>

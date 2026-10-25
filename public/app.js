@@ -1842,10 +1842,13 @@ function switchEditorPanel(name) {
     els.app?.classList.add('right-open');
     try { els.agentInput?.focus(); } catch {}
   }
-  const allowed = ['code','preview','console','terminal','ia-config','btc','quantfury'];
+  const allowed = ['code','preview','console','terminal','ia-config','btc','quantfury','jogos'];
   if (allowed.includes(activeKey) || n.startsWith('code:')) {
     if (els.editorPanels) els.editorPanels.dataset.active = activeKey;
     if (activeKey === 'btc') _btcLoadStatusIfMissing();
+    if (activeKey === 'jogos') {
+      if (typeof window.__jogosOnTabOpen === 'function') try { window.__jogosOnTabOpen(); } catch(_) {}
+    }
     if (activeKey === 'quantfury') {
       if (typeof window.__editorTabHandler === 'function') try { window.__editorTabHandler('quantfury'); } catch(_) {}
     }
@@ -1862,6 +1865,7 @@ function switchEditorPanel(name) {
     else if (n === 'ia-config') isActive = tt === 'ia-config';
     else if (n === 'btc') isActive = tt === 'btc';
     else if (n === 'quantfury') isActive = tt === 'quantfury';
+    else if (n === 'jogos')     isActive = tt === 'jogos';
     else                       isActive = tt === activeKey;
     t.classList.toggle('active', !!isActive);
   });
@@ -3554,7 +3558,7 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
     else if (!t.dataset.codeFile) t.classList.remove('active');
   });
   // Listeners das 4 abas fixas (Chat removido do centro — foi pro painel direito TiAi)
-  const specials = ['preview','console','terminal','code','ia-config','btc','quantfury'];
+  const specials = ['preview','console','terminal','code','ia-config','btc','quantfury','jogos'];
   specials.forEach(key => {
     const tab = els.editorTabs?.querySelector(`[data-editor-tab="${key}"]`);
     if (tab && !tab.__attSp) {
@@ -3569,7 +3573,7 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
 /* switchTab LEGADA (rotas antigas chamam switchTab('preview')) — redireciona para switchEditorPanel moderno */
 const _origSwitchTab = switchTab;
 switchTab = function(name) {
-  if (['preview','console','terminal','chat','code','ia-config','btc','quantfury'].includes(String(name))) {
+  if (['preview','console','terminal','chat','code','ia-config','btc','quantfury','jogos'].includes(String(name))) {
     switchEditorPanel(String(name));
   } else if (_origSwitchTab) {
     return _origSwitchTab(name);
