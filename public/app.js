@@ -4546,10 +4546,13 @@ function initRC19Mobile() {
             if (!node || node.nodeType !== 1) continue;
             const txt = (node.textContent || '').slice(0, 8000);
             if (_rc27InternetAuthRegex.test(txt)) {
-              // Tenta extrair scopeId do texto
+              // Só abre com scopeId REAL presente no texto.
+              // Sem isso, o histórico do chat re-renderizado a cada load reabria o modal
+              // com um scopeId fabricado (inet_fallback_*), cobrindo a UI/caixa de input.
               const mScope = txt.match(/(inet_[a-z0-9_]{4,})/) || txt.match(/scopeId["'`\s:]*([a-z0-9_\-]{6,})/i);
+              if (!mScope) continue;
               const mUrls = Array.from(txt.matchAll(/https?:\/\/[^\s"'<>)]+/gi) || []).map(x => x[0]).slice(0, 10);
-              const scopeId = mScope ? mScope[1] : (els.rc27AuthCurrentScopeId || ('inet_fallback_' + Date.now().toString(36)));
+              const scopeId = mScope[1];
               els.rc27AuthCurrentScopeId = scopeId;
               window.__rc27ForceOpenInternetAuth({ scopeId, urls: mUrls });
               return;
