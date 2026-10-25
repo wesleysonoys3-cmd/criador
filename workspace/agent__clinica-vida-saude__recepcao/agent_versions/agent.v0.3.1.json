@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "rc24.1",
+  "id": "agent_4a0290a5e73f",
+  "name": "Recepção",
+  "slug": "recepcao",
+  "version": "0.3.1",
+  "company": {
+    "name": "Clínica Vida & Saúde",
+    "slug": "clinica-vida-saude",
+    "segmento": "Saúde / Clínica Médica",
+    "size": "media",
+    "notes": ""
+  },
+  "persona": "",
+  "problemStatement": "Recepcionar pacientes via WhatsApp, buscar horários na agenda Google, cadastrar paciente no CRM e enviar confirmação por e-mail.",
+  "assumptions": [],
+  "requirements": {
+    "functional": [
+      "Receber mensagem inicial paciente via WhatsApp",
+      "Buscar horários disponíveis semana atual",
+      "Confirmar consulta",
+      "Salvar histórico de interações no CRM"
+    ],
+    "nonFunctional": [
+      "Tempo resposta < 2s",
+      "Não logar PII do paciente"
+    ],
+    "businessRules": [
+      "Seg a Sex 08:00-18:00",
+      "Não marcar consulta sem CRM cadastrado",
+      "Não marcar aos domingos",
+      "Precisa responder em até 30s durante horário de atendimento via WhatsApp",
+      "Histórico CRM do paciente é consultado antes de marcar consulta",
+      "Não marcar consulta aos sábados",
+      "Sempre solicitar CPF do paciente antes de marcar consulta"
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "whatsapp_evolux-1",
+      "type": "whatsapp_evolux",
+      "provider": "Evolux",
+      "status": "pending",
+      "envVarsRequired": [
+        "WHATSAPP_EVOLUX_API_KEY",
+        "WHATSAPP_EVOLUX_INSTANCE_ID"
+      ],
+      "description": "Receber/responder mensagens WhatsApp via Evolux API."
+    },
+    {
+      "id": "google_calendar-2",
+      "type": "google_calendar",
+      "provider": "Google Workspace (Service Account)",
+      "status": "pending",
+      "envVarsRequired": [
+        "GOOGLE_CALENDAR_CLIENT_EMAIL",
+        "GOOGLE_CALENDAR_PRIVATE_KEY_BASE64"
+      ],
+      "description": "Buscar/criar horários na agenda de consultas."
+    },
+    {
+      "id": "smtp_email-3",
+      "type": "smtp_email",
+      "provider": "SMTP genérico (Gmail/Outlook/SendGrid/SES)",
+      "status": "pending",
+      "envVarsRequired": [
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "SMTP_USER",
+        "SMTP_PASS"
+      ],
+      "description": "Envio de e-mail de confirmação de consulta."
+    },
+    {
+      "id": "generic_rest_crm-4",
+      "type": "generic_rest_crm",
+      "provider": "CRM REST genérico (Bearer/Header API Key)",
+      "status": "pending",
+      "envVarsRequired": [
+        "CRM_BASE_URL",
+        "CRM_API_KEY"
+      ],
+      "description": "Cadastrar pacientes/negócios no CRM interno por REST."
+    },
+    {
+      "id": "cap_webhook_cancelar",
+      "type": "custom_webhook",
+      "name": "Webhook cancelamento",
+      "provider": "HTTP POST",
+      "envVarsRequired": [
+        "CUSTOM_WEBHOOK_URL"
+      ]
+    }
+  ],
+  "tools_declared": [
+    "whatsapp_enviar_mensagem",
+    "agenda_buscar_horarios_disponiveis",
+    "crm_registrar_paciente",
+    "email_confirmar_consulta"
+  ],
+  "securityRules": [
+    "Nunca expor chaves de API (API_KEY, _PASS, TOKEN) no frontend, localStorage ou logs.",
+    "Nunca servir dotfiles ou .env via static; Paths de arquivos devem validar base dir (path traversal)."
+  ],
+  "deliverable": {
+    "kind": "node_express_app"
+  },
+  "createdAt": 1789862267778,
+  "updatedAt": 1789862267798,
+  "author": "orchestrator_rc24",
+  "integrations": [
+    {
+      "id": "int_webhook_diretor_cancelar",
+      "type": "custom_webhook",
+      "name": "Notificar diretor",
+      "description": "POST ao diretor se consulta for cancelada",
+      "envVars": {
+        "CUSTOM_WEBHOOK_URL": ""
+      }
+    }
+  ]
+}

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniTask — WhatsApp Real Agent Studio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0b0f19',
+                        darkCard: '#111827',
+                        darkBorder: '#1f2937',
+                        primary: '#6366f1',
+                        whatsapp: '#25D366'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-darkBg text-gray-100 min-h-screen flex flex-col antialiased">
+
+    <!-- Top Navbar -->
+    <header class="bg-darkCard border-b border-darkBorder sticky top-0 z-50 px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="bg-whatsapp p-2 rounded-xl text-white shadow-lg shadow-whatsapp/20">
+                <i data-lucide="message-circle" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg text-white">OmniTask WhatsApp Real Agent</h1>
+                <p class="text-xs text-gray-400">Conexão Oficial WhatsApp Web (61 99251-8130)</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <div id="connectionBadge" class="flex items-center space-x-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs text-amber-400 font-medium">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                <span id="badgeText">Conectando ao WhatsApp...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl mx-auto p-4 lg:p-6 w-full space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Caixa de QR Code Oficial Real (Esquerda) -->
+            <div class="bg-darkCard border border-darkBorder p-8 rounded-3xl flex flex-col items-center justify-center text-center shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-whatsapp via-primary to-whatsapp animate-pulse"></div>
+
+                <div class="mb-4">
+                    <span id="statusLabel" class="text-xs font-semibold px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">Status: Aguardando QR Code</span>
+                </div>
+
+                <!-- QR Display Real -->
+                <div id="qrWrapper" class="bg-white p-4 rounded-2xl shadow-xl mb-6 flex items-center justify-center min-h-[220px] min-w-[220px]">
+                    <div id="qrLoader" class="text-gray-500 text-xs animate-pulse">Carregando QR Code oficial do WhatsApp Web...</div>
+                    <img id="qrImage" src="" alt="WhatsApp QR Code Real" class="hidden rounded-lg w-52 h-52 object-contain" />
+                </div>
+
+                <h3 class="font-bold text-sm text-white mb-1">Escaneie com o celular (61 99251-8130)</h3>
+                <p class="text-xs text-gray-400">Abra o WhatsApp > Aparelhos Conectados > Conectar um Aparelho.</p>
+            </div>
+
+            <!-- Disparador de Mensagem Real em Background (Direita) -->
+            <div class="lg:col-span-2 bg-darkCard border border-darkBorder p-6 rounded-3xl space-y-5 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-lg text-white mb-2 flex items-center space-x-2">
+                        <i data-lucide="send" class="w-5 h-5 text-whatsapp"></i>
+                        <span>Disparador de Mensagem Real em Background</span>
+                    </h3>
+                    <p class="text-xs text-gray-400 mb-6">Envie mensagens reais diretamente para o número <b>61 99251-8130</b> ou clientes conectados sem sair da página.</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Número Destino</label>
+                            <input type="text" id="targetPhone" value="5561992518130" class="w-full bg-darkBg border border-darkBorder rounded-xl px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-whatsapp">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Mensagem</label>
+                            <textarea id="targetMessage" class="w-full bg-darkBg border border-darkBorder rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-whatsapp h-36 resize-none">Olá! Esta é uma mensagem automática real enviada pelo agente OmniTask em background.</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="sendRealMessage()" class="w-full bg-whatsapp hover:bg-emerald-600 text-white py-3 rounded-xl font-semibold text-sm transition shadow-lg shadow-whatsapp/25 flex items-center justify-center space-x-2">
+                    <i data-lucide="zap" class="w-4 h-4"></i>
+                    <span>Enviar Mensagem Real Agora</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Logs Box -->
+        <div class="bg-darkCard border border-darkBorder p-6 rounded-3xl">
+            <h3 class="font-bold text-sm text-white mb-3 flex items-center space-x-2">
+                <i data-lucide="activity" class="w-4 h-4 text-whatsapp"></i>
+                <span>Logs em Tempo Real do Servidor WhatsApp</span>
+            </h3>
+            <div id="logContainer" class="bg-darkBg border border-darkBorder p-4 rounded-xl h-40 overflow-y-auto font-mono text-xs space-y-2 text-gray-300">
+                <div class="text-whatsapp">[SISTEMA] Conectando ao servidor Socket.io...</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Botão Flutuante do Robô IA (OmniBot) -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <button onclick="toggleBotChat()" class="bg-primary hover:bg-primary/90 text-white p-4 rounded-full shadow-2xl shadow-primary/50 transition transform hover:scale-110 flex items-center justify-center relative" title="Assistente Robô IA">
+            <i data-lucide="bot" class="w-7 h-7"></i>
+            <span class="absolute -top-1 -right-1 w-3 h-3 bg-whatsapp rounded-full border-2 border-darkBg animate-pulse"></span>
+        </button>
+    </div>
+
+    <!-- Janela de Chat do Robô IA -->
+    <div id="botChatWindow" class="fixed bottom-24 right-6 w-96 bg-darkCard border border-darkBorder rounded-3xl shadow-2xl z-50 hidden flex flex-col h-[480px] overflow-hidden">
+        <div class="bg-darkBg px-5 py-4 border-b border-darkBorder flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-primary/20 text-primary rounded-xl">
+                    <i data-lucide="bot" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-white">Assistente OmniBot</h4>
+                    <p class="text-[10px] text-whatsapp">● Online • Pronto para ajudar</p>
+                </div>
+            </div>
+            <button onclick="toggleBotChat()" class="text-gray-400 hover:text-white p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div id="botChatFeed" class="flex-1 overflow-y-auto p-4 space-y-3 bg-darkBg/60 text-xs">
+            <div class="flex justify-start">
+                <div class="bg-darkCard border border-darkBorder max-w-[80%] p-3 rounded-2xl text-gray-200 space-y-1">
+                    <span class="text-[9px] font-bold text-primary">OmniBot AI</span>
+                    <p>Olá! O servidor está inicializando o WhatsApp Web oficial para gerar o QR code real para o número 61 99251-8130.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 bg-darkBg border-t border-darkBorder flex items-center space-x-2">
+            <input type="text" id="botInput" onkeydown="if(event.key==='Enter') sendBotMessage()" placeholder="Digite sua dúvida..." class="flex-1 bg-darkCard border border-darkBorder rounded-xl px-3 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-primary">
+            <button onclick="sendBotMessage()" class="bg-primary hover:bg-primary/90 text-white p-2.5 rounded-xl transition">
+                <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Script Socket.io -->
+    <script>
+        const socket = io();
+
+        const badge = document.getElementById('connectionBadge');
+        const badgeText = document.getElementById('badgeText');
+        const qrImage = document.getElementById('qrImage');
+        const qrLoader = document.getElementById('qrLoader');
+        const statusLabel = document.getElementById('statusLabel');
+        const logContainer = document.getElementById('logContainer');
+
+        function addLog(text, type = 'info') {
+            const color = type === 'success' ? 'text-whatsapp' : type === 'error' ? 'text-red-400' : 'text-gray-300';
+            logContainer.insertAdjacentHTML('afterbegin', `<div class="${color}">[${new Date().toLocaleTimeString()}] ${text}</div>`);
+        }
+
+        socket.on('whatsapp-status', (data) => {
+            addLog(`Status: ${data.status}`);
+            statusLabel.textContent = `Status: ${data.status}`;
+
+            if (data.status.includes('Conectado')) {
+                qrImage.classList.add('hidden');
+                qrLoader.textContent = '✅ WhatsApp Conectado com Sucesso!';
+                qrLoader.classList.remove('hidden');
+                badge.className = 'flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs text-emerald-400 font-medium';
+                badgeText.textContent = 'Conectado (61992518130)';
+            } else if (data.qr) {
+                qrImage.src = data.qr;
+                qrImage.classList.remove('hidden');
+                qrLoader.classList.add('hidden');
+                badge.className = 'flex items-center space-x-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs text-amber-400 font-medium';
+                badgeText.textContent = 'Aguardando Leitura do QR Code';
+                addLog('QR Code real do WhatsApp Web recebido e exibido.', 'success');
+            }
+        });
+
+        socket.on('whatsapp-message', (data) => {
+            addLog(`Mensagem recebida de ${data.from}: ${data.body}`, 'success');
+        });
+
+        function sendRealMessage() {
+            const phone = document.getElementById('targetPhone').value;
+            const message = document.getElementById('targetMessage').value;
+            if (!phone || !message) return alert('Preencha o número e a mensagem.');
+
+            addLog(`Enviando mensagem real para ${phone}...`, 'info');
+            socket.emit('send-real-message', { phone, message });
+        }
+
+        socket.on('message-result', (res) => {
+            if (res.success) {
+                addLog(`Mensagem real enviada com sucesso para ${res.phone}!`, 'success');
+                alert('Mensagem real enviada com sucesso para o WhatsApp!');
+            } else {
+                addLog(`Erro ao enviar: ${res.error}`, 'error');
+                alert(`Erro ao enviar: ${res.error}`);
+            }
+        });
+
+        function toggleBotChat() {
+            const win = document.getElementById('botChatWindow');
+            win.classList.toggle('hidden');
+            lucide.createIcons();
+        }
+
+        function sendBotMessage() {
+            const input = document.getElementById('botInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const feed = document.getElementById('botChatFeed');
+            feed.insertAdjacentHTML('beforeend', `
+                <div class="flex justify-end">
+                    <div class="bg-primary text-white max-w-[80%] p-3 rounded-2xl space-y-1 shadow">
+                        <p>${escapeHtml(text)}</p>
+                    </div>
+                </div>
+            `);
+
+            input.value = '';
+            feed.scrollTop = feed.scrollHeight;
+
+            setTimeout(() => {
+                let reply = "O agente está sincronizado com o WhatsApp Web para gerenciar o número 61 99251-8130.";
+                feed.insertAdjacentHTML('beforeend', `
+                    <div class="flex justify-start">
+                        <div class="bg-darkCard border border-darkBorder max-w-[80%] p-3 rounded-2xl text-gray-200 space-y-1">
+                            <span class="text-[9px] font-bold text-primary">OmniBot AI</span>
+                            <p>${escapeHtml(reply)}</p>
+                        </div>
+                    </div>
+                `);
+                feed.scrollTop = feed.scrollHeight;
+            }, 1000);
+        }
+
+        function escapeHtml(str) {
+            from = str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            return from;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            addLog('Aguardando inicialização do Puppeteer para geração do QR Code real...', 'info');
+        });
+    </script>
+</body>
+</html>

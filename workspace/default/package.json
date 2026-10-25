@@ -1,0 +1,15 @@
+{
+  "name": "fortune-tiger-brasil",
+  "version": "1.0.0",
+  "description": "Fortune Tiger Brasil - Cassino Oficial",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/**/*.test.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

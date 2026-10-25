@@ -1,0 +1,19 @@
+{
+  "name": "sistema-vagas-curriculos",
+  "version": "1.0.0",
+  "description": "Sistema de vagas de emprego e envio de currículos em PDF",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^11.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {}
+}

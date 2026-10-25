@@ -1,0 +1,46 @@
+[
+  {
+    "fallbackInternal": false,
+    "slug": "testeagente-desktop",
+    "displayName": "TesteAgente Desktop",
+    "path": "/Users/tiagosantos/Desktop/criador/_mock_desktop/TesteAgente",
+    "mounted": true,
+    "createdAt": 1789609428509,
+    "modifiedAt": 1789609428509
+  },
+  {
+    "fallbackInternal": true,
+    "slug": "teste-do-criador",
+    "displayName": "teste do criador",
+    "path": "/Users/tiagosantos/Desktop/teste do criador/",
+    "mounted": true,
+    "createdAt": 1789610060294,
+    "modifiedAt": 1789610060294
+  },
+  {
+    "fallbackInternal": false,
+    "slug": "projeto-explorer-teste",
+    "displayName": "Projeto Explorer Teste",
+    "path": "/Users/tiagosantos/Desktop/criador/workspace/projeto-explorer-teste",
+    "mounted": true,
+    "createdAt": 1789658878655,
+    "modifiedAt": 1789658878655
+  },
+  {
+    "fallbackInternal": true,
+    "slug": "bar",
+    "displayName": "bar",
+    "path": "/Users/tiagosantos/Desktop/bar/",
+    "mounted": true,
+    "createdAt": 1789680256427,
+    "modifiedAt": 1789680256427
+  },
+  {
+    "slug": "ajeitaai",
+    "displayName": "ajeitaai",
+    "path": "/Users/tiagosantos/Desktop/ajeitaai/",
+    "mounted": true,
+    "createdAt": 1792887839026,
+    "modifiedAt": 1792887839026
+  }
+]

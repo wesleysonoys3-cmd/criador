@@ -1,0 +1,118 @@
+{
+  "name": "teste-n3-clinica-auditiva-recepcao",
+  "summary": "Recepcionar pacientes via WhatsApp, confirmar horário Google Calendar, salvar CRM, enviar e-mail. | Capabilities: whatsapp_evolux, google_calendar, smtp_email, generic_rest_crm",
+  "palette": {
+    "primary": "#0ea5e9",
+    "secondary": "#0f172a",
+    "accent": "#10b981",
+    "text": "#0f172a",
+    "background": "#ffffff",
+    "typography": {
+      "sans": "Inter",
+      "heading": "Inter",
+      "mono": "JetBrains Mono"
+    }
+  },
+  "typography": {
+    "sans": "Inter",
+    "heading": "Inter",
+    "mono": "JetBrains Mono"
+  },
+  "sections": [
+    {
+      "title": "Agent Health Check",
+      "order": 1,
+      "description": "Endpoint GET /health."
+    },
+    {
+      "title": "Agent Chat API",
+      "order": 2,
+      "description": "POST /api/v1/chat com histórico e tools."
+    },
+    {
+      "title": "Capability Handlers",
+      "order": 3,
+      "description": "Endpoints para webhooks (WhatsApp etc.)."
+    },
+    {
+      "title": "Config & Deploy",
+      "order": 4,
+      "description": ".env.example + README deploy Render."
+    }
+  ],
+  "files": [
+    {
+      "path": "server.js",
+      "purpose": "Entrypoint Express: health + chat + integrations.",
+      "type": "node"
+    },
+    {
+      "path": "package.json",
+      "purpose": "Dependências mínimas do agente final.",
+      "type": "json"
+    },
+    {
+      "path": ".env.example",
+      "purpose": "Placeholders das capabilities (SEM valores reais).",
+      "type": "env"
+    },
+    {
+      "path": "README.md",
+      "purpose": "Como rodar, configurar capabilities, deploy no Render.",
+      "type": "markdown"
+    }
+  ],
+  "interactions": [
+    {
+      "id": "whatsapp_enviar_mensagem",
+      "type": "tool_function",
+      "step": 1,
+      "description": "Declarar função whatsapp_enviar_mensagem no agente."
+    },
+    {
+      "id": "agenda_buscar_horarios_disponiveis",
+      "type": "tool_function",
+      "step": 2,
+      "description": "Declarar função agenda_buscar_horarios_disponiveis no agente."
+    },
+    {
+      "id": "crm_registrar_paciente",
+      "type": "tool_function",
+      "step": 3,
+      "description": "Declarar função crm_registrar_paciente no agente."
+    },
+    {
+      "id": "email_confirmar_consulta",
+      "type": "tool_function",
+      "step": 4,
+      "description": "Declarar função email_confirmar_consulta no agente."
+    }
+  ],
+  "seo_accessibility": [
+    "Nenhum SEO aplicável (API), mas README descreve endpoints e erros."
+  ],
+  "acceptanceCriteria": [
+    {
+      "criterio": "Receber paciente whatsapp",
+      "validado": false
+    },
+    {
+      "criterio": "Buscar horários",
+      "validado": false
+    },
+    {
+      "criterio": "Marcar consulta",
+      "validado": false
+    },
+    {
+      "criterio": "Salvar CRM",
+      "validado": false
+    },
+    {
+      "criterio": "Enviar email",
+      "validado": false
+    }
+  ],
+  "_sourceOrchestrator": true,
+  "_agentVersion": "0.1.0"
+}

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel da Empresa - Portal de Empregos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold flex items-center gap-2">
+        <span>🏢</span> Painel da Empresa: <span id="nomeEmpresaHeader" class="font-normal text-blue-200"></span>
+      </h1>
+      <button onclick="sair()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition">Sair</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Coluna Esquerda: Criar Vaga -->
+    <div class="bg-white rounded-xl shadow-md p-6 h-fit">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">Publicar Nova Vaga</h3>
+      <div id="mensagemStatus" class="hidden mb-4 p-3 rounded-lg text-sm font-medium"></div>
+      <form onsubmit="criarVaga(event)" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Título da Vaga</label>
+          <input type="text" id="titulo" required placeholder="Ex: Desenvolvedor Fullstack" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Local / Modelo</label>
+          <input type="text" id="local" required placeholder="Ex: Remoto / São Paulo - SP" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+          <textarea id="descricao" rows="3" required placeholder="Detalhes da vaga..." class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Requisitos</label>
+          <textarea id="requisitos" rows="3" required placeholder="Requisitos necessários..." class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition">Publicar Vaga</button>
+      </form>
+    </div>
+
+    <!-- Coluna Direita: Minhas Vagas e Candidatos -->
+    <div class="lg:col-span-2 space-y-6">
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Suas Vagas Publicadas</h3>
+        <div id="vagasEmpresaContainer" class="space-y-4">
+          <p class="text-gray-500 text-center py-6">Carregando vagas...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Candidatos -->
+  <div id="modalCandidatos" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center p-4">
+    <div class="bg-white rounded-xl shadow-lg max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-gray-900">Currículos Recebidos</h3>
+        <button onclick="fecharModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+      </div>
+      <div id="listaCandidaturas" class="space-y-4">
+        <!-- Candidatos injetados aqui -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white text-center py-6 mt-auto">
+    <p>&copy; 2025 Portal de Empregos e Currículos. Todos os direitos reservados.</p>
+  </footer>
+
+  <script>
+    const empresaStr = localStorage.getItem('empresa');
+    if (!empresaStr) {
+      window.location.href = 'login.html';
+    }
+    const empresa = JSON.parse(empresaStr);
+    document.getElementById('nomeEmpresaHeader').textContent = empresa.nome;
+
+    function sair() {
+      localStorage.removeItem('empresa');
+      window.location.href = 'login.html';
+    }
+
+    async function carregarVagasEmpresa() {
+      try {
+        const res = await fetch(`/api/empresas/${empresa.id}/vagas`);
+        const vagas = await res.json();
+        const container = document.getElementById('vagasEmpresaContainer');
+
+        if (vagas.length === 0) {
+          container.innerHTML = '<p class="text-gray-500 text-center py-6">Você ainda não publicou nenhuma vaga.</p>';
+          return;
+        }
+
+        container.innerHTML = vagas.map(v => `
+          <div class="border rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gray-50">
+            <div>
+              <h4 class="text-lg font-bold text-gray-800">${v.titulo}</h4>
+              <p class="text-sm text-gray-600">📍 ${v.local} • Publicado em ${new Date(v.criado_em).toLocaleDateString('pt-BR')}</p>
+            </div>
+            <button onclick="verCandidaturas(${v.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition whitespace-nowrap">
+              Ver Currículos
+            </button>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Erro ao carregar vagas:', err);
+      }
+    }
+
+    async function criarVaga(e) {
+      e.preventDefault();
+      const status = document.getElementById('mensagemStatus');
+      const titulo = document.getElementById('titulo').value;
+      const local = document.getElementById('local').value;
+      const descricao = document.getElementById('descricao').value;
+      const requisitos = document.getElementById('requisitos').value;
+
+      try {
+        const res = await fetch('/api/vagas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ empresa_id: empresa.id, titulo, local, descricao, requisitos })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          status.className = "mb-4 p-3 rounded-lg text-sm font-medium bg-green-100 text-green-700";
+          status.textContent = "✅ Vaga publicada com sucesso!";
+          status.classList.remove('hidden');
+          document.querySelector('form').reset();
+          carregarVagasEmpresa();
+        } else {
+          throw new Error(data.error || 'Erro ao publicar vaga.');
+        }
+      } catch (err) {
+        status.className = "mb-4 p-3 rounded-lg text-sm font-medium bg-red-100 text-red-700";
+        status.textContent = "❌ " + err.message;
+        status.classList.remove('hidden');
+      }
+    }
+
+    async function verCandidaturas(vagaId) {
+      const modal = document.getElementById('modalCandidatos');
+      const lista = document.getElementById('listaCandidaturas');
+      modal.classList.remove('hidden');
+      lista.innerHTML = '<p class="text-gray-500 text-center py-4">Carregando currículos...</p>';
+
+      try {
+        const res = await fetch(`/api/vagas/${vagaId}/candidaturas`);
+        const candidaturas = await res.json();
+
+        if (candidaturas.length === 0) {
+          lista.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum currículo recebido para esta vaga ainda.</p>';
+          return;
+        }
+
+        lista.innerHTML = candidaturas.map(c => `
+          <div class="border rounded-lg p-4 bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h5 class="font-bold text-gray-900">${c.nome_candidato}</h5>
+              <p class="text-sm text-gray-600">📧 ${c.email_candidato} • 📞 ${c.telefone}</p>
+              <p class="text-xs text-gray-500 mt-1">Enviado em ${new Date(c.enviado_em).toLocaleString('pt-BR')}</p>
+            </div>
+            <a href="${c.arquivo_pdf}" target="_blank" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition whitespace-nowrap">
+              📄 Baixar Currículo PDF
+            </a>
+          </div>
+        `).join('');
+      } catch (err) {
+        lista.innerHTML = '<p class="text-red-500 text-center py-4">Erro ao carregar candidaturas.</p>';
+      }
+    }
+
+    function fecharModal() {
+      document.getElementById('modalCandidatos').classList.add('hidden');
+    }
+
+    carregarVagasEmpresa();
+  </script>
+</body>
+</html>

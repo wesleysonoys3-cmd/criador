@@ -1,0 +1,27 @@
+{
+  "model": "RandomForest + Calibration",
+  "asset": "AAVE",
+  "horizon": 1,
+  "up_threshold": 0.015,
+  "down_threshold": -0.015,
+  "features": [
+    "return_1d",
+    "return_3d",
+    "return_7d",
+    "sma_7",
+    "sma_20",
+    "sma_50",
+    "ema_12",
+    "ema_26",
+    "macd",
+    "macd_signal",
+    "macd_hist",
+    "rsi",
+    "volatility_7d",
+    "volatility_30d",
+    "volume_ratio",
+    "distance_sma20",
+    "distance_sma50"
+  ],
+  "created_at": "2026-09-21T02:08:03.015768+00:00"
+}

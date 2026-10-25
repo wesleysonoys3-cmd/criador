@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>TiAgente Security · Auditor & Corretor de Segurança</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-[#060916] text-slate-200 h-screen w-screen overflow-hidden font-sans antialiased selection:bg-emerald-600/40" style="-webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;">
+  <!-- ===== HEADER ===== -->
+  <header class="h-11 shrink-0 border-b border-white/[0.06] bg-sidebar/70 flex items-center px-4 gap-3">
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 grid place-items-center shadow-lg shadow-emerald-500/10 border border-white/10">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-white"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <div class="leading-tight">
+        <div class="text-white font-extrabold tracking-wide text-[13.5px]">TiAgente <span class="text-emerald-300">Security</span></div>
+        <div class="text-[10px] text-slate-500 -mt-0.5">Auditor Autônomo · Correções somente após sua aprovação</div>
+      </div>
+    </div>
+    <div class="ml-auto flex items-center gap-1.5">
+      <div id="sec-status-chip" class="px-2.5 h-7 rounded-md text-[10.5px] font-bold bg-white/[0.03] border border-white/[0.06] text-slate-400 flex items-center gap-1.5">
+        <span id="sec-status-dot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+        <span id="sec-status-text">Iniciando…</span>
+      </div>
+      <button id="sec-reload" class="px-2.5 h-7 rounded-md text-[11px] font-bold bg-white/[0.03] border border-white/[0.06] text-slate-300 hover:bg-white/[0.06] hover:text-white transition flex items-center gap-1.5">
+        <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 4v6h-6"/><path d="M20.49 9A9 9 0 0 0 3.51 15"/></svg>
+        Atualizar
+      </button>
+      <a href="#" id="sec-goto-criador" target="_blank" rel="noopener" class="px-2.5 h-7 rounded-md text-[11px] font-bold bg-brand-500/10 border border-brand-400/20 text-brand-300 hover:bg-brand-500/20 transition flex items-center gap-1.5 no-underline">
+        <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        TiAgente Criador ↗
+      </a>
+    </div>
+  </header>
+
+  <!-- ===== MAIN (2 colunas: Lista esquerda · Detalhe direita) ===== -->
+  <main class="h-[calc(100vh-44px)] flex">
+    <!-- COLUNA ESQUERDA · Lista de projetos -->
+    <aside id="sec-left" class="w-[300px] shrink-0 border-r border-white/[0.06] bg-sidebar/30 flex flex-col min-h-0">
+      <div class="px-3.5 py-3 border-b border-white/[0.06]">
+        <div class="text-[10.5px] uppercase font-bold tracking-wider text-emerald-300 mb-1.5">Projetos detectados</div>
+        <div id="sec-projects-count" class="text-[11.5px] text-slate-500 leading-snug">0 projetos · escaneando workspace do TiAgente Criador…</div>
+        <div class="relative mt-2.5">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="sec-projects-search" placeholder="Filtrar por nome do projeto…" class="w-full h-8 rounded-md bg-[#0b1125] border border-white/[0.06] pl-8 pr-3 text-[11.5px] text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-white/20" />
+        </div>
+      </div>
+      <ul id="sec-project-list" class="flex-1 min-h-0 overflow-auto py-1.5"></ul>
+    </aside>
+
+    <!-- COLUNA DIREITA · Tela do projeto selecionado -->
+    <section id="sec-right" class="flex-1 min-w-0 min-h-0 flex flex-col">
+      <!-- Header projeto + botões ações -->
+      <div id="sec-right-empty" class="flex-1 min-h-0 grid place-items-center">
+        <div class="max-w-xl px-6 text-center space-y-4">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/10 border border-emerald-400/30 grid place-items-center">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-300"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+          </div>
+          <div class="text-white font-extrabold text-xl leading-tight">Bem-vindo ao <span class="text-emerald-300">TiAgente Security</span></div>
+          <div class="text-[12.5px] text-slate-400 leading-relaxed max-w-lg">
+            Escolha um projeto na coluna esquerda e clique em <strong class="text-white">▶️ Iniciar Auditoria</strong>.<br>
+            O Security vai escanear arquivos em busca de <em>secrets hardcoded</em>, injeções (SQL/XSS/RCE), headers HTTP, CORS, dependências vulneráveis, path traversal e permissões de arquivo.
+            Depois você vê <strong>sugestões de correção</strong>, <strong>aprova manualmente</strong> cada item, aplica com <strong>backup automático</strong> e roda a auditoria novamente para comparar <strong>antes × depois</strong>.
+          </div>
+          <div class="grid grid-cols-4 gap-2.5 pt-2">
+            <div class="rounded-xl border border-white/[0.06] bg-white/[0.025] py-3 px-2">
+              <div class="text-[10.5px] uppercase font-bold tracking-wider text-slate-500 mb-0.5">1. Listar</div>
+              <div class="text-[11.5px] text-slate-300">Projetos do workspace</div>
+            </div>
+            <div class="rounded-xl border border-white/[0.06] bg-white/[0.025] py-3 px-2">
+              <div class="text-[10.5px] uppercase font-bold tracking-wider text-slate-500 mb-0.5">2. Auditar</div>
+              <div class="text-[11.5px] text-slate-300">10+ regras OWASP</div>
+            </div>
+            <div class="rounded-xl border border-white/[0.06] bg-white/[0.025] py-3 px-2">
+              <div class="text-[10.5px] uppercase font-bold tracking-wider text-slate-500 mb-0.5">3. Aprovar</div>
+              <div class="text-[11.5px] text-slate-300">Lote severidade + indiv.</div>
+            </div>
+            <div class="rounded-xl border border-white/[0.06] bg-white/[0.025] py-3 px-2">
+              <div class="text-[10.5px] uppercase font-bold tracking-wider text-slate-500 mb-0.5">4. Aplicar</div>
+              <div class="text-[11.5px] text-slate-300">Backup + antes × depois</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sec-right-project" class="hidden flex-1 min-w-0 min-h-0 flex flex-col overflow-y-auto scroll-smooth" style="-webkit-overflow-scrolling: touch; scrollbar-gutter: stable both-edges; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent;">
+        <!-- PROJECT HEADER + GRADE CARD -->
+        <div class="px-6 py-4 border-b border-white/[0.06] bg-sidebar/30 flex items-start justify-between gap-4">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 id="sec-project-title" class="text-[16px] font-extrabold text-white leading-tight truncate">—</h1>
+              <span id="sec-project-source" class="text-[9.5px] px-1.5 py-0.5 rounded-md border border-white/[0.07] text-slate-500 uppercase tracking-wider font-bold">—</span>
+              <span id="sec-project-port" class="text-[9.5px] px-1.5 py-0.5 rounded-md bg-white/[0.03] border border-white/[0.06] text-slate-500 font-mono hidden"></span>
+            </div>
+            <div id="sec-project-path" class="text-[11px] text-slate-500 font-mono truncate mt-1 max-w-2xl" title="">—</div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0 flex-wrap">
+            <button id="sec-audit-start" class="h-9 px-3.5 rounded-lg text-white text-[11.5px] font-bold bg-gradient-to-br from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 border border-emerald-400/30 shadow-lg shadow-emerald-500/10 transition flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Iniciar Auditoria
+            </button>
+            <button id="sec-ai-explain" class="h-9 px-3 rounded-lg text-[11.5px] font-bold bg-purple-500/10 border border-purple-400/30 text-purple-300 hover:bg-purple-500/20 transition flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
+              Resumo IA
+            </button>
+            <button id="sec-backup-restore-open" class="h-9 px-3 rounded-lg text-[11.5px] font-bold bg-white/[0.04] border border-white/[0.08] text-slate-300 hover:bg-white/[0.07] hover:text-white transition flex items-center gap-1.5">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 4 3 12 11 12"/></svg>
+              Backups / Restaurar
+            </button>
+          </div>
+        </div>
+
+        <!-- SCORECARD / STATUS -->
+        <div id="sec-scorecard-container" class="px-6 pt-4"></div>
+
+        <!-- TABS: Vulnerabilidades · Aprovar & Aplicar · Resultado Antes/Depois · Auditar URL -->
+        <div class="px-6 pt-4">
+          <div id="sec-tabs" class="inline-flex items-center h-9 rounded-lg bg-white/[0.03] border border-white/[0.06] p-0.5 text-[11px] font-bold flex-wrap">
+            <button data-sec-tab="vulns" class="sec-tab px-3.5 h-full rounded-md transition" data-active="1">🔍 Vulnerabilidades</button>
+            <button data-sec-tab="approve" class="sec-tab px-3.5 h-full rounded-md transition">✅ Aprovar & Aplicar</button>
+            <button data-sec-tab="diff" class="sec-tab px-3.5 h-full rounded-md transition">📊 Antes × Depois</button>
+            <button data-sec-tab="urlaudit" class="sec-tab px-3.5 h-full rounded-md transition">🌐 Auditar URL</button>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT · scrollavel (agora scrolla C/ scorecard & tabs, não só conteudo abaixo) -->
+        <div class="flex-1 min-w-0 px-6 pb-8 pt-4">
+          <div data-sec-tab-panel="vulns"></div>
+          <div data-sec-tab-panel="approve" class="hidden"></div>
+          <div data-sec-tab-panel="diff" class="hidden"></div>
+          <div data-sec-tab-panel="urlaudit" class="hidden"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL RESTAURAR BACKUP -->
+  <div id="sec-modal-backup" class="fixed inset-0 z-40 hidden bg-black/50 backdrop-blur-sm grid place-items-center p-4">
+    <div class="w-full max-w-2xl rounded-2xl border border-white/[0.06] bg-[#0a0f25] shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+        <div class="text-white font-extrabold text-[14px]">Backups disponíveis</div>
+        <button id="sec-modal-backup-close" class="w-8 h-8 rounded-md bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] grid place-items-center text-slate-300">✕</button>
+      </div>
+      <div class="px-5 py-3 space-y-2 max-h-[60vh] overflow-auto" id="sec-modal-backup-list">
+        <div class="text-[11.5px] text-slate-500 py-6 text-center">Sem backups disponíveis. Rode uma auditoria e/ou aplique correções que um backup pré é criado automaticamente.</div>
+      </div>
+      <div class="px-5 py-3 border-t border-white/[0.06] text-[10.5px] text-slate-500 leading-relaxed">
+        ⚠️ Restaurar um backup substitui <strong>TODO o conteúdo atual</strong> do projeto por arquivos salvos no ponto de backup (incluindo deletar arquivos criados depois).
+        Sempre faça um backup atual antes de restaurar (é criado automaticamente).
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMAR AUDITORIA DE URL -->
+  <div id="sec-modal-url-confirm" class="fixed inset-0 z-40 hidden bg-black/50 backdrop-blur-sm grid place-items-center p-4">
+    <div class="w-full max-w-2xl rounded-2xl border border-white/[0.06] bg-[#0a0f25] shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 grid place-items-center text-white shrink-0 border border-white/10 shadow-lg shadow-amber-500/10">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="min-w-0">
+            <div class="text-white font-extrabold text-[14px] leading-tight">Confirmar auditoria de URL</div>
+            <div id="sec-url-confirm-subtitle" class="text-[10.5px] text-slate-500 truncate mt-0.5">—</div>
+          </div>
+        </div>
+        <button id="sec-url-confirm-close" class="w-8 h-8 rounded-md bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] grid place-items-center text-slate-300">✕</button>
+      </div>
+      <div class="px-5 py-4 space-y-3 max-h-[65vh] overflow-auto">
+        <div class="rounded-xl border border-white/[0.06] bg-black/20 px-3.5 py-2.5">
+          <div class="text-[9.5px] uppercase font-bold tracking-wider text-slate-500 mb-0.5">URL que será analisada</div>
+          <div id="sec-url-confirm-url" class="text-[12px] font-mono break-all text-amber-200">—</div>
+        </div>
+        <div>
+          <div class="text-[10.5px] uppercase font-bold tracking-wider text-emerald-300 mb-1.5">O que será feito (não-destrutivo · somente leitura)</div>
+          <ul id="sec-url-confirm-plan" class="space-y-1 text-[11.5px] text-slate-300 leading-snug list-disc pl-5"></ul>
+        </div>
+        <div>
+          <div class="text-[10.5px] uppercase font-bold tracking-wider text-red-300 mb-1.5">O que NÃO será feito</div>
+          <ul class="space-y-1 text-[11.5px] text-slate-400 leading-snug list-disc pl-5">
+            <li>Nenhum brute force, tentativa de login, envio de formulários.</li>
+            <li>Nenhum path adivinhado fora de /robots.txt · /sitemap.xml · /wlwmanifest.xml (conhecidos públicos).</li>
+            <li>Nenhum POST/PUT/DELETE. Nenhum dado é alterado no servidor alvo.</li>
+            <li>Nenhum scan de portas, DNS enumeration ou brute force subdomínios.</li>
+          </ul>
+        </div>
+        <div class="rounded-xl border border-amber-400/20 bg-amber-500/5 px-3.5 py-2.5 space-y-1.5">
+          <label class="flex items-start gap-2 cursor-pointer select-none">
+            <input id="sec-url-own-check" type="checkbox" class="mt-0.5 w-4 h-4 accent-amber-500" />
+            <div class="text-[11.5px] text-slate-300 leading-snug">
+              <strong class="text-amber-200">Declaro ser o proprietário</strong> ou possuo autorização escrita explícita do proprietário do domínio/endereço informado para realizar esta auditoria.
+            </div>
+          </label>
+          <label class="flex items-start gap-2 cursor-pointer select-none">
+            <input id="sec-url-waf-check" type="checkbox" class="mt-0.5 w-4 h-4 accent-amber-500" />
+            <div class="text-[11.5px] text-slate-300 leading-snug">
+              Estou ciente de que CDNs/WAFs como Cloudflare podem bloquear temporariamente este IP (403/429) se interpretarem a requisição como suspeita.
+            </div>
+          </label>
+        </div>
+        <div id="sec-url-confirm-warn" class="hidden rounded-xl border border-red-500/30 bg-red-500/5 px-3 py-2 text-[11.5px] text-red-300"></div>
+      </div>
+      <div class="px-5 py-3.5 border-t border-white/[0.06] flex items-center justify-between gap-3">
+        <div class="text-[10px] text-slate-500">
+          Janela de confirmação: <span id="sec-url-confirm-ttl" class="font-mono text-slate-400">--</span>s · Token de 1 uso só.
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="sec-url-cancel-btn" class="h-9 px-3.5 rounded-lg text-[11.5px] font-bold text-slate-300 border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.07] transition">Cancelar</button>
+          <button id="sec-url-confirm-btn" disabled class="h-9 px-4 rounded-lg text-white text-[11.5px] font-bold bg-gradient-to-br from-red-500 to-orange-500 hover:from-red-400 hover:to-orange-400 border border-white/10 shadow-lg shadow-red-500/10 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+            Confirmar e Iniciar Auditoria
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="sec-toast" class="fixed bottom-4 right-4 z-50 hidden px-4 py-2.5 rounded-xl shadow-lg border text-[12px] font-bold backdrop-blur-md max-w-sm break-words"></div>
+
+  <script src="app.js?v=rc26_autofix_scrollfix_20260919"></script>
+</body>
+</html>

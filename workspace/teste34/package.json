@@ -1,0 +1,22 @@
+{
+  "name": "enigma-tres-deuses",
+  "version": "1.0.0",
+  "description": "Simulador interativo do Enigma dos Três Deuses (Verdade, Mentira e Acaso)",
+  "main": "server.js",
+  "scripts": {
+    "test": "node --test test/enigma.test.js test/server.test.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "enigma",
+    "logica",
+    "tres-deuses",
+    "boolos"
+  ],
+  "author": "TiAgente / Trae AI",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {}
+}

@@ -1,0 +1,18 @@
+{
+  "agentId": "agent_4e93cb7bbac0",
+  "currentState": "rascunho",
+  "stateHistory": [
+    {
+      "ts": 1789862267240,
+      "from": null,
+      "to": "rascunho",
+      "reason": "criado",
+      "by": "orchestrator"
+    }
+  ],
+  "lastRc22Run": null,
+  "lastQaRun": null,
+  "lastSecurityRun": null,
+  "approvedSecurityFixIds": [],
+  "deployedUrl": null
+}

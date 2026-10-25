@@ -1,0 +1,31 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ============================================================
+    //  Logos de parceiros
+    //  · Leitura: pública (qualquer um pode visualizar)
+    //  · Escrita: usuário autenticado, tamanho < 2MB, MIME whitelist
+    // ============================================================
+    match /partnerLogos/{allPaths=**} {
+      allow read: if true;
+      allow write: if
+        request.auth != null &&
+        request.resource.size < 2 * 1024 * 1024 &&
+        request.resource.contentType in [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/webp'
+        ];
+      allow delete: if false;
+    }
+
+    // ============================================================
+    //  Demais arquivos — por padrão BLOQUEADOS
+    // ============================================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

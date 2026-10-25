@@ -1,0 +1,43 @@
+{
+  "agentId": "agent_4a0290a5e73f",
+  "currentState": "construindo",
+  "stateHistory": [
+    {
+      "ts": 1789862267779,
+      "from": null,
+      "to": "rascunho",
+      "reason": "criado",
+      "by": "orchestrator"
+    },
+    {
+      "ts": 1789862267808,
+      "from": "rascunho",
+      "to": "construindo",
+      "reason": "E2E clínica",
+      "by": "api_build"
+    }
+  ],
+  "lastRc22Run": {
+    "ts": 1789862267808,
+    "status": "queued"
+  },
+  "lastQaRun": null,
+  "lastSecurityRun": {
+    "ts": 1789862267841,
+    "status": "erro",
+    "counts": {
+      "critico": 0,
+      "alto": 0,
+      "medio": 0,
+      "baixo": 0,
+      "info": 0
+    },
+    "findingsCount": 0,
+    "security": {
+      "ok": false,
+      "error": "Security não está rodando em http://127.0.0.1:3400: fetch failed"
+    }
+  },
+  "approvedSecurityFixIds": [],
+  "deployedUrl": null
+}

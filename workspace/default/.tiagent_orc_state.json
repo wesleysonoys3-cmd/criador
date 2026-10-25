@@ -1,0 +1,3486 @@
+{
+  "schemaVersion": "rc28.1",
+  "id": "orc_default_1790026379233_djmids",
+  "createdAt": 1790026379233,
+  "updatedAt": 1790210539711,
+  "objetivoAtual": "crie",
+  "requisitos": {
+    "rf": [
+      {
+        "id": "RF_PADRAO",
+        "title": "Aplicação funcional conforme objetivo",
+        "description": "Entregar funcionalidade solicitada pelo objetivo de alto nível.",
+        "source": "heuristica_autonoma"
+      }
+    ],
+    "rnfr": [
+      {
+        "id": "RNF_PERF",
+        "title": "Desempenho",
+        "description": "Resposta < 3s nas telas principais."
+      },
+      {
+        "id": "RNF_SEG",
+        "title": "Segurança",
+        "description": "Validação de inputs, sanitização HTML, sem chaves hardcoded no código."
+      },
+      {
+        "id": "RNF_RESP",
+        "title": "Responsividade",
+        "description": "UI deve funcionar em desktop e mobile."
+      },
+      {
+        "id": "RNF_USAB",
+        "title": "Usabilidade",
+        "description": "Interface em português, feedback claro nas ações."
+      }
+    ],
+    "businessRules": [
+      {
+        "id": "BR_PADRAO",
+        "description": "Seguir as decisões do Estado Central; se dúvida técnica, preferir solução reversível e documentar."
+      }
+    ],
+    "rawKeywords": [
+      "crie"
+    ],
+    "detection": {
+      "needsPersistence": false,
+      "needsAuth": false,
+      "needsInternet": false,
+      "needsWhatsApp": false,
+      "needsPayment": false
+    }
+  },
+  "arquitetura": {
+    "camadas": [
+      "frontend",
+      "backend API"
+    ],
+    "estruturaPastas": [
+      "/public",
+      "/src"
+    ],
+    "padroes": [
+      "MVC leve",
+      "REST JSON",
+      "validação server-side"
+    ]
+  },
+  "tecnologias": {
+    "lang": "node",
+    "framework": "express",
+    "banco": "nenhum (dados em memória temporária para protótipo / JSON file)",
+    "libs": [
+      "express",
+      "cors",
+      "dotenv"
+    ]
+  },
+  "versoesRelevantes": {},
+  "agentesDisponiveis": {
+    "ARCHITECT": {
+      "ok": true
+    },
+    "DEVELOPER": {
+      "ok": true
+    },
+    "QA": {
+      "ok": true
+    },
+    "SECURITY": {
+      "ok": true
+    },
+    "TEST": {
+      "ok": true
+    },
+    "INTERNET": {
+      "ok": false
+    }
+  },
+  "ferramentasDisponiveis": [
+    "read_file",
+    "write_file",
+    "delete_file",
+    "run_command",
+    "list_dir",
+    "state_get",
+    "state_patch",
+    "task_list",
+    "task_update",
+    "web_request_ask_authorization",
+    "web_search_authorized",
+    "web_fetch_authorized",
+    "run_tests",
+    "rollback_to_checkpoint",
+    "security_audit_and_autofix"
+  ],
+  "tarefas": [
+    {
+      "id": "t_an_01",
+      "title": "Análise inicial do projeto",
+      "description": "Listar arquivos existentes, detectar stack, ler configs.",
+      "dependsOn": [],
+      "agent": "ORCHESTRATOR",
+      "status": "completed"
+    },
+    {
+      "id": "t_ar_02",
+      "title": "Arquitetura e plano",
+      "description": "Chamar IA Arquiteta para definir estrutura de arquivos e seções.",
+      "dependsOn": [
+        "t_an_01"
+      ],
+      "agent": "ARCHITECT",
+      "status": "completed",
+      "updatedAtMs": 1790039932300,
+      "motivoBloqueio": null
+    },
+    {
+      "id": "t_be_03",
+      "title": "Backend: server.js + endpoints REST",
+      "description": "Implementar Express server + rotas CRUD + validações.",
+      "dependsOn": [
+        "t_ar_02"
+      ],
+      "agent": "DEVELOPER",
+      "status": "pending"
+    },
+    {
+      "id": "t_fe_04",
+      "title": "Frontend: index.html + UI",
+      "description": "Tailwind via CDN, telas, formulários, integração com API backend.",
+      "dependsOn": [
+        "t_be_03"
+      ],
+      "agent": "DEVELOPER",
+      "status": "pending"
+    },
+    {
+      "id": "t_te_05",
+      "title": "Executar testes automáticos",
+      "description": "Auto-detectar framework (npm test / node --test / custom). Rodar e coletar resultados.",
+      "dependsOn": [
+        "t_fe_04"
+      ],
+      "agent": "TEST",
+      "status": "pending"
+    },
+    {
+      "id": "t_qa_06",
+      "title": "QA · Score + issues",
+      "description": "Rodar relatório QA; se score < 80 ou críticos, loop de correção.",
+      "dependsOn": [
+        "t_te_05"
+      ],
+      "agent": "QA",
+      "status": "pending"
+    },
+    {
+      "id": "t_se_07",
+      "title": "Security RC26 · Auditoria + autofix",
+      "description": "Rodar bridge Security 3400; aplicar HC whitelist; diff Antes × Depois.",
+      "dependsOn": [
+        "t_qa_06"
+      ],
+      "agent": "SECURITY",
+      "status": "pending"
+    },
+    {
+      "id": "t_va_08",
+      "title": "Validação final + relatório",
+      "description": "Smoke test curl, checar critério de conclusão §19; marcar fase COMPLETED.",
+      "dependsOn": [
+        "t_se_07"
+      ],
+      "agent": "ORCHESTRATOR",
+      "status": "pending"
+    }
+  ],
+  "tarefasConcluidas": 2,
+  "tarefasPendentes": 6,
+  "tarefaEmExecucaoId": "t_be_03",
+  "dependencias": [],
+  "arquivosRelevantes": {},
+  "arquivosModificados": [],
+  "decisoesTecnicas": [
+    {
+      "id": "DEC_mubzjz1s",
+      "title": "Persistência: não necessária",
+      "rationale": "Objetivo não menciona persistência/dados permanentes",
+      "alternatives": [],
+      "createdAt": 1790039926576
+    }
+  ],
+  "pesquisasRealizadasFontes": [],
+  "errosEncontrados": [],
+  "tentativasRealizadas": [
+    {
+      "id": "t_ar_02",
+      "status": "completed",
+      "at": 1790039932295,
+      "detail": {
+        "handled": true,
+        "keys": [
+          "ok",
+          "returned"
+        ],
+        "rc28": null,
+        "phase": null
+      },
+      "realEvidences": [
+        {
+          "kind": "arch_file",
+          "data": {
+            "check": "package.json",
+            "ok": false
+          },
+          "at": 1790039932294
+        },
+        {
+          "kind": "arch_file",
+          "data": {
+            "check": "server.js OR index.js OR main.js",
+            "ok": false
+          },
+          "at": 1790039932294
+        },
+        {
+          "kind": "arch_file",
+          "data": {
+            "check": "public/ existe",
+            "ok": false
+          },
+          "at": 1790039932294
+        },
+        {
+          "kind": "arch_state_or_modified",
+          "data": {
+            "temArquiteturaDefinida": true,
+            "arquivosModificados": false,
+            "arquivosModificadosSetSize": 0
+          },
+          "at": 1790039932295
+        }
+      ]
+    }
+  ],
+  "correcoesRealizadas": [],
+  "testesExecutadosResultados": [],
+  "problemasConhecidos": [],
+  "limitacoes": [],
+  "proximaAcao": "RC28_FASE_IMPLEMENTATION",
+  "faseGeral": "IMPLEMENTATION",
+  "needsPersistence": false,
+  "internetAuthorization": null,
+  "checkpoints": [
+    {
+      "id": "cp_1790039926579_001",
+      "seq": 1,
+      "fase": "ANALYSIS",
+      "createdAt": 1790039926579,
+      "arquivoTar": "/Users/tiagosantos/Desktop/criador/workspace/default/.rc27_checkpoints/1790039926579_001_ANALYSIS.tar.gz",
+      "tarSizeBytes": 27964,
+      "summary": "análise inicial + requisitos extraídos"
+    },
+    {
+      "id": "cp_1790039926629_002",
+      "seq": 2,
+      "fase": "PLANNING",
+      "createdAt": 1790039926629,
+      "arquivoTar": "/Users/tiagosantos/Desktop/criador/workspace/default/.rc27_checkpoints/1790039926629_002_PLANNING.tar.gz",
+      "tarSizeBytes": 28699,
+      "summary": "plano com 8 tarefas; topoSort ok=true"
+    }
+  ],
+  "toolCallsSinceLastSave": 0,
+  "statusExecucao": "running",
+  "decisionTrace": [
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ANALYSIS deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "ANALYSIS",
+      "phaseTo": "PLANNING",
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890332
+    },
+    {
+      "v": 2,
+      "ts": 1790039890332,
+      "analysis": "fase=ANALYSIS · tarefas=0/0 · stack=?+?",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "ADVANCE_PHASE",
+        "taskId": null,
+        "phaseTo": "PLANNING"
+      },
+      "successCriteria": [
+        "faseGeral=COMPLETED ou nova fase com tarefas pendentes reduzidas"
+      ],
+      "risks": [
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ANALYSIS deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "ANALYSIS",
+      "phaseTo": "PLANNING",
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890333
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual PLANNING deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 2,
+      "phaseFrom": "PLANNING",
+      "phaseTo": "ARCHITECTURE",
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890339
+    },
+    {
+      "v": 2,
+      "ts": 1790039890339,
+      "analysis": "fase=PLANNING · tarefas=0/0 · streak_sem_progresso=1 · stack=?+? · historico_acoes=3",
+      "selectedStrategy": {
+        "strategyType": "TEST_DRIVEN_FIX",
+        "riskLevel": "low",
+        "description": "Executar testes existentes primeiro; basear a próxima decisão no resultado real dos testes."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "ADVANCE_PHASE",
+        "taskId": null,
+        "phaseTo": "ARCHITECTURE"
+      },
+      "successCriteria": [
+        "faseGeral=COMPLETED ou nova fase com tarefas pendentes reduzidas"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE TEST_DRIVEN_FIX não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.765,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual PLANNING deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 2,
+      "phaseFrom": "PLANNING",
+      "phaseTo": "ARCHITECTURE",
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890341
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ARCHITECTURE deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 3,
+      "phaseFrom": "ARCHITECTURE",
+      "phaseTo": "IMPLEMENTATION",
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890344
+    },
+    {
+      "v": 2,
+      "ts": 1790039890344,
+      "analysis": "fase=ARCHITECTURE · tarefas=0/0 · streak_sem_progresso=2 · stack=?+? · historico_acoes=6",
+      "selectedStrategy": {
+        "strategyType": "MINI_STEP_BACKTRACK",
+        "riskLevel": "medium",
+        "description": "Dividir a próxima tarefa em 2+ mini-passos verificáveis, ou rollback ao último checkpoint com sucesso."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "ADVANCE_PHASE",
+        "taskId": null,
+        "phaseTo": "IMPLEMENTATION"
+      },
+      "successCriteria": [
+        "faseGeral=COMPLETED ou nova fase com tarefas pendentes reduzidas",
+        "decisionEngine.progressMetrics.noProgressStreak < valor_anterior"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE MINI_STEP_BACKTRACK não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.8699999999999999,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ARCHITECTURE deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 3,
+      "phaseFrom": "ARCHITECTURE",
+      "phaseTo": "IMPLEMENTATION",
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890346
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 4,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890352
+    },
+    {
+      "v": 2,
+      "ts": 1790039890352,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=9",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 4,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890354
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 5,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890356
+    },
+    {
+      "v": 2,
+      "ts": 1790039890356,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=12",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 5,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890358
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 6,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890361
+    },
+    {
+      "v": 2,
+      "ts": 1790039890361,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=15",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 6,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890364
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 7,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890366
+    },
+    {
+      "v": 2,
+      "ts": 1790039890366,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=18",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 7,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890367
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 8,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890369
+    },
+    {
+      "v": 2,
+      "ts": 1790039890369,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=21",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 8,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890371
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 9,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890372
+    },
+    {
+      "v": 2,
+      "ts": 1790039890372,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=24",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 9,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890373
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 10,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890375
+    },
+    {
+      "v": 2,
+      "ts": 1790039890375,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=27",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 10,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890376
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 11,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890378
+    },
+    {
+      "v": 2,
+      "ts": 1790039890378,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=30",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 11,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890379
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 12,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890381
+    },
+    {
+      "v": 2,
+      "ts": 1790039890381,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=33",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 12,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890382
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 13,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890383
+    },
+    {
+      "v": 2,
+      "ts": 1790039890383,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=36",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 13,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890385
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 14,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890386
+    },
+    {
+      "v": 2,
+      "ts": 1790039890386,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=39",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 14,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890387
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 15,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890389
+    },
+    {
+      "v": 2,
+      "ts": 1790039890389,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=42",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 15,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890390
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 16,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890392
+    },
+    {
+      "v": 2,
+      "ts": 1790039890392,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=45",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 16,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890394
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 17,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890396
+    },
+    {
+      "v": 2,
+      "ts": 1790039890396,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=48",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 17,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890397
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 18,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890399
+    },
+    {
+      "v": 2,
+      "ts": 1790039890399,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 18,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890400
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 19,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890401
+    },
+    {
+      "v": 2,
+      "ts": 1790039890401,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 19,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890403
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 20,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890405
+    },
+    {
+      "v": 2,
+      "ts": 1790039890405,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 20,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890406
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 21,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890407
+    },
+    {
+      "v": 2,
+      "ts": 1790039890407,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 21,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890409
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 22,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890411
+    },
+    {
+      "v": 2,
+      "ts": 1790039890411,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 22,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890412
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 23,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890414
+    },
+    {
+      "v": 2,
+      "ts": 1790039890414,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 23,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890416
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 24,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890418
+    },
+    {
+      "v": 2,
+      "ts": 1790039890418,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 24,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890419
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 25,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890420
+    },
+    {
+      "v": 2,
+      "ts": 1790039890420,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 25,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890422
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 26,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890424
+    },
+    {
+      "v": 2,
+      "ts": 1790039890424,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 26,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890425
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 27,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890427
+    },
+    {
+      "v": 2,
+      "ts": 1790039890427,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 27,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890429
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 28,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890431
+    },
+    {
+      "v": 2,
+      "ts": 1790039890431,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 28,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890433
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 29,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890435
+    },
+    {
+      "v": 2,
+      "ts": 1790039890435,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 29,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890436
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 30,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890439
+    },
+    {
+      "v": 2,
+      "ts": 1790039890439,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 30,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890441
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 31,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890443
+    },
+    {
+      "v": 2,
+      "ts": 1790039890443,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 31,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890446
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 32,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890448
+    },
+    {
+      "v": 2,
+      "ts": 1790039890448,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 32,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890450
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 33,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890452
+    },
+    {
+      "v": 2,
+      "ts": 1790039890452,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 33,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890454
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 34,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890456
+    },
+    {
+      "v": 2,
+      "ts": 1790039890456,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 34,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890458
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 35,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890460
+    },
+    {
+      "v": 2,
+      "ts": 1790039890460,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 35,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890462
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 36,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890464
+    },
+    {
+      "v": 2,
+      "ts": 1790039890464,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 36,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890466
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 37,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890468
+    },
+    {
+      "v": 2,
+      "ts": 1790039890468,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 37,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890470
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 38,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890472
+    },
+    {
+      "v": 2,
+      "ts": 1790039890472,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 38,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890474
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 39,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890476
+    },
+    {
+      "v": 2,
+      "ts": 1790039890476,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": "clarify",
+      "step": 39,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890478
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "Excedeu maxCycles=40 ciclos (anti-loop §17).",
+      "heuristic": "max_cycles_excedido",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 40,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890481
+    },
+    {
+      "v": 2,
+      "ts": 1790039890481,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "Excedeu maxCycles=40 ciclos (anti-loop §17).",
+      "heuristic": "max_cycles_excedido",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 40,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": "BLOCKED",
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039890483
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ARCHITECTURE deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "ARCHITECTURE",
+      "phaseTo": "IMPLEMENTATION",
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039926674
+    },
+    {
+      "v": 2,
+      "ts": 1790039926674,
+      "analysis": "fase=ARCHITECTURE · tarefas=1/8 · streak_sem_progresso=4 · stack=node+express · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "ADVANCE_PHASE",
+        "taskId": null,
+        "phaseTo": "IMPLEMENTATION"
+      },
+      "successCriteria": [
+        "faseGeral=COMPLETED ou nova fase com tarefas pendentes reduzidas"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ARCHITECTURE deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "ARCHITECTURE",
+      "phaseTo": "IMPLEMENTATION",
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039926677
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_ar_02",
+      "reason": "Próxima tarefa topologicamente válida: t_ar_02 · ARCHITECT · \"Arquitetura e plano\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_ar_02"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 2,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039926686
+    },
+    {
+      "v": 2,
+      "ts": 1790039926686,
+      "analysis": "fase=IMPLEMENTATION · tarefas=1/8 · streak_sem_progresso=5 · stack=node+express · historico_acoes=50",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "high",
+        "description": "Fallback final: todas estratégias bloqueadas. Reexecutar heurística."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_ar_02",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_ar_02_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [
+        {
+          "id": "R_ALTA",
+          "severity": "high",
+          "description": "Estratégia marcada como alto risco; preparar rollback."
+        },
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.375,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 3,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1790039932312
+    },
+    {
+      "v": 2,
+      "ts": 1790039932312,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · stack=node+express · historico_acoes=50 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "high",
+        "description": "Fallback final: todas estratégias bloqueadas. Reexecutar heurística."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [
+        {
+          "id": "R_ALTA",
+          "severity": "high",
+          "description": "Estratégia marcada como alto risco; preparar rollback."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.4625,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    }
+  ],
+  "decisionEngine": {
+    "engineVersion": "rc28.decision.v1",
+    "mode": "heuristic",
+    "hypotheses": [],
+    "strategiesTried": [
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1790039890336,
+        "resultSummary": "avançou_fase_PLANNING · critérios 0/1"
+      },
+      {
+        "strategyType": "TEST_DRIVEN_FIX",
+        "success": false,
+        "atMs": 1790039890342,
+        "resultSummary": "avançou_fase_ARCHITECTURE · critérios 0/1"
+      },
+      {
+        "strategyType": "MINI_STEP_BACKTRACK",
+        "success": false,
+        "atMs": 1790039890348,
+        "resultSummary": "avançou_fase_IMPLEMENTATION · critérios 0/2"
+      },
+      {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "success": false,
+        "atMs": 1790039890484,
+        "resultSummary": "human_review · Excedeu maxCycles=40 ciclos (anti-loop §17)."
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "success": false,
+        "atMs": 1790039926680,
+        "resultSummary": "avançou_fase_IMPLEMENTATION · critérios 0/1"
+      },
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": true,
+        "atMs": 1790039932303,
+        "resultSummary": "critérios 1/2"
+      }
+    ],
+    "ineffectiveStrategies": [
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "discardedAtMs": 1790039890336,
+        "reason": "resultado_nao_atendeu_successCriteria",
+        "cycle": 1
+      },
+      {
+        "strategyType": "TEST_DRIVEN_FIX",
+        "discardedAtMs": 1790039890342,
+        "reason": "resultado_nao_atendeu_successCriteria",
+        "cycle": 2
+      },
+      {
+        "strategyType": "MINI_STEP_BACKTRACK",
+        "discardedAtMs": 1790039890348,
+        "reason": "resultado_nao_atendeu_successCriteria",
+        "cycle": 3
+      },
+      {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "discardedAtMs": 1790039890484,
+        "reason": "Excedeu maxCycles=40 ciclos (anti-loop §17).",
+        "cycle": 40
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "discardedAtMs": 1790039926680,
+        "reason": "resultado_nao_atendeu_successCriteria",
+        "cycle": 1
+      }
+    ],
+    "alternativesHistory": [
+      {
+        "atMs": 1790039890336,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "avançou_fase_PLANNING · critérios 0/1"
+      },
+      {
+        "atMs": 1790039890342,
+        "selectedStrategy": "TEST_DRIVEN_FIX",
+        "alternativesCount": 2,
+        "outcome": "failure",
+        "summary": "avançou_fase_ARCHITECTURE · critérios 0/1"
+      },
+      {
+        "atMs": 1790039890348,
+        "selectedStrategy": "MINI_STEP_BACKTRACK",
+        "alternativesCount": 2,
+        "outcome": "failure",
+        "summary": "avançou_fase_IMPLEMENTATION · critérios 0/2"
+      },
+      {
+        "atMs": 1790039890484,
+        "selectedStrategy": "RESEARCH_THEN_EXECUTE",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "human_review · Excedeu maxCycles=40 ciclos (anti-loop §17)."
+      },
+      {
+        "atMs": 1790039926680,
+        "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "avançou_fase_IMPLEMENTATION · critérios 0/1"
+      },
+      {
+        "atMs": 1790039932303,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "success",
+        "summary": "critérios 1/2"
+      }
+    ],
+    "progressMetrics": {
+      "totalCycles": 6,
+      "cyclesWithProgress": 1,
+      "lastProgressAtMs": 1790039932303,
+      "noProgressStreak": 0,
+      "objectiveProgressPct": 15
+    },
+    "lastDecision": {
+      "selectedStrategy": "HEURISTIC_DEFAULT",
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "phaseTo": "IMPLEMENTATION",
+        "reason": "Próxima tarefa topologicamente válida: t_ar_02 · ARCHITECT · \"Arquitetura e plano\". Motivo: fase IMPL prioriza DEV/ARCH.",
+        "heuristic": "rc24_bridge_priority",
+        "candidates": [
+          "t_ar_02"
+        ],
+        "version": "rc28.1.decisor.v2",
+        "taskId": "t_ar_02",
+        "bridgeUsed": "clarify"
+      },
+      "decidedAtMs": 1790039932303
+    },
+    "lastMeasuredResult": {
+      "success": true,
+      "summary": "critérios 1/2",
+      "cycle": 2,
+      "measuredAtMs": 1790039932303,
+      "failReason": null,
+      "taskId": "t_ar_02"
+    },
+    "adaptiveConstraints": {
+      "maxCycles": null,
+      "maxStrategies": null,
+      "confidenceThreshold": 0.7
+    },
+    "objetivoSeedadoAtual": "crie",
+    "objetivoOrigem": "NOVA_SOLICITACAO",
+    "etapa7Isolated": true,
+    "etapa7SeedAtMs": 1790039926668
+  },
+  "testesExecutados": [],
+  "resultadosTestes": {
+    "framework": "node_native_test",
+    "pass": 0,
+    "fail": 0,
+    "total": 1,
+    "executedAtMs": 1790039938657,
+    "exitCode": 0
+  },
+  "autonomyRuntime": {
+    "version": 1,
+    "objective": "crie",
+    "objectiveAtMs": 1790039926574,
+    "currentTaskId": null,
+    "completedTaskIds": [
+      "t_ar_02"
+    ],
+    "failedTaskIds": [],
+    "nextAction": "Inicializado. Próximo passo: analisar objetivo e definir tarefas.",
+    "objectiveProgressPct": 25,
+    "taskCompleted": true,
+    "objectiveVerified": false,
+    "lastVerificationReason": null,
+    "stall": {
+      "cyclesNoProgress": 0,
+      "lastProgressAtMs": 1790039932307,
+      "status": "none"
+    },
+    "recoveryAttempts": [],
+    "blockingReason": null,
+    "loops": 1,
+    "concludedAtMs": null
+  },
+  "blockedReason": "Excedeu maxCycles=40 ciclos (anti-loop §17).",
+  "objetivoUsuarioMensagem": "crie",
+  "objetivoOrigem": "NOVA_SOLICITACAO",
+  "internetAuthorizationPending": {
+    "scopeId": "inet_muet4szb_ujfof",
+    "reason": "Pesquisar informações atualizadas sobre o projeto DeFi e token AAVE",
+    "urls": [],
+    "estimatedScope": "1 pesquisa na web sobre AAVE (criptomoeda/protocolo DeFi)",
+    "requestedAtMs": 1790210539708,
+    "status": "requested"
+  },
+  "awaitingInternetAuthorization": {
+    "scopeId": "inet_muc03z8i_j68rg",
+    "reason": "Aguardando clique Sim/Não do usuário via modal UI. Estado Central salvo para resume.",
+    "startedAtMs": 1790040859950,
+    "provider": "browser_open_flow_v1"
+  },
+  "internetAuthorizationLastPendingScope": "inet_muc03z8i_j68rg"
+}

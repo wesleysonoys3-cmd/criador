@@ -1,0 +1,1328 @@
+{
+  "schemaVersion": "rc28.1",
+  "id": "orc_default_1789972827720_58975f",
+  "createdAt": 1789972827720,
+  "updatedAt": 1789972976830,
+  "objetivoAtual": "Crie um pequeno sistema web com uma página inicial, um botão funcional e um teste automatizado que valide o funcionamento do botão. Execute os testes e confirme se o objetivo inteiro foi concluído.",
+  "requisitos": {
+    "rf": [
+      {
+        "id": "RF_PADRAO",
+        "title": "Aplicação funcional conforme objetivo",
+        "description": "Entregar funcionalidade solicitada pelo objetivo de alto nível.",
+        "source": "heuristica_autonoma"
+      }
+    ],
+    "rnfr": [
+      {
+        "id": "RNF_PERF",
+        "title": "Desempenho",
+        "description": "Resposta < 3s nas telas principais."
+      },
+      {
+        "id": "RNF_SEG",
+        "title": "Segurança",
+        "description": "Validação de inputs, sanitização HTML, sem chaves hardcoded no código."
+      },
+      {
+        "id": "RNF_RESP",
+        "title": "Responsividade",
+        "description": "UI deve funcionar em desktop e mobile."
+      },
+      {
+        "id": "RNF_USAB",
+        "title": "Usabilidade",
+        "description": "Interface em português, feedback claro nas ações."
+      }
+    ],
+    "businessRules": [
+      {
+        "id": "BR_HOR",
+        "description": "Operação restrita aos horários de funcionamento definidos."
+      }
+    ],
+    "rawKeywords": [
+      "crie",
+      "pequeno",
+      "sistema",
+      "página",
+      "inicial,",
+      "botão",
+      "funcional",
+      "teste",
+      "automatizado",
+      "valide",
+      "funcionamento",
+      "botão.",
+      "execute",
+      "testes",
+      "confirme",
+      "objetivo",
+      "inteiro",
+      "concluído."
+    ],
+    "detection": {
+      "needsPersistence": false,
+      "needsAuth": false,
+      "needsInternet": false,
+      "needsWhatsApp": false,
+      "needsPayment": false
+    }
+  },
+  "arquitetura": {
+    "camadas": [
+      "frontend",
+      "backend API"
+    ],
+    "estruturaPastas": [
+      "/public",
+      "/src"
+    ],
+    "padroes": [
+      "MVC leve",
+      "REST JSON",
+      "validação server-side"
+    ]
+  },
+  "tecnologias": {
+    "lang": "node",
+    "framework": "express",
+    "banco": "nenhum (dados em memória temporária para protótipo / JSON file)",
+    "libs": [
+      "express",
+      "cors",
+      "dotenv"
+    ]
+  },
+  "versoesRelevantes": {},
+  "agentesDisponiveis": {
+    "ARCHITECT": {
+      "ok": true
+    },
+    "DEVELOPER": {
+      "ok": true
+    },
+    "QA": {
+      "ok": true
+    },
+    "SECURITY": {
+      "ok": true
+    },
+    "TEST": {
+      "ok": true
+    },
+    "INTERNET": {
+      "ok": false
+    }
+  },
+  "ferramentasDisponiveis": [
+    "read_file",
+    "write_file",
+    "delete_file",
+    "run_command",
+    "list_dir",
+    "state_get",
+    "state_patch",
+    "task_list",
+    "task_update",
+    "web_request_ask_authorization",
+    "web_search_authorized",
+    "web_fetch_authorized",
+    "run_tests",
+    "rollback_to_checkpoint",
+    "security_audit_and_autofix"
+  ],
+  "tarefas": [
+    {
+      "id": "t_an_01",
+      "title": "Análise inicial do projeto",
+      "description": "Listar arquivos existentes, detectar stack, ler configs.",
+      "dependsOn": [],
+      "agent": "ORCHESTRATOR",
+      "status": "completed"
+    },
+    {
+      "id": "t_ar_02",
+      "title": "Arquitetura e plano",
+      "description": "Chamar IA Arquiteta para definir estrutura de arquivos e seções.",
+      "dependsOn": [
+        "t_an_01"
+      ],
+      "agent": "ARCHITECT",
+      "status": "completed",
+      "updatedAtMs": 1789972832807,
+      "motivoBloqueio": null
+    },
+    {
+      "id": "t_be_03",
+      "title": "Backend: server.js + endpoints REST",
+      "description": "Implementar Express server + rotas CRUD + validações.",
+      "dependsOn": [
+        "t_ar_02"
+      ],
+      "agent": "DEVELOPER",
+      "status": "blocked",
+      "updatedAtMs": 1789972976820,
+      "motivoBloqueio": "frontend_sem_html_encontrado"
+    },
+    {
+      "id": "t_fe_04",
+      "title": "Frontend: index.html + UI",
+      "description": "Tailwind via CDN, telas, formulários, integração com API backend.",
+      "dependsOn": [
+        "t_be_03"
+      ],
+      "agent": "DEVELOPER",
+      "status": "pending"
+    },
+    {
+      "id": "t_te_05",
+      "title": "Executar testes automáticos",
+      "description": "Auto-detectar framework (npm test / node --test / custom). Rodar e coletar resultados.",
+      "dependsOn": [
+        "t_fe_04"
+      ],
+      "agent": "TEST",
+      "status": "pending"
+    },
+    {
+      "id": "t_qa_06",
+      "title": "QA · Score + issues",
+      "description": "Rodar relatório QA; se score < 80 ou críticos, loop de correção.",
+      "dependsOn": [
+        "t_te_05"
+      ],
+      "agent": "QA",
+      "status": "pending"
+    },
+    {
+      "id": "t_se_07",
+      "title": "Security RC26 · Auditoria + autofix",
+      "description": "Rodar bridge Security 3400; aplicar HC whitelist; diff Antes × Depois.",
+      "dependsOn": [
+        "t_qa_06"
+      ],
+      "agent": "SECURITY",
+      "status": "pending"
+    },
+    {
+      "id": "t_va_08",
+      "title": "Validação final + relatório",
+      "description": "Smoke test curl, checar critério de conclusão §19; marcar fase COMPLETED.",
+      "dependsOn": [
+        "t_se_07"
+      ],
+      "agent": "ORCHESTRATOR",
+      "status": "pending"
+    }
+  ],
+  "tarefasConcluidas": 2,
+  "tarefasPendentes": 6,
+  "tarefaEmExecucaoId": "t_be_03",
+  "dependencias": [],
+  "arquivosRelevantes": {},
+  "arquivosModificados": [],
+  "decisoesTecnicas": [
+    {
+      "id": "DEC_muavlt8o",
+      "title": "Persistência: não necessária",
+      "rationale": "Objetivo não menciona persistência/dados permanentes",
+      "alternatives": [],
+      "createdAt": 1789972827720
+    }
+  ],
+  "pesquisasRealizadasFontes": [],
+  "errosEncontrados": [
+    {
+      "id": "t_be_03",
+      "message": "frontend_sem_html_encontrado",
+      "at": 1789972976818,
+      "loop": "RC28_RUN_SINGLE_TASK",
+      "realCheck": {
+        "ok": false,
+        "reason": "frontend_sem_html_encontrado",
+        "evidences": []
+      }
+    }
+  ],
+  "tentativasRealizadas": [
+    {
+      "id": "t_ar_02",
+      "status": "completed",
+      "at": 1789972832804,
+      "detail": {
+        "handled": true,
+        "keys": [
+          "ok",
+          "returned"
+        ],
+        "rc28": null,
+        "phase": null
+      },
+      "realEvidences": [
+        {
+          "kind": "arch_file",
+          "data": {
+            "check": "package.json",
+            "ok": false
+          },
+          "at": 1789972832803
+        },
+        {
+          "kind": "arch_file",
+          "data": {
+            "check": "server.js OR index.js OR main.js",
+            "ok": false
+          },
+          "at": 1789972832803
+        },
+        {
+          "kind": "arch_file",
+          "data": {
+            "check": "public/ existe",
+            "ok": false
+          },
+          "at": 1789972832804
+        },
+        {
+          "kind": "arch_state_or_modified",
+          "data": {
+            "temArquiteturaDefinida": true,
+            "arquivosModificados": false,
+            "arquivosModificadosSetSize": 0
+          },
+          "at": 1789972832804
+        }
+      ]
+    },
+    {
+      "id": "t_be_03",
+      "status": "failed",
+      "at": 1789972976818,
+      "reason": "frontend_sem_html_encontrado",
+      "autoCorrectionFailed": true
+    }
+  ],
+  "correcoesRealizadas": [
+    {
+      "pass": 1,
+      "ok": true,
+      "erroMessage": "frontend_sem_html_encontrado",
+      "signature": "sig_0003d6bff2f8d1ef",
+      "writeFilesChangedCount": 1,
+      "atMs": 1789972976815
+    }
+  ],
+  "testesExecutadosResultados": [],
+  "problemasConhecidos": [],
+  "limitacoes": [],
+  "proximaAcao": "RC28_FASE_IMPLEMENTATION",
+  "faseGeral": "IMPLEMENTATION",
+  "needsPersistence": false,
+  "internetAuthorization": null,
+  "checkpoints": [
+    {
+      "id": "cp_1789972827722_001",
+      "seq": 1,
+      "fase": "ANALYSIS",
+      "createdAt": 1789972827722,
+      "arquivoTar": "/Users/tiagosantos/Desktop/criador/workspace/e2e_rc29_resilience_ovx8os0f/.rc27_checkpoints/1789972827722_001_ANALYSIS.tar.gz",
+      "tarSizeBytes": 2567,
+      "summary": "análise inicial + requisitos extraídos"
+    },
+    {
+      "id": "cp_1789972827746_002",
+      "seq": 2,
+      "fase": "PLANNING",
+      "createdAt": 1789972827746,
+      "arquivoTar": "/Users/tiagosantos/Desktop/criador/workspace/e2e_rc29_resilience_ovx8os0f/.rc27_checkpoints/1789972827746_002_PLANNING.tar.gz",
+      "tarSizeBytes": 3342,
+      "summary": "plano com 8 tarefas; topoSort ok=true"
+    },
+    {
+      "id": "cp_1789972890616_005",
+      "seq": 5,
+      "fase": "IMPLEMENTATION",
+      "createdAt": 1789972890616,
+      "arquivoTar": "/Users/tiagosantos/Desktop/criador/workspace/e2e_rc29_resilience_ovx8os0f/.rc27_checkpoints/1789972890616_005_IMPLEMENTATION.tar.gz",
+      "tarSizeBytes": 6722,
+      "summary": "rc28_auto_step_5"
+    },
+    {
+      "id": "cp_1789972943032_010",
+      "seq": 10,
+      "fase": "IMPLEMENTATION",
+      "createdAt": 1789972943032,
+      "arquivoTar": "/Users/tiagosantos/Desktop/criador/workspace/e2e_rc29_resilience_ovx8os0f/.rc27_checkpoints/1789972943032_010_IMPLEMENTATION.tar.gz",
+      "tarSizeBytes": 7473,
+      "summary": "rc28_auto_step_10"
+    }
+  ],
+  "toolCallsSinceLastSave": 0,
+  "statusExecucao": "running",
+  "decisionTrace": [
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ARCHITECTURE deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "ARCHITECTURE",
+      "phaseTo": "IMPLEMENTATION",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972827769
+    },
+    {
+      "v": 2,
+      "ts": 1789972827769,
+      "analysis": "fase=ARCHITECTURE · tarefas=1/8 · stack=node+express",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "ADVANCE_PHASE",
+        "taskId": null,
+        "phaseTo": "IMPLEMENTATION"
+      },
+      "successCriteria": [
+        "faseGeral=COMPLETED ou nova fase com tarefas pendentes reduzidas"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "trigger": "SE HEURISTIC_DEFAULT não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ARCHITECTURE deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "ARCHITECTURE",
+      "phaseTo": "IMPLEMENTATION",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972827771
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_ar_02",
+      "reason": "Próxima tarefa topologicamente válida: t_ar_02 · ARCHITECT · \"Arquitetura e plano\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_ar_02"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 2,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972827775
+    },
+    {
+      "v": 2,
+      "ts": 1789972827775,
+      "analysis": "fase=IMPLEMENTATION · tarefas=1/8 · streak_sem_progresso=1 · stack=node+express · historico_acoes=3",
+      "selectedStrategy": {
+        "strategyType": "TEST_DRIVEN_FIX",
+        "riskLevel": "low",
+        "description": "Executar testes existentes primeiro; basear a próxima decisão no resultado real dos testes."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_ar_02",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_ar_02_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "trigger": "SE TEST_DRIVEN_FIX não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 3,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.765,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 3,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972832815
+    },
+    {
+      "v": 2,
+      "ts": 1789972832815,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · stack=node+express · historico_acoes=5 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "TEST_DRIVEN_FIX",
+        "riskLevel": "low",
+        "description": "Executar testes existentes primeiro; basear a próxima decisão no resultado real dos testes."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "trigger": "SE TEST_DRIVEN_FIX não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 3,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.765,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 4,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972865297
+    },
+    {
+      "v": 2,
+      "ts": 1789972865297,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · ultimo_erro=frontend_sem_html_encontrado · streak_sem_progresso=1 · stack=node+express · historico_acoes=7 · resultados_anteriores=2",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE PRIORITY_FIRST_UNBLOCKED não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 5,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972878032
+    },
+    {
+      "v": 2,
+      "ts": 1789972878032,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · ultimo_erro=frontend_sem_html_encontrado · stack=node+express · historico_acoes=9 · resultados_anteriores=2",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE PRIORITY_FIRST_UNBLOCKED não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 6,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972890643
+    },
+    {
+      "v": 2,
+      "ts": 1789972890643,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · ultimo_erro=frontend_sem_html_encontrado · stack=node+express · historico_acoes=11 · resultados_anteriores=2",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE PRIORITY_FIRST_UNBLOCKED não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 7,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972899365
+    },
+    {
+      "v": 2,
+      "ts": 1789972899365,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · ultimo_erro=frontend_sem_html_encontrado · stack=node+express · historico_acoes=13 · resultados_anteriores=2",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE PRIORITY_FIRST_UNBLOCKED não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 8,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972908188
+    },
+    {
+      "v": 2,
+      "ts": 1789972908188,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · ultimo_erro=frontend_sem_html_encontrado · stack=node+express · historico_acoes=15 · resultados_anteriores=2",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE PRIORITY_FIRST_UNBLOCKED não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 9,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972921761
+    },
+    {
+      "v": 2,
+      "ts": 1789972921761,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · ultimo_erro=frontend_sem_html_encontrado · stack=node+express · historico_acoes=17 · resultados_anteriores=2",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE PRIORITY_FIRST_UNBLOCKED não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 10,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972934314
+    },
+    {
+      "v": 2,
+      "ts": 1789972934314,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · ultimo_erro=frontend_sem_html_encontrado · stack=node+express · historico_acoes=19 · resultados_anteriores=2",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE PRIORITY_FIRST_UNBLOCKED não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 11,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972943055
+    },
+    {
+      "v": 2,
+      "ts": 1789972943055,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · ultimo_erro=frontend_sem_html_encontrado · stack=node+express · historico_acoes=21 · resultados_anteriores=2",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE PRIORITY_FIRST_UNBLOCKED não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 12,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972955417
+    },
+    {
+      "v": 2,
+      "ts": 1789972955417,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · ultimo_erro=frontend_sem_html_encontrado · stack=node+express · historico_acoes=23 · resultados_anteriores=2",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE PRIORITY_FIRST_UNBLOCKED não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 13,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972964015
+    },
+    {
+      "v": 2,
+      "ts": 1789972964015,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · ultimo_erro=frontend_sem_html_encontrado · stack=node+express · historico_acoes=25 · resultados_anteriores=2",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE PRIORITY_FIRST_UNBLOCKED não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "EXECUTE_TASK",
+      "taskId": "t_be_03",
+      "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+      "heuristic": "rc24_bridge_priority",
+      "candidates": [
+        "t_be_03"
+      ],
+      "bridgeUsed": "clarify",
+      "step": 14,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789972976828
+    },
+    {
+      "v": 2,
+      "ts": 1789972976828,
+      "analysis": "fase=IMPLEMENTATION · tarefas=2/8 · ultimo_erro=frontend_sem_html_encontrado · stack=node+express · historico_acoes=27 · resultados_anteriores=2",
+      "selectedStrategy": {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "riskLevel": "low",
+        "description": "Executar a 1ª tarefa pronta com maior prioridade (por dependências e agent)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "taskId": "t_be_03",
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "tarefa_t_be_03_status=completed",
+        "após_execucao: sem_novos_erros_em_errosEncontrados"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE PRIORITY_FIRST_UNBLOCKED não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.755,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    }
+  ],
+  "decisionEngine": {
+    "engineVersion": "rc28.decision.v1",
+    "mode": "heuristic",
+    "hypotheses": [],
+    "strategiesTried": [
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1789972827772,
+        "resultSummary": "avançou_fase_IMPLEMENTATION · critérios 0/1"
+      },
+      {
+        "strategyType": "TEST_DRIVEN_FIX",
+        "success": true,
+        "atMs": 1789972832810,
+        "resultSummary": "critérios 1/2"
+      },
+      {
+        "strategyType": "TEST_DRIVEN_FIX",
+        "success": false,
+        "atMs": 1789972865289,
+        "resultSummary": "critérios 0/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "success": true,
+        "atMs": 1789972878028,
+        "resultSummary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "success": true,
+        "atMs": 1789972890612,
+        "resultSummary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "success": true,
+        "atMs": 1789972899360,
+        "resultSummary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "success": true,
+        "atMs": 1789972908184,
+        "resultSummary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "success": true,
+        "atMs": 1789972921757,
+        "resultSummary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "success": true,
+        "atMs": 1789972934310,
+        "resultSummary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "success": true,
+        "atMs": 1789972943029,
+        "resultSummary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "success": true,
+        "atMs": 1789972955412,
+        "resultSummary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "success": true,
+        "atMs": 1789972964011,
+        "resultSummary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "strategyType": "PRIORITY_FIRST_UNBLOCKED",
+        "success": true,
+        "atMs": 1789972976823,
+        "resultSummary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      }
+    ],
+    "ineffectiveStrategies": [
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "discardedAtMs": 1789972827772,
+        "reason": "resultado_nao_atendeu_successCriteria",
+        "cycle": 1
+      },
+      {
+        "strategyType": "TEST_DRIVEN_FIX",
+        "discardedAtMs": 1789972865289,
+        "reason": "frontend_sem_html_encontrado",
+        "cycle": 3
+      }
+    ],
+    "alternativesHistory": [
+      {
+        "atMs": 1789972827772,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 2,
+        "outcome": "failure",
+        "summary": "avançou_fase_IMPLEMENTATION · critérios 0/1"
+      },
+      {
+        "atMs": 1789972832810,
+        "selectedStrategy": "TEST_DRIVEN_FIX",
+        "alternativesCount": 3,
+        "outcome": "success",
+        "summary": "critérios 1/2"
+      },
+      {
+        "atMs": 1789972865289,
+        "selectedStrategy": "TEST_DRIVEN_FIX",
+        "alternativesCount": 3,
+        "outcome": "failure",
+        "summary": "critérios 0/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "atMs": 1789972878028,
+        "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+        "alternativesCount": 2,
+        "outcome": "success",
+        "summary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "atMs": 1789972890612,
+        "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+        "alternativesCount": 2,
+        "outcome": "success",
+        "summary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "atMs": 1789972899360,
+        "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+        "alternativesCount": 2,
+        "outcome": "success",
+        "summary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "atMs": 1789972908184,
+        "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+        "alternativesCount": 2,
+        "outcome": "success",
+        "summary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "atMs": 1789972921757,
+        "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+        "alternativesCount": 2,
+        "outcome": "success",
+        "summary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "atMs": 1789972934310,
+        "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+        "alternativesCount": 2,
+        "outcome": "success",
+        "summary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "atMs": 1789972943029,
+        "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+        "alternativesCount": 2,
+        "outcome": "success",
+        "summary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "atMs": 1789972955412,
+        "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+        "alternativesCount": 2,
+        "outcome": "success",
+        "summary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "atMs": 1789972964011,
+        "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+        "alternativesCount": 2,
+        "outcome": "success",
+        "summary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      },
+      {
+        "atMs": 1789972976823,
+        "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+        "alternativesCount": 2,
+        "outcome": "success",
+        "summary": "critérios 1/2 · motivo=frontend_sem_html_encontrado"
+      }
+    ],
+    "progressMetrics": {
+      "totalCycles": 13,
+      "cyclesWithProgress": 11,
+      "lastProgressAtMs": 1789972976823,
+      "noProgressStreak": 0,
+      "objectiveProgressPct": 15
+    },
+    "lastDecision": {
+      "selectedStrategy": "PRIORITY_FIRST_UNBLOCKED",
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "EXECUTE_TASK",
+        "phaseTo": "IMPLEMENTATION",
+        "reason": "Próxima tarefa topologicamente válida: t_be_03 · DEVELOPER · \"Backend: server.js + endpoints REST\". Motivo: fase IMPL prioriza DEV/ARCH.",
+        "heuristic": "rc24_bridge_priority",
+        "candidates": [
+          "t_be_03"
+        ],
+        "version": "rc28.1.decisor.v2",
+        "taskId": "t_be_03",
+        "bridgeUsed": "clarify"
+      },
+      "decidedAtMs": 1789972976823
+    },
+    "lastMeasuredResult": {
+      "success": true,
+      "summary": "critérios 1/2 · motivo=frontend_sem_html_encontrado",
+      "cycle": 13,
+      "measuredAtMs": 1789972976823,
+      "failReason": "frontend_sem_html_encontrado",
+      "taskId": "t_be_03"
+    },
+    "adaptiveConstraints": {
+      "maxCycles": null,
+      "maxStrategies": null,
+      "confidenceThreshold": 0.7
+    },
+    "objetivoSeedadoAtual": "Crie um pequeno sistema web com uma página inicial, um botão funcional e um teste automatizado que valide o funcionamento do botão. Execute os testes e confirme se o objetivo inteiro foi concluído.",
+    "objetivoOrigem": "NOVA_SOLICITACAO",
+    "etapa7Isolated": true,
+    "etapa7SeedAtMs": 1789972827766
+  },
+  "autonomyRuntime": {
+    "version": 1,
+    "objective": "Crie um pequeno sistema web com uma página inicial, um botão funcional e um teste automatizado que valide o funcionamento do botão. Execute os testes e confirme se o objetivo inteiro foi concluído.",
+    "objectiveAtMs": 1789972827718,
+    "currentTaskId": null,
+    "completedTaskIds": [
+      "t_ar_02"
+    ],
+    "failedTaskIds": [
+      {
+        "taskId": "t_be_03",
+        "errorSummary": "frontend_sem_html_encontrado",
+        "attempts": 11,
+        "lastAtMs": 1789972976825
+      }
+    ],
+    "nextAction": "Inicializado. Próximo passo: analisar objetivo e definir tarefas.",
+    "objectiveProgressPct": 25,
+    "taskCompleted": false,
+    "objectiveVerified": false,
+    "lastVerificationReason": null,
+    "stall": {
+      "cyclesNoProgress": 0,
+      "lastProgressAtMs": 1789972976825,
+      "status": "none"
+    },
+    "recoveryAttempts": [],
+    "blockingReason": null,
+    "loops": 12,
+    "concludedAtMs": null
+  },
+  "objetivoUsuarioMensagem": "Crie um pequeno sistema web com uma página inicial, um botão funcional e um teste automatizado que valide o funcionamento do botão. Execute os testes e confirme se o objetivo inteiro foi concluído.",
+  "objetivoOrigem": "NOVA_SOLICITACAO",
+  "lastPassOk": 1
+}

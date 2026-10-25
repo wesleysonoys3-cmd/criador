@@ -1,0 +1,19 @@
+==================================================
+ARQUIVO DE TESTE
+==================================================
+Assistente: Agente Sênior de Programação TRAE IA
+Data: Domingo, 20 de Setembro de 2026
+Hora: 08:55:40 -03
+
+--------------------------------------------------
+O QUE É SQLITE?
+--------------------------------------------------
+O SQLite é um sistema de gerenciamento de banco de dados relacional (SGBD)
+serverless, embutido e baseado em um único arquivo de disco.
+
+Características principais:
+1. Serverless: Não exige processo de servidor separado rodando em background.
+2. Arquivo Único: Todo o banco (tabelas, índices, dados) fica salvo em 1 único arquivo.
+3. Zero Configuração: Não precisa de usuários, senhas ou instalação complexa.
+4. Leve e Rápido: Ideal para apps mobile (iOS/Android), browsers, desktop e protótipos.
+==================================================

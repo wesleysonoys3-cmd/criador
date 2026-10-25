@@ -40,6 +40,9 @@ import { runAutonomousOrchestrator, autoCorrectionLoop } from './tiagent_orc_mot
 import { rc28RunDecisionLoop, RC28_LOOP_VER } from './rc28_decision_loop.js';
 import { createBrowserAgent } from './browser_agent.mjs';
 import * as BtcMi from './btc_market/scheduler.js';
+import { QuantfurySvc } from './quantfury/service.mjs';
+import { QuantfuryMonitor } from './quantfury/scheduler.mjs';
+import { analyzeQuantfuryPosition } from './quantfury/analysis.mjs';
 const BTC_MI_DATA_DIR = path.resolve(process.cwd(), 'btc_market/data');
 const BTC_MI_INTERVAL_MS = Number(process.env.BTC_MI_INTERVAL_MS || 60000) || 60000;
 
@@ -7223,6 +7226,251 @@ app.post('/api/btc/manual', express.json({ limit: '64kb' }), async (req, res) =>
 app.get('/api/btc/backtest', async (req, res) => {
   try { res.json(await BtcMi.apiRunBacktest({ days: Number(req.query?.days || 0) })); }
   catch (e) { res.status(500).json({ ok:false, error: String(e && e.message || e) }); }
+});
+
+/* =============== QUANTFURY MCP (módulo isolado · READ_ONLY) =============== */
+const _QF_JSON = express.json({ limit: '128kb' });
+const _QF_NO_CACHE = (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  next();
+};
+
+QuantfuryMonitor.onAlert((alert, analysis) => {
+  try {
+    if (typeof wss !== 'undefined' && wss && wss.clients) {
+      const payload = JSON.stringify({ type: 'quantfury:alert', alert, ts: Date.now() });
+      for (const c of wss.clients) {
+        try { if (c && c.readyState === 1) c.send(payload); } catch (_) {}
+      }
+    }
+  } catch (_) { /* não propagar para request */ }
+});
+
+app.get('/api/quantfury/status', _QF_NO_CACHE, (req, res) => {
+  try {
+    const st = QuantfurySvc.getState();
+    const data = QuantfurySvc.getCachedData();
+    res.json({ ok: true, state: st, cached: data, monitor: QuantfuryMonitor.status() });
+  } catch (e) { res.status(500).json({ ok:false, error: String(e?.message || e) }); }
+});
+
+app.post('/api/quantfury/connect', _QF_JSON, _QF_NO_CACHE, async (req, res) => {
+  try {
+    const force = Boolean(req.body?.force);
+    const result = await QuantfurySvc.connect({ force });
+    if (result && result.lastError && typeof result.lastError === 'object' && (result.state === 'authorizing' || result.state === 'expired' || result.requiresAuth)) {
+      const leak = /(cf_clearance|__cf_bm|__Secure-|authorization|bearer\s|cookie|set-cookie|session\s*id|QuantfurySession|password|senha)/i.test(JSON.stringify(result.lastError) + (result.lastError.message || ''));
+      if (leak) result.lastError = { message: 'Autenticação Quantfury necessária. Autorize o conector MCP oficial.', code: result.lastError.code || -1, httpStatus: result.lastError.httpStatus || 401 };
+    }
+    const isAuth = result && (result.state === 'authorizing' || result.state === 'expired' || result.requiresAuth);
+    if (isAuth) res.status(result?.lastError?.httpStatus === 401 ? 401 : 403);
+    res.json({ ok: true, result });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    const sanitized = msg.replace(/(cf_clearance|__cf_bm|__Secure-[A-Za-z0-9_-]+|authorization[:=]\s*"[^"]*"|bearer\s+[A-Za-z0-9._\-]{8,}|cookie[:=]\s*"[^"]*"|set-cookie|QuantfurySession\s*=\s*[^\s;]+|password\s*[:=]\s*[^\s;]+|senha\s*[:=]\s*[^\s;]+)/gi, '[REDACTED]');
+    const friendly = (QuantfurySvc?.getState?.()?.message && /Autenticação Quantfury/i.test(QuantfurySvc.getState().message)) ? QuantfurySvc.getState().message : (/autorize|AUTHORIZATION|pendente|expired|expirou|401|403/i.test(sanitized) ? 'Autenticação Quantfury necessária. Autorize o conector MCP oficial em https://ai.quantfury.com/mcp .' : sanitized);
+    if (/autorização expirou|expired|401/i.test(sanitized)) res.status(401);
+    else if (/autorize|AUTHORIZATION|pendente|403/i.test(sanitized)) res.status(403);
+    else if (/conectar|indisponível|unavailable|timeout|network/i.test(sanitized)) res.status(503);
+    else res.status(500);
+    res.json({ ok: false, error: sanitized, friendly });
+  }
+});
+
+app.post('/api/quantfury/disconnect', _QF_JSON, _QF_NO_CACHE, async (req, res) => {
+  try {
+    if (QuantfuryMonitor.isActive()) QuantfuryMonitor.stop();
+    const result = await QuantfurySvc.disconnect();
+    res.json({ ok: true, result });
+  } catch (e) { res.status(500).json({ ok:false, error: String(e?.message || e) }); }
+});
+
+app.post('/api/quantfury/refresh', _QF_JSON, _QF_NO_CACHE, async (req, res) => {
+  try {
+    const force = Boolean(req.body?.force);
+    const result = await QuantfurySvc.refreshAll({ force });
+    const cached = QuantfurySvc.getCachedData();
+    res.json({ ok: true, state: result, cached });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    const status = /expirou|expired/i.test(msg) ? 401 : /autorize|AUTH/i.test(msg) ? 403 : /conectar|indisp|timeout|network/i.test(msg) ? 503 : 500;
+    res.status(status).json({ ok:false, error: msg, state: QuantfurySvc.getState() });
+  }
+});
+
+app.get('/api/quantfury/tools', _QF_NO_CACHE, (req, res) => {
+  try {
+    const st = QuantfurySvc.getState();
+    res.json({ ok: true, readOnly: st.readOnly, tools: st.tools });
+  } catch (e) { res.status(500).json({ ok:false, error: String(e?.message || e) }); }
+});
+
+app.post('/api/quantfury/analyze', _QF_JSON, _QF_NO_CACHE, async (req, res) => {
+  try {
+    const assetSymbol = req.body?.asset ? String(req.body.asset).slice(0, 32) : null;
+    const raw = await QuantfurySvc.analyzePosition({ assetSymbol });
+    const accountNode = raw.account || null;
+    const positions = Array.isArray(raw.positions) ? raw.positions : [];
+    if (!positions.length) {
+      res.json({ ok: true, generatedAt: raw.generatedAt, positions: [], analyses: [], account: accountNode, message: 'Não foi possível obter posições neste momento.' });
+      return;
+    }
+    const analyses = positions.map(p => analyzeQuantfuryPosition({
+      position: p,
+      account: accountNode,
+      userName: 'Tiago',
+    }));
+    try {
+      const g = typeof globalThis !== 'undefined' ? globalThis : (typeof global !== 'undefined' ? global : {});
+      g.__QUANTFURY_LAST_OBSERVATIONS__ = Object.freeze({
+        at: Date.now(),
+        observations: Object.freeze(analyses.map(a => Object.freeze({ ...(a.structuredObservation || {}) }))),
+      });
+    } catch (_) {}
+    res.json({ ok: true, generatedAt: raw.generatedAt, positions, analyses, account: accountNode });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    res.status(/expired/i.test(msg) ? 401 : /autoriz/i.test(msg) ? 403 : 500).json({ ok:false, error: msg });
+  }
+});
+
+app.post('/api/quantfury/tool', _QF_JSON, _QF_NO_CACHE, async (req, res) => {
+  try {
+    const toolName = String(req.body?.tool || '').slice(0, 120);
+    const args = (req.body?.args && typeof req.body.args === 'object') ? req.body.args : {};
+    if (!toolName) return res.status(400).json({ ok:false, error: 'Parâmetro tool ausente.' });
+    const result = await QuantfurySvc.genericReadToolCall(toolName, args);
+    res.json({ ok: true, tool: toolName, result });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (/READ_ONLY/i.test(msg)) return res.status(403).json({ ok:false, error: msg, readOnly: true });
+    res.status(500).json({ ok:false, error: msg });
+  }
+});
+
+app.post('/api/quantfury/monitor/start', _QF_JSON, (req, res) => {
+  try {
+    const intervalMs = req.body?.intervalMs ? Number(req.body.intervalMs) : null;
+    const r = QuantfuryMonitor.start({ intervalMs });
+    res.json({ ok: r.ok, status: QuantfuryMonitor.status(), reason: r.reason || null });
+  } catch (e) { res.status(500).json({ ok:false, error: String(e?.message || e) }); }
+});
+
+app.post('/api/quantfury/monitor/stop', _QF_JSON, (req, res) => {
+  try { res.json({ ok: true, ...QuantfuryMonitor.stop() }); }
+  catch (e) { res.status(500).json({ ok:false, error: String(e?.message || e) }); }
+});
+
+app.get('/api/quantfury/monitor/alerts', _QF_NO_CACHE, (req, res) => {
+  try {
+    const limit = Math.min(100, Math.max(1, Number(req.query?.limit || 20) || 20));
+    res.json({ ok: true, alerts: QuantfuryMonitor.recentAlerts({ limit }), status: QuantfuryMonitor.status() });
+  } catch (e) { res.status(500).json({ ok:false, error: String(e?.message || e) }); }
+});
+
+/* ==============================================================
+ *  Q QUANTFURY CHAT/VOZ · Endpoint de intenções (READ_ONLY)
+ *  Detecta perguntas em PT-BR sobre conta/posições/P&L/risco e
+ *  responde com dados reais do MCP. NÃO passa pelo agente RC28.
+ * ============================================================== */
+const _QTF_CHAT_INTENTS = [
+  { re: /\b(quantfury|minha\s*conta|saldo|patrim[oô]nio|equidade|balan[cç]o)\b/i, intent: 'account_balance' },
+  { re: /\b(posi[çc][õo]es?|abertas?|minha\s*posi[çc][aã]o)\b/i, intent: 'positions_overview' },
+  { re: /\b(posi[çc][aã]o\s+em|em\s+([A-Z0-9]{2,15})|analisa\s+([A-Z0-9]{2,15}))\b/i, intent: 'position_asset' },
+  { re: /\b(p\s*[&e]\s*l|ganhos?|perdidas?|resultado|lucro|preju[íi]zo)\b/i, intent: 'pnl' },
+  { re: /\b(risco|exposi[çc][aã]o|n[íi]vel\s+de\s+risco)\b/i, intent: 'risk' },
+  { re: /\b(analisa|an[áa]lise|diagn[oó]stico|cen[áa]rio|opini[ãoo]|tend[eê]ncia)\b.*\b(posi[çc][aã]o|carteira|ativo|mercado)\b/i, intent: 'analyze' },
+  { re: /\b(analisa\s+minha\s+posi[çc][aã]o|como\s+est[aá]\s+minha\s+posi[çc][aã]o|qual\s+o\s+meu\s+p\s*[&e]\s*l)\b/i, intent: 'analyze' },
+];
+
+app.post('/api/quantfury/chat', _QF_JSON, _QF_NO_CACHE, async (req, res) => {
+  try {
+    const msg = String(req.body?.message || '').slice(0, 500);
+    if (!msg) return res.status(400).json({ ok: false, error: 'Mensagem vazia.' });
+    const st = QuantfurySvc.getState();
+    if (!st.connected) {
+      return res.json({ ok: true, handled: false, needsConnect: true, reply: `⚠️ Quantfury não está conectada. Abra a aba **Q Quantfury** no painel e clique em **Conectar Quantfury**. Autorize o acesso e depois tente novamente.` });
+    }
+    let matched = null;
+    for (const rule of _QTF_CHAT_INTENTS) {
+      const m = msg.match(rule.re);
+      if (m) { matched = { intent: rule.intent, match: m }; break; }
+    }
+    if (!matched) { return res.json({ ok: true, handled: false, reply: null }); }
+    const force = true;
+    await QuantfurySvc.refreshAll({ force }).catch(() => null);
+    const anaRaw = await QuantfurySvc.analyzePosition({}).catch(e => ({ positions: [], account: null, generatedAt: null }));
+    const positions = Array.isArray(anaRaw.positions) ? anaRaw.positions : [];
+    const accountNode = anaRaw.account || (QuantfurySvc.getCachedData().account || null);
+    const analyses = positions.map(p => analyzeQuantfuryPosition({ position: p, account: accountNode, userName: 'Tiago' }));
+    const fmt$ = v => {
+      if (v == null || !Number.isFinite(Number(v))) return '—';
+      const n = Number(v), s = n < 0 ? '-' : '', a = Math.abs(n);
+      if (a >= 1e9) return s + '$' + (a/1e9).toFixed(2) + 'B';
+      if (a >= 1e6) return s + '$' + (a/1e6).toFixed(2) + 'M';
+      if (a >= 1e3) return s + '$' + (a/1e3).toFixed(2) + 'K';
+      return s + '$' + a.toFixed(2);
+    };
+    let reply = '';
+    switch (matched.intent) {
+      case 'account_balance': {
+        const eq = accountNode?.equity ?? accountNode?.balance ?? accountNode?.overview?.equity ?? null;
+        const bc = accountNode?.balance ?? accountNode?.overview?.balance ?? null;
+        const mg = accountNode?.usedMargin ?? accountNode?.overview?.usedMargin ?? null;
+        const pnl = accountNode?.pnl ?? null;
+        reply = `📊 **Conta Quantfury**\n\n• Patrimônio: **${fmt$(eq)}**\n• Saldo disponível: **${fmt$(bc)}**\n• Margem em uso: **${fmt$(mg)}**\n• P&L consolidado: **${fmt$(pnl)}** ${pnl != null && Number(pnl) >= 0 ? '🟢' : '🔴'}\n\n${!positions.length ? 'Nenhuma posição aberta no momento.' : positions.length + ' posição(ões) aberta(s). Use "analisa minhas posições" para mais detalhes.'}`;
+        break;
+      }
+      case 'positions_overview':
+      case 'pnl': {
+        if (!positions.length) { reply = `📭 Você não tem posições abertas na Quantfury neste momento.`; break; }
+        const lines = positions.map((p, i) => {
+          const a = analyses[i] || null;
+          const risk = a?.structuredObservation?.riskLevel || '—';
+          const dir = (p.direction || '?').toUpperCase();
+          return `${i+1}. **${p.asset || '—'}** · ${dir === 'LONG' ? '🟢 Longo' : dir === 'SHORT' ? '🔴 Curto' : dir} · Entrada ${fmt$(p.entryPrice)} · Atual ${fmt$(p.currentPrice)} · P&L **${fmt$(p.pnl)}** · Risco ${risk}`;
+        });
+        const totalPnl = positions.reduce((s, p) => s + (Number(p.pnl) || 0), 0);
+        reply = `🧾 **Posições Quantfury (${positions.length})** · P&L total **${fmt$(totalPnl)}** ${totalPnl >= 0 ? '🟢' : '🔴'}\n\n${lines.join('\n')}\n\nPara detalhes de um ativo específico, diga algo como _"analisa minha posição em BTC"_ ou _"risco em ETH"_.`;
+        break;
+      }
+      case 'position_asset': {
+        const asset = (matched.match[2] || matched.match[3] || '').toUpperCase() || null;
+        const hit = asset ? positions.find(p => (p.asset || '').toUpperCase() === asset) : null;
+        const idx = hit ? positions.indexOf(hit) : -1;
+        const ana = idx >= 0 ? analyses[idx] : null;
+        if (!hit) { reply = asset ? `🔍 Não encontrei posição aberta em **${asset}**. Posições atuais: ${positions.map(p=>p.asset).join(', ') || 'nenhuma'}.` : `🗂️ **Posições abertas**: ${positions.map(p=>p.asset).join(', ') || 'nenhuma'}.`; break; }
+        reply = `🎯 **Posição em ${hit.asset}**\n\nDireção: ${(hit.direction||'').toUpperCase() === 'LONG' ? '🟢 **Longo (compra)**' : (hit.direction||'').toUpperCase() === 'SHORT' ? '🔴 **Curto (venda)**' : hit.direction || '—'}\nPreço de entrada: **${fmt$(hit.entryPrice)}**\nPreço atual: **${fmt$(hit.currentPrice)}**\nP&L: **${fmt$(hit.pnl)}** ${Number(hit.pnl||0)>=0?'🟢':'🔴'}\nRisco: **${ana?.structuredObservation?.riskLevel || '—'}**${ana?.structuredObservation?.riskScore ? ` · ${ana.structuredObservation.riskScore}/100` : ''}\n\n${ana?.analysis ? '---\n' + ana.analysis : ''}`;
+        break;
+      }
+      case 'risk': {
+        if (!positions.length) { reply = `🛡️ Sem posições abertas. Risco geral: **BAIXO** (sem exposição).`; break; }
+        const scores = analyses.map(a => Number(a?.structuredObservation?.riskScore || 0));
+        const maxScore = scores.length ? Math.max(...scores) : 0;
+        const avgScore = scores.length ? scores.reduce((s,v)=>s+v,0) / scores.length : 0;
+        const overall = maxScore >= 75 ? 'MUITO ALTO 🔴' : maxScore >= 50 ? 'ALTO 🟠' : maxScore >= 25 ? 'MODERADO 🟡' : 'BAIXO 🟢';
+        reply = `🛡️ **Avaliação de risco Quantfury**\n\n• Posições abertas: **${positions.length}**\n• Exposição total: **${fmt$(positions.reduce((s,p)=>s + (Number(p.size||0) * Number(p.currentPrice||0)), 0))}**\n• Risco MÁXIMO por ativo: **${maxScore.toFixed(0)}/100**\n• Risco MÉDIO: **${avgScore.toFixed(0)}/100**\n• Classificação geral: **${overall}**\n\n${analyses.filter(a => Number(a?.structuredObservation?.riskScore||0) >= 50).map(a => `⚠️ ${a.structuredObservation.asset}: ${a.structuredObservation.riskLevel || '?'}`).join('\n') || 'Nenhum ativo com risco elevado.'}`;
+        break;
+      }
+      case 'analyze': {
+        if (!positions.length) { reply = `📋 Não há posições para analisar no momento. Verifique se a Quantfury está conectada e tente atualizar a aba.`; break; }
+        const lines = analyses.map((a, i) => {
+          const p = positions[i];
+          return `**[${p.asset || '—'}]** · ${a.structuredObservation?.direction || '?'} · P&L ${fmt$(p.pnl)} · Risco **${a.structuredObservation?.riskLevel || '—'}**${a.structuredObservation?.riskScore?` (${a.structuredObservation.riskScore}/100)`:''}\n${a.analysis || ''}`;
+        });
+        reply = `🔬 **Análise Quantfury · ${positions.length} posição(ões)**\n\n---\n\n${lines.join('\n\n---\n\n')}\n\n⚠️ **Aviso**: isto é análise de contexto, não recomendação. Nenhuma operação será executada automaticamente.`;
+        break;
+      }
+      default:
+        reply = null;
+    }
+    res.json({ ok: true, handled: !!reply, reply, intent: matched.intent, hasPositions: !!positions.length, generatedAt: anaRaw.generatedAt || new Date().toISOString() });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (/expired|sess[aã]o.*expir/i.test(msg)) return res.status(200).json({ ok: true, handled: true, needsReconnect: true, reply: '🔴 Sessão Quantfury expirou. Volte na aba **Q Quantfury** e re-conecte para renovar a autorização.' });
+    res.status(500).json({ ok: false, error: msg });
+  }
 });
 
 // =============== STARTUP: Garante TODOS projetos (mounted e workspace) têm SERVIDOR PREVIEW DEDICADO RODANDO ANTES do listen ===============

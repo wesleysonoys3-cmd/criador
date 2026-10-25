@@ -1,0 +1,16 @@
+{
+  "name": "tiagente-security",
+  "version": "1.0.0",
+  "description": "TiAgente Security — Auditor e Corretor de Segurança Autônomo (módulo isolado)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "./start.sh",
+    "dev": "./start.sh"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "dotenv": "^16.4.7",
+    "cors": "^2.8.6"
+  }
+}

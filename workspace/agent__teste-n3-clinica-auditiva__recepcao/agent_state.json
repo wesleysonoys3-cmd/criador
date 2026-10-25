@@ -1,0 +1,82 @@
+{
+  "agentId": "agent_5cf23befbc16",
+  "currentState": "construindo",
+  "stateHistory": [
+    {
+      "ts": 1789858152657,
+      "from": null,
+      "to": "rascunho",
+      "reason": "criado",
+      "by": "orchestrator"
+    },
+    {
+      "ts": 1789858152710,
+      "from": "rascunho",
+      "to": "construindo",
+      "reason": "N3 teste build",
+      "by": "api_build"
+    },
+    {
+      "ts": 1789861130508,
+      "from": "construindo",
+      "to": "construindo",
+      "reason": "N3 teste build",
+      "by": "api_build"
+    },
+    {
+      "ts": 1789861602652,
+      "from": "construindo",
+      "to": "construindo",
+      "reason": "N3 teste build",
+      "by": "api_build"
+    },
+    {
+      "ts": 1789861609720,
+      "from": "construindo",
+      "to": "construindo",
+      "reason": "N3 teste build",
+      "by": "api_build"
+    },
+    {
+      "ts": 1789862267461,
+      "from": "construindo",
+      "to": "construindo",
+      "reason": "N3 teste build",
+      "by": "api_build"
+    },
+    {
+      "ts": 1790052564249,
+      "from": "construindo",
+      "to": "construindo",
+      "reason": "N3 teste build",
+      "by": "api_build"
+    }
+  ],
+  "lastRc22Run": {
+    "ts": 1790052564249,
+    "status": "queued"
+  },
+  "lastQaRun": null,
+  "lastSecurityRun": {
+    "ts": 1790052564458,
+    "status": "erro",
+    "counts": {
+      "critico": 0,
+      "alto": 0,
+      "medio": 0,
+      "baixo": 0,
+      "info": 0
+    },
+    "findingsCount": 0,
+    "security": {
+      "raw": ""
+    }
+  },
+  "approvedSecurityFixIds": [
+    "SEC-HC-001",
+    "SEC-HC-002",
+    "SEC-HC-003"
+  ],
+  "deployedUrl": null,
+  "securityAppliedAt": 1790052564463
+}

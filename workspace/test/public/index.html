@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BarberBot AI — Sistema Autônomo para Barbearia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .chat-container::-webkit-scrollbar { width: 6px; }
+    .chat-container::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-slate-900 border-b border-slate-800 py-4 px-6 shadow-md flex justify-between items-center">
+    <div class="flex items-center space-x-3">
+      <div class="bg-amber-500 text-slate-950 p-2.5 rounded-xl font-bold text-xl shadow-lg">
+        <i class="fa-solid fa-scissors"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-white">BarberBot <span class="text-amber-500">AI</span></h1>
+        <p class="text-xs text-slate-400">Atendimento Autônomo Inteligente • 24/7 online</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-3">
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span class="w-2 h-2 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+        Bot Ativo & Conectado
+      </span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Simulador de Chat (2 colunas) -->
+    <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col shadow-2xl overflow-hidden h-[680px]">
+      
+      <!-- Chat Header -->
+      <div class="bg-slate-850 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="relative">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center font-bold text-slate-950 shadow">
+              💈
+            </div>
+            <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+          </div>
+          <div>
+            <h2 class="font-semibold text-white">Assistente Navalha de Ouro</h2>
+            <p class="text-xs text-emerald-400">Responde instantaneamente com IA</p>
+          </div>
+        </div>
+        <button onclick="limparChat()" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition">
+          <i class="fa-solid fa-rotate-right mr-1"></i> Reiniciar
+        </button>
+      </div>
+
+      <!-- Messages Box -->
+      <div id="chatMessages" class="flex-1 p-4 md:p-6 overflow-y-auto chat-container space-y-4 bg-slate-950/50">
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-sm shrink-0">
+            🤖
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-4 max-w-[85%] text-slate-200 text-sm shadow">
+            <p>Fala, meu nobre! 💈 Seja bem-vindo à <strong>Barbearia Navalha de Ouro</strong>. Sou o assistente virtual autônomo. Como posso te dar aquela moral hoje?</p>
+            <span class="text-[10px] text-slate-500 mt-1 block">Agora mesmo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sugestões Rápidas (Chips) -->
+      <div id="suggestionsBox" class="px-4 py-3 bg-slate-900 border-t border-slate-800 flex flex-wrap gap-2">
+        <button onclick="enviarSugestao('Quais são os serviços e preços?')" class="text-xs bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-300 px-3 py-1.5 rounded-full transition border border-slate-700">✂️ Serviços e Preços</button>
+        <button onclick="enviarSugestao('Quero agendar um horário')" class="text-xs bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-300 px-3 py-1.5 rounded-full transition border border-slate-700">📅 Quero Agendar</button>
+        <button onclick="enviarSugestao('Qual o endereço e horário de funcionamento?')" class="text-xs bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-300 px-3 py-1.5 rounded-full transition border border-slate-700">📍 Endereço</button>
+      </div>
+
+      <!-- Input Bar -->
+      <div class="p-4 bg-slate-900 border-t border-slate-800 flex items-center space-x-3">
+        <input type="text" id="userInput" placeholder="Digite sua mensagem..." 
+          class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
+          onkeypress="handleKeyPress(event)">
+        <button onclick="enviarMensagem()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-3 rounded-xl transition shadow-lg flex items-center justify-center">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Painel Lateral: Agendamentos e Serviços -->
+    <div class="space-y-6">
+
+      <!-- Agendamentos Recentes -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-white flex items-center text-sm">
+            <i class="fa-solid fa-calendar-check text-amber-500 mr-2"></i> Agendamentos Ativos
+          </h3>
+          <button onclick="carregarAgendamentos()" class="text-xs text-slate-400 hover:text-amber-400">
+            <i class="fa-solid fa-sync"></i>
+          </button>
+        </div>
+        <div id="listaAgendamentos" class="space-y-3">
+          <!-- Preenchido via JS -->
+        </div>
+      </div>
+
+      <!-- Tabela rápida de Serviços -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <h3 class="font-bold text-white flex items-center mb-4 text-sm">
+          <i class="fa-solid fa-tags text-amber-500 mr-2"></i> Tabela de Preços
+        </h3>
+        <div id="listaServicos" class="space-y-2.5 text-sm">
+          <!-- Preenchido via JS -->
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="text-center py-4 text-xs text-slate-500 border-t border-slate-900 mt-auto">
+    BarberBot AI © 2025 — Automação Inteligente de Atendimento para Barbearias 💈
+  </footer>
+
+  <script>
+    const chatMessages = document.getElementById('chatMessages');
+    const userInput = document.getElementById('userInput');
+    const suggestionsBox = document.getElementById('suggestionsBox');
+    const listaAgendamentos = document.getElementById('listaAgendamentos');
+    const listaServicos = document.getElementById('listaServicos');
+
+    function formatarTexto(texto) {
+      return texto
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br>');
+    }
+
+    async function carregarDados() {
+      try {
+        const resServ = await fetch('/api/servicos');
+        const servicos = await resServ.json();
+        listaServicos.innerHTML = servicos.map(s => `
+          <div class="flex justify-between items-center py-1.5 border-b border-slate-800/60 last:border-0">
+            <span class="text-slate-300 text-xs">${s.nome}</span>
+            <span class="text-amber-400 font-semibold text-xs">${s.preco}</span>
+          </div>
+        `).join('');
+
+        carregarAgendamentos();
+      } catch (e) {
+        console.error("Erro ao carregar dados", e);
+      }
+    }
+
+    async function carregarAgendamentos() {
+      try {
+        const resAg = await fetch('/api/agendamentos');
+        const agendamentos = await resAg.json();
+        listaAgendamentos.innerHTML = agendamentos.map(a => `
+          <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-xs space-y-1">
+            <div class="flex justify-between font-semibold text-white">
+              <span>${a.cliente}</span>
+              <span class="text-emerald-400">${a.status}</span>
+            </div>
+            <div class="text-slate-300">✂️ ${a.servico}</div>
+            <div class="text-amber-500">🕒 ${a.horario}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error("Erro ao carregar agendamentos", e);
+      }
+    }
+
+    async function enviarMensagemTexto(texto) {
+      if (!texto || !texto.trim()) return;
+
+      const msgTexto = texto.trim();
+      userInput.value = '';
+
+      // Adiciona mensagem do usuário
+      chatMessages.innerHTML += `
+        <div class="flex items-start justify-end space-x-3">
+          <div class="bg-amber-500 text-slate-950 rounded-2xl rounded-tr-sm p-4 max-w-[85%] text-sm shadow font-medium">
+            <p>${escapeHtml(msgTexto)}</p>
+            <span class="text-[10px] text-slate-800 mt-1 block text-right">Agora</span>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-sm shrink-0">
+            👤
+          </div>
+        </div>
+      `;
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      // Indicador de digitação
+      const typingId = 'typing-' + Date.now();
+      chatMessages.innerHTML += `
+        <div id="${typingId}" class="flex items-start space-x-3">
+          <div class="w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-sm shrink-0">🤖</div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 text-slate-400 text-sm animate-pulse">
+            Pensando na resposta...
+          </div>
+        </div>
+      `;
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mensagem: msgTexto })
+        });
+
+        const data = await response.json();
+
+        // Remove indicador
+        document.getElementById(typingId)?.remove();
+
+        // Resposta do Bot
+        chatMessages.innerHTML += `
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-sm shrink-0">🤖</div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-4 max-w-[85%] text-slate-200 text-sm shadow">
+              <p>${formatarTexto(data.resposta)}</p>
+              <span class="text-[10px] text-slate-500 mt-1 block">Agora</span>
+            </div>
+          </div>
+        `;
+
+        // Atualiza sugestões
+        if (data.sugestoes && data.sugestoes.length > 0) {
+          suggestionsBox.innerHTML = data.sugestoes.map(s => `
+            <button onclick="enviarSugestao('${s}')" class="text-xs bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-300 px-3 py-1.5 rounded-full transition border border-slate-700">${s}</button>
+          `).join('');
+        }
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        carregarAgendamentos();
+      } catch (e) {
+        document.getElementById(typingId)?.remove();
+        chatMessages.innerHTML += `
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-sm shrink-0">⚠️</div>
+            <div class="bg-slate-900 border border-red-800 rounded-2xl p-4 text-red-300 text-sm">
+              Erro ao se conectar com o servidor. Tente novamente.
+            </div>
+          </div>
+        `;
+        console.error(e);
+      }
+    }
+
+    function enviarMensagem() {
+      enviarMensagemTexto(userInput.value);
+    }
+
+    function enviarSugestao(texto) {
+      enviarMensagemTexto(texto);
+    }
+
+    function handleKeyPress(e) {
+      if (e.key === 'Enter') enviarMensagem();
+    }
+
+    function limparChat() {
+      chatMessages.innerHTML = `
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-sm shrink-0">🤖</div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-4 max-w-[85%] text-slate-200 text-sm shadow">
+            <p>Conversa reiniciada! Como posso te ajudar na <strong>Barbearia Navalha de Ouro</strong>?</p>
+            <span class="text-[10px] text-slate-500 mt-1 block">Agora</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    carregarDados();
+  </script>
+</body>
+</html>

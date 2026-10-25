@@ -248,6 +248,10 @@
             <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="currentColor" class="text-amber-400 shrink-0"><path d="M17.078 9.817c.325-2.156-1.32-3.31-3.57-4.09l.73-2.932-1.778-.441-.71 2.852c-.466-.116-.94-.225-1.414-.332l.712-2.857L8.57 1.664l-.73 2.933c-3.863.905-6.53 2.886-4.89 6.149.975 1.932 3.04 3.073 5.185 4.075-.06.25-.113.5-.166.744-1.69-.202-4.255-.664-4.484 2.47-.04.557.14 1.071.494 1.506.062.075.128.147.198.217a1 1 0 00.15.143l1.62-.609c1.127 1.193 2.56 1.87 4.196 2.302l-.726 2.915 1.778.441.73-2.932c.481.12.955.23 1.422.339l-.728 2.92 1.779.441.73-2.93c3.908-.916 6.6-2.865 4.956-6.19-.95-1.97-2.998-3.118-5.166-4.145.23-.67.418-1.35.553-2.042zm-3.291 4.684c-.52 2.088-4.059.975-5.192.687l.922-3.704c1.133.289 4.801.848 4.27 3.017zm.525-4.693c-.475 1.902-3.393.922-4.35.675l.83-3.33c.956.248 4.006.701 3.52 2.655z"/></svg>
             <span class="truncate font-medium">₿ BTC</span>
           </button>
+          <button class="editor-tab flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="quantfury" title="Q Quantfury MCP · Conta, Posições, Análise e Alertas (READ_ONLY)">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-cyan-300 shrink-0"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-6"/><circle cx="12" cy="12" r="0.4" fill="currentColor"/></svg>
+            <span class="truncate font-medium">Q Quantfury</span>
+          </button>
         </div>
         <!-- Ln/Col info (legível) -->
         <div class="ml-auto mr-2.5 flex items-center gap-2 text-[10.5px] text-slate-500 font-mono whitespace-nowrap pb-1">
@@ -415,6 +419,100 @@
             <div id="btc-dashboard" class="space-y-4 hidden"></div>
             <div id="btc-backtest-panel" class="hidden rounded-xl border border-sky-400/20 bg-sky-500/5 p-4 space-y-3"></div>
             <div id="btc-history-panel" class="hidden rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-4 space-y-3"></div>
+          </div>
+        </div>
+
+        <!-- ===== Q Quantfury MCP (aba "Q Quantfury") · Módulo isolado · READ_ONLY ===== -->
+        <div data-editor-panel="quantfury" class="editor-panel hidden flex-1 flex-col min-h-0 bg-[#060918]" id="qtf-panel">
+          <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between text-[10.5px]">
+            <div class="flex items-center gap-2 text-cyan-300 font-bold uppercase tracking-wider">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="shrink-0"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+              Quantfury MCP · Conta, Posições, Análise e Alertas (READ_ONLY)
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span id="qtf-status-chip" class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 border border-slate-500/20 bg-white/5 text-[10.5px] font-bold text-slate-400">
+                <span id="qtf-status-dot">⚪</span>
+                <span id="qtf-status-label">Não conectado</span>
+              </span>
+              <button id="qtf-connect-btn" class="text-white px-3 py-1 rounded-md bg-gradient-to-br from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500 border border-cyan-400/40 shadow transition flex items-center gap-1 font-bold text-[10.5px]">
+                <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <span id="qtf-connect-label">Conectar Quantfury</span>
+              </button>
+              <button id="qtf-refresh-btn" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition flex items-center gap-1 text-[10.5px] font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Atualizar dados">
+                <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                <span class="hidden sm:inline">Atualizar</span>
+              </button>
+              <button id="qtf-analyze-btn" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition flex items-center gap-1 text-[10.5px] font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Analisar posição">
+                <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span class="hidden sm:inline">Analisar</span>
+              </button>
+              <button id="qtf-monitor-btn" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition flex items-center gap-1 text-[10.5px] font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Monitorar posição">
+                <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span id="qtf-monitor-label" class="hidden sm:inline">Monitorar</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="qtf-body" class="flex-1 overflow-auto p-4 md:p-5 space-y-4">
+            <div id="qtf-spinner" class="text-[11.5px] text-slate-500 text-center py-10 hidden">
+              <div class="inline-flex items-center gap-2">
+                <svg width="16" height="16" class="animate-spin text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <span id="qtf-spinner-text">Conectando ao Quantfury…</span>
+              </div>
+            </div>
+
+            <div id="qtf-auth-panel" class="hidden rounded-xl border border-cyan-400/20 bg-cyan-500/5 p-4 space-y-2.5">
+              <div class="flex items-start gap-2 text-[11.5px] font-bold text-cyan-300 uppercase tracking-wider">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Autorização necessária · Quantfury MCP
+              </div>
+              <div id="qtf-auth-msg" class="text-[11px] text-slate-300 leading-relaxed"></div>
+
+              <!-- User Code (device-flow / authorization-pending) -->
+              <div id="qtf-auth-code-wrap" class="hidden rounded-lg border border-white/10 bg-black/30 p-3 space-y-1">
+                <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Seu código de autorização</div>
+                <div class="flex items-center gap-2">
+                  <code id="qtf-auth-code" class="flex-1 font-mono text-[14px] text-cyan-200 tracking-wider select-all bg-cyan-500/10 px-3 py-1.5 rounded-md border border-cyan-400/30">———</code>
+                  <button id="qtf-auth-code-copy" class="shrink-0 text-[10px] px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/5 transition font-bold" title="Copiar código">
+                    <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Copiar
+                  </button>
+                </div>
+                <div id="qtf-auth-expire" class="text-[10px] text-slate-500 mt-0.5"></div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                <a id="qtf-auth-url" href="#" target="_blank" rel="noopener noreferrer nofollow" class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 bg-gradient-to-br from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500 text-white font-bold text-[10.5px] border border-cyan-400/40 shadow transition">
+                  <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  Abrir página de autorização Quantfury
+                </a>
+                <button id="qtf-auth-recheck" class="inline-flex items-center gap-1 rounded-md px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white font-bold text-[10.5px] border border-white/5 transition">
+                  <svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                  Já autorizei · Verificar conexão
+                </button>
+              </div>
+
+              <!-- Instruction card (clients compatíveis) -->
+              <div id="qtf-auth-clients" class="mt-1 hidden rounded-lg border border-white/10 bg-black/20 p-2.5 space-y-1.5 text-[10.5px] text-slate-400 leading-relaxed">
+                <div class="font-bold text-slate-300">💡 Alternativa oficial: configurar como conector MCP Streamable HTTP</div>
+                <ul class="list-disc list-inside space-y-0.5 pl-0.5">
+                  <li>Claude Code: <code class="text-cyan-300 font-mono">claude mcp add --transport http quantfury-trading https://ai.quantfury.com/mcp</code> · depois digite <code class="text-cyan-300">/mcp</code>, selecione <code class="text-cyan-300">quantfury-trading</code> e autorize</li>
+                  <li>Cursor / Codex / Claude Desktop: Personalizar → Conectores/MCPs → Adicionar servidor HTTP Streamable → URL: <code class="text-cyan-300 font-mono">https://ai.quantfury.com/mcp</code></li>
+                  <li>ChatGPT: ativar modo desenvolvedor → Configurações → Plugins → Adicionar personalizado → colar a URL acima</li>
+                </ul>
+                <div class="mt-1 pt-1 border-t border-white/5 text-[10px] text-slate-500">
+                  ⚠️ Endereço oficial do MCP Quantfury (utilizado pelo TiAgente):
+                  <a href="https://ai.quantfury.com/mcp" target="_blank" rel="noopener noreferrer nofollow" class="text-cyan-300 underline underline-offset-2 hover:text-cyan-200">https://ai.quantfury.com/mcp</a>
+                </div>
+              </div>
+            </div>
+
+            <div id="qtf-dashboard" class="space-y-4 hidden"></div>
+
+            <div id="qtf-empty-state" class="rounded-xl border border-slate-500/20 bg-white/[0.02] p-5 text-center space-y-2">
+              <div class="text-[11px] text-slate-500">Conecte-se à sua conta Quantfury para visualizar posições, saldo e análises.</div>
+              <div class="text-[9.5px] text-slate-600">MODO SOMENTE LEITURA · Nenhuma operação de compra/venda será executada</div>
+            </div>
           </div>
         </div>
       </div>

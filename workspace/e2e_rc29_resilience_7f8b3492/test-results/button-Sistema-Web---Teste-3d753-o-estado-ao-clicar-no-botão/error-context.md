@@ -1,0 +1,800 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: button.spec.js >> Sistema Web - Teste do Botão >> deve carregar a página e alterar o estado ao clicar no botão
+- Location: tests/button.spec.js:4:3
+
+# Error details
+
+```
+Error: expect(locator).toHaveText(expected) failed
+
+Locator: locator('#welcome-title')
+Expected: "Bem-vindo ao Sistema"
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toHaveText" locator('#welcome-title') with timeout 5000ms
+  - waiting for locator('#welcome-title')
+
+```
+
+```yaml
+- banner:
+  - img
+  - text: IDE
+  - button "default Workspace · :3010 ⚠️":
+    - img
+    - text: default Workspace · :3010 ⚠️
+    - img
+  - img
+  - text: Search
+  - heading "Nova conversa" [level=1]
+  - button "Limpar chat":
+    - img
+- complementary:
+  - img
+  - text: Explorer
+  - button "Selecionar pasta (Finder macOS) · Abrir projeto como workspace":
+    - img
+  - button "Expandir / Recolher toda a árvore":
+    - img
+  - button "Atualizar":
+    - img
+  - button "Recolher painel":
+    - img
+  - img
+  - text: "agent_versions AGEN .agent 8 B PROJ .project 45 B JSON conversation_memory.jsonl 30.5 KB HTML index.html 47.2 KB JS test.js 344 B Conectado Pronto para começar Projeto: default Tokens: —"
+- img
+- text: Service
+- combobox:
+  - option "Enter URL or select a running service…" [selected]
+  - option "default · Porta 3010"
+  - option "e2e_rc29_resilience_7f8b3492 · Porta 3034"
+  - option "e2e_rc29_resilience_7lhdn6n5 · Porta 3033"
+  - option "e2e_rc29_resilience_y55uqrwr · Porta 3032"
+  - option "e2e_rc29_resilience_ovx8os0f · Porta 3031"
+  - option "vvvv · Porta 3002"
+  - option "e2e_rc29_resilience_d317d2d3 · Porta 3030"
+  - option "e2e_rc29_resilience_muau51bq · Porta 3029"
+  - option "e2e_rc29_resilience_muatg33t · Porta 3028"
+  - option "e2e_rc29_resilience_muat970z · Porta 3027"
+  - option "e2e_rc29_resilience_muat3n1n · Porta 3026"
+  - option "e2e_rc29_resilience_muasuse7 · Porta 3003"
+  - option "e2e_rc29_resilience_muaswkmm · Porta 3025"
+  - option "sisteteste · Porta 3001"
+  - option "tester · Porta 3077"
+  - option "fff · Porta 3090"
+  - option "test · Porta 3089"
+  - option "teste5 · Porta 3088"
+  - option "ia · Porta 3087"
+  - option "agent__empresa-padrao__recepcao · Porta 3086"
+  - option "agent__brasil__recepcao · Porta 3085"
+  - option "agent__audio-brasil__recepcao · Porta 3079"
+  - option "tmp_unifchat_t6_8af926 · Porta 3078"
+  - option "agent__arthur__recepcao · Porta 3046"
+  - option "agent__clinica-vida-saude__recepcao · Porta 3023"
+  - option "agent__testes-n2-bar-do-ze-rest__atendente · Porta 3024"
+  - option "agent__teste-n3-clinica-auditiva__recepcao · Porta 3037"
+  - option "novo5 · Porta 3076"
+  - option "teste45 · Porta 3075"
+  - option "novo4 · Porta 3074"
+  - option "bar · Porta 3020 🗂️"
+  - option "whatz · Porta 3041"
+  - option "agent__tudo__recepcao · Porta 3048"
+  - option "agent__ivel__recepcao · Porta 3047"
+  - option "agent__empresa__agente · Porta 3042"
+  - option "agent__teste_autofix · Porta 3038"
+  - option "pasta-sem-titulo-2 · Porta 3019"
+  - option "teste2 · Porta 3018"
+  - option "teste-do-criador-2 · Porta 3015"
+  - option "agent__clinica-teste-qa-chain__agente · Porta 3040"
+  - option "teste3 · Porta 3039"
+  - option "Projeto Explorer Teste · Porta 3016 🗂️"
+  - option "site-da-loja-60041 · Porta 3008"
+  - option "teste-sec-rc25-cenario-a · Porta 3043"
+  - option "teste-sec-rc26-final · Porta 3045"
+  - option "teste-sec-rc25-final · Porta 3044"
+  - option "criar · Porta 3011"
+  - option "rc22-teste-landing · Porta 3022"
+  - option "novo · Porta 3021"
+  - option "sistemafluter · Porta 3017"
+  - option "routes · Porta 3014"
+  - option "middleware · Porta 3012"
+  - option "TesteAgente Desktop · Porta 3004 🗂️"
+  - option "teste do criador · Porta 3009 🗂️"
+  - option "loja-72655 · Porta 3007"
+  - option "segundosite-diferente · Porta 3006"
+  - option "minha-landing-page · Porta 3013"
+- button "Voltar":
+  - img
+- button "Avançar":
+  - img
+- button "Recarregar":
+  - img
+- button "Abrir em nova aba":
+  - img
+- button "Code":
+  - img
+  - text: Code
+- button "Preview":
+  - img
+  - text: Preview
+- button "Console":
+  - img
+  - text: Console
+- button "Terminal":
+  - img
+  - text: Terminal
+- button "IA Config":
+  - img
+  - text: IA Config
+- text: "Ln 1, Col 1 Spaces: 2 UTF-8"
+- img
+- text: CUE
+- iframe
+- img
+- text: http://127.0.0.1:3010/index.html
+- complementary:
+  - text: TiAi
+  - button "Minimizar":
+    - img
+  - button "Config":
+    - img
+  - button "Fechar painel":
+    - img
+  - text: Agent
+  - button "SOLO INT" [pressed]
+  - combobox:
+    - option "3.5 Flash Lite" [selected]
+    - option "3.5 Flash"
+    - option "2.5 Flash"
+    - option "2.0 Flash Exp"
+  - button "Thought › —":
+    - img
+    - text: Thought › —
+  - text: Plano / Steps 0/0
+  - list:
+    - listitem: Sem plano ativo. Envie uma tarefa no painel abaixo.
+  - img
+  - img
+  - paragraph: Olá! Tudo bem? Sobre o que gostaria de conversar ou qual projeto podemos explorar hoje?
+  - img
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Explorar workspace] — Verificar arquivos existentes na pasta de trabalho."
+    - listitem: "[Criar aplicação de apostas] — Desenvolver um sistema completo de apostas (ex: Jogo de Adivinhação / Crash / Roleta Simples com saldo, créditos, interface moderna em Tailwind CSS e lógica funcional em JavaScript)."
+    - listitem: "[Validar implementação] — Testar e garantir que tudo está pronto para o usuário clicar e jogar imediatamente."
+  - separator
+  - paragraph:
+    - text: Vou inspecionar o diretório de trabalho atual para estruturar a aplicação de apostas.Sim,
+    - strong: com certeza!
+    - text: Eu posso criar um
+    - strong: sistema de apostas completo, moderno e totalmente funcional
+    - text: para você abrir no navegador, clicar e jogar na hora.
+  - paragraph:
+    - text: Para tornar a experiência incrível, vou criar um
+    - strong: Mini-Cassino Web
+    - text: "completo contendo:"
+  - list:
+    - listitem:
+      - strong: Sistema de Cadastro e Saldo Inicial
+      - text: (você ganha fichas/créditos grátis para começar).
+    - listitem:
+      - strong: Múltiplos Jogos Prontos para Jogar
+      - text: ":"
+      - list:
+        - listitem:
+          - strong: Roleta da Sorte (Roulette)
+          - text: ": Escolha cor ou número, aposte suas fichas e veja o resultado na hora."
+        - listitem:
+          - strong: Crash / Foguete
+          - text: ": Acompanhe o multiplicador subindo e clique em \"Retirar\" (Cash Out) antes que o foguete exploda!"
+        - listitem:
+          - strong: Caça-Níqueis (Slot Machine)
+          - text: ": Gire os cilindros para tentar combinar três símbolos e ganhar prêmios."
+    - listitem:
+      - strong: Painel de Estatísticas
+      - text: ": Acompanhe seu saldo em tempo real, histórico de apostas e lucro/prejuízo."
+    - listitem:
+      - strong: Design Moderno e Responsivo
+      - text: ": Feito com Tailwind CSS, animações suaves e efeitos sonoros visuais."
+  - paragraph: Vou criar os arquivos do projeto agora mesmo no diretório de trabalho.
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Explorar workspace] — Verificar arquivos existentes no diretório de trabalho."
+    - listitem: "[Criar estrutura do sistema de apostas] — Desenvolver um site de apostas completo e funcional (Frontend HTML/CSS/Tailwind + JavaScript com mini-jogos estilo Cassino, sistema de saldo, login simulado e histórico)."
+    - listitem: "[Validar implementação] — Testar e confirmar a integridade do código gerado."
+  - separator
+  - paragraph: Vou listar o diretório de trabalho para inspecionar o workspace antes de criar o sistema de apostas.
+  - img
+  - paragraph: Vou criar um aplicativo web completo de apostas e cassino ("BetMaster Pro") contendo saldo virtual, jogos interativos funcionais (Caça-Níqueis / Slot, Roleta, Jogo do Tigre/Fortune Tiger simulado, Crash / Aviator simplificado), histórico de apostas e painel interativo.
+  - img
+  - paragraph: Vou criar um script simples de teste ou servidor local em Node.js (opcional) para verificar a integridade da aplicação.
+  - img
+  - paragraph: Vou executar o teste de validação para comprovar que o sistema está correto.
+  - img
+  - heading "✅ Concluído" [level=3]
+  - paragraph:
+    - text: Criei um
+    - strong: sistema de apostas completo, interativo e funcional
+    - text: ("BetMaster Pro") pronto para uso! Basta abrir o arquivo
+    - code: index.html
+    - text: em qualquer navegador para jogar imediatamente.
+  - heading "📁 Arquivos criados:" [level=4]
+  - list:
+    - listitem:
+      - code: index.html
+      - text: — Aplicação web completa de apostas (Lobby, Slot Machine / Caça-Níqueis Fortune Tiger, Roleta Europeia, Aviator Crash, Cara ou Coroa, Histórico de transações, sistema de saldo virtual e bônus de depósito instantâneo).
+    - listitem:
+      - code: test.js
+      - text: — Script de validação da estrutura.
+  - heading "🚀 Como rodar e jogar:" [level=4]
+  - list:
+    - listitem:
+      - text: Abra o arquivo
+      - strong:
+        - code: index.html
+      - text: diretamente no seu navegador (Google Chrome, Firefox, Safari ou Edge).
+    - listitem:
+      - text: Você já começa com
+      - strong: R$ 1.000,00
+      - text: de saldo virtual.
+    - listitem:
+      - text: "Clique em qualquer jogo no Lobby para testar a sorte:"
+      - list:
+        - listitem:
+          - strong: Fortune Tiger Slot
+          - text: ": Ajuste a aposta e gire para buscar combinações vencedoras e o Jackpot!"
+        - listitem:
+          - strong: Roleta Europeia
+          - text: ": Escolha Vermelho, Preto ou Verde e gire a roleta."
+        - listitem:
+          - strong: Aviator Crash
+          - text: ": Inicie o voo e resgate (Cashout) antes do avião explodir!"
+        - listitem:
+          - strong: Cara ou Coroa
+          - text: ": Dobre sua banca em 50% de chance."
+    - listitem:
+      - text: Clique em
+      - strong: Depositar
+      - text: a qualquer momento para recarregar seu saldo de testes se necessário.
+  - heading "💡 Dicas de uso:" [level=4]
+  - list:
+    - listitem:
+      - text: Todo o design foi construído com
+      - strong: Tailwind CSS
+      - text: em modo escuro (Dark Mode) profissional, com animações suaves e responsivas para celular e computador.
+  - img
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Atualizar Slot Machine] — Aprimorar o jogo Fortune Tiger Slot para incluir mecânicas e identidade visual completas do \"Jogo do Tigrinho\" (com animações de brinde, bônus de combo e rodadas grátis simuladas)."
+    - listitem: "[Validar alteração] — Rodar testes e verificar o código atualizado."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para enriquecer o jogo do Tigrinho com recursos avançados de cassino.
+  - img
+  - paragraph: Vou testar novamente a aplicação para garantir que tudo está perfeito.
+  - img
+  - paragraph:
+    - text: Vou atualizar o script de validação (
+    - code: test.js
+    - text: ) para refletir o novo título do jogo "Fortune Tiger".
+  - img
+  - paragraph: Vou rodar novamente o teste.
+  - img
+  - heading "✅ Concluído" [level=3]
+  - list:
+    - listitem:
+      - strong: Objetivo atingido
+      - text: ": Criei um sistema de cassino e apostas completo e 100% funcional, incluindo o famoso"
+      - strong: "\"Jogo do Tigrinho\" (Fortune Tiger)"
+      - text: com roleta, caça-níqueis 3x3 com bônus surpresa, Crash Aviator, Cara ou Coroa, sistema de saldo dinâmico e histórico de jogadas. Basta clicar e jogar!
+    - listitem:
+      - strong: 📁 Arquivos criados
+      - text: ":"
+      - list:
+        - listitem:
+          - code: index.html
+          - text: (Aplicação web completa com Tailwind CSS e lógica em JavaScript)
+        - listitem:
+          - code: test.js
+          - text: (Script de validação automatizada)
+    - listitem:
+      - strong: 🚀 Comandos para rodar
+      - text: ":"
+      - code: "npx http-server . -p 8080 # ou abra o arquivo index.html diretamente no seu navegador."
+      - button "Copiar"
+    - listitem:
+      - strong: 💡 Dicas de uso
+      - text: ":"
+      - list:
+        - listitem:
+          - text: Comece com o saldo de
+          - strong: R$ 1.000,00
+          - text: grátis.
+        - listitem:
+          - text: Clique em
+          - strong: "\"Jogar Slot Agora\""
+          - text: para acessar o
+          - strong: Fortune Tiger
+          - text: com animações, símbolos do tigre, laranjas e envelopes da sorte, além da chance de ativar linhas cheias e prêmios de até 100x!
+        - listitem:
+          - text: Use o botão
+          - strong: Depositar
+          - text: para recarregar fichas sempre que quiser.
+  - img
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar animação de giro nos tambores do Tigrinho] — Atualizar o script de animação para simular o giro contínuo dos 9 blocos do caça-níquel antes de exibir o resultado final."
+    - listitem: "[Validar implementação] — Executar teste."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para adicionar animação fluida de rotação/giro nos tambores do Jogo do Tigrinho.
+  - img
+  - paragraph: Vou rodar o teste final para comprovar que tudo está em ordem.
+  - img
+  - heading "✅ Concluído" [level=3]
+  - list:
+    - listitem:
+      - strong: Objetivo atingido
+      - text: ": Criação de um sistema de apostas e cassino completo com saldo virtual, depósito instantâneo, histórico de apostas e 4 jogos funcionais (incluindo o"
+      - strong: Jogo do Tigrinho / Fortune Tiger
+      - text: com animações de giro dinâmico nos tambores,
+      - strong: Roleta Europeia
+      - text: ","
+      - strong: Aviator Crash
+      - text: e
+      - strong: Cara ou Coroa
+      - text: ).
+    - listitem:
+      - strong: 📁 Arquivos criados
+      - text: ":"
+      - list:
+        - listitem:
+          - code: index.html
+          - text: (Interface web completa em Tailwind CSS com todos os jogos e lógica interativa)
+        - listitem:
+          - code: test.js
+          - text: (Script de validação do sistema)
+    - listitem:
+      - strong: 🚀 Comandos para rodar
+      - text: ":"
+      - code: "npx http-server . -p 3028 # ou abra o arquivo index.html diretamente no seu navegador."
+      - button "Copiar"
+    - listitem:
+      - strong: 💡 Dicas de uso
+      - text: ":"
+      - list:
+        - listitem: Clique em "Depositar" para adicionar saldo na sua banca virtual.
+        - listitem:
+          - text: Selecione o
+          - strong: Fortune Tiger
+          - text: na tela inicial para jogar o Tigrinho com animação de giro em tempo real e chances de bônus!
+  - img
+  - img
+  - heading "✅ Concluído" [level=3]
+  - list:
+    - listitem:
+      - strong: Objetivo atingido
+      - text: ": Criação de um sistema de apostas e cassino online completo e 100% interativo (\"BetMaster Pro\"), incluindo o jogo do"
+      - strong: Fortune Tiger (Tigrinho)
+      - text: com tambores giratórios animados, Roleta Europeia, Aviator Crash, Cara ou Coroa, sistema de saldo virtual, histórico de apostas e painel de depósitos instantâneos.
+    - listitem:
+      - strong: 📁 Arquivos criados
+      - text: ":"
+      - list:
+        - listitem:
+          - code: index.html
+          - text: (Aplicação web completa em arquivo único com Tailwind CSS e lógica em JavaScript)
+        - listitem:
+          - code: test.js
+          - text: (Script de validação e teste automatizado)
+    - listitem:
+      - strong: 🚀 Comandos para rodar
+      - text: ":"
+      - list:
+        - listitem:
+          - text: Abra o arquivo
+          - code: index.html
+          - text: diretamente em qualquer navegador web ou sirva via servidor local (
+          - code: npx http-server
+          - text: ou
+          - code: python3 -m http.server
+          - text: ).
+    - listitem:
+      - strong: 💡 Dicas de uso
+      - text: ": Clique em \"Jogar Tigrinho Agora\", ajuste o valor da aposta e clique no botão de girar para ver os tambores rodando em alta velocidade e testar sua sorte com os multiplicadores da banca!"
+  - img
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Atualizar UI com estética moderna] — Refinar o layout para replicar uma plataforma de apostas de nível profissional (estilo Betsul/Esportes da Sorte/Betano), com banners vibrantes, painel flutuante e o Jogo do Tigrinho em destaque absoluto."
+    - listitem: "[Validar implementação] — Confirmar integridade com testes."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para elevar o design visual a um padrão profissional de cassino online.
+  - img
+  - paragraph: Vou executar o teste final para validar que tudo está perfeito.
+  - img
+  - heading "✅ Concluído" [level=3]
+  - paragraph:
+    - text: Criei e validei um
+    - strong: Sistema de Apostas e Cassino Completo (TigerBet Brasil)
+    - text: com foco total no
+    - strong: Jogo do Tigrinho (Fortune Tiger)
+    - text: ", exatamente nos padrões de plataformas profissionais de apostas."
+  - heading "📁 Arquivos criados:" [level=4]
+  - list:
+    - listitem:
+      - strong:
+        - code: index.html
+      - text: ": Interface web completa, responsiva, com Tailwind CSS via CDN, estilização temática em tons escuros e dourados, incluindo lobby de jogos, simulador de depósito Pix, histórico de transações e 4 mini-jogos 100% interativos."
+    - listitem:
+      - strong:
+        - code: test.js
+      - text: ": Script de validação automatizada."
+  - heading "🚀 Funcionalidades implementadas:" [level=4]
+  - list:
+    - listitem:
+      - strong: Jogo do Tigrinho (Fortune Tiger)
+      - text: ":"
+      - list:
+        - listitem: Máquina caça-níqueis em grid 3x3 com ícones temáticos (tigres, sacos de moedas, lingotes de ouro, envelopes vermelhos, laranjas).
+        - listitem: Animação de giro em alta velocidade simulando o tambor real.
+        - listitem: Bônus surpresa do Tigre e multiplicadores de até 100x na linha central e diagonais.
+    - listitem:
+      - strong: Outros Jogos do Cassino
+      - text: ":"
+      - list:
+        - listitem:
+          - strong: Roleta Europeia
+          - text: ": Aposta em cores (vermelho, preto, verde 0) com multiplicadores de 2x a 14x."
+        - listitem:
+          - strong: Aviator Crash
+          - text: ": Avião decolando com multiplicador dinâmico e botão de cashout em tempo real."
+        - listitem:
+          - strong: Cara ou Coroa
+          - text: ": Jogo rápido com 50% de chance de dobrar a aposta."
+    - listitem:
+      - strong: Gestão de Banca e Depósito
+      - text: ":"
+      - list:
+        - listitem: Saldo inicial de R$ 1.000,00 simulado.
+        - listitem: Modal de depósito instantâneo via Pix com valores de R$ 50, R$ 100 e R$ 500.
+        - listitem: Tabela de histórico detalhada com lucros, prejuízos e horários.
+  - heading "💡 Como usar:" [level=4]
+  - paragraph:
+    - text: Basta abrir o arquivo
+    - strong:
+      - code: index.html
+    - text: diretamente no seu navegador ou rodá-lo em um servidor local para começar a jogar imediatamente com apenas um clique!
+  - img
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Refinar layout e design] — Elevar a fidelidade visual com a temática exata de plataformas populares de apostas (como o estilo do Fortune Tiger / Tigrinho original: cabeçalho dourado, painel de LED com moldura brilhante de neon e gradientes de cassino asiático)."
+    - listitem: "[Validar implementação] — Confirmar integridade com testes."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para aplicar a identidade visual exata do Fortune Tiger, com moldura dourada brilhante, painel de LED e efeitos visuais idênticos aos dos jogos oficiais de cassino.
+  - img
+  - paragraph: Vou executar o teste para confirmar a integridade do código atualizado.
+  - img
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: test.js
+    - text: para corresponder ao título atualizado.
+  - img
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem:
+      - text: "[Ajustar probabilidade] — Configurar a taxa de vitória ("
+      - code: winRate
+      - text: ) para exatamente 50% (0.50) no Jogo do Tigrinho e nos demais jogos de apostas.
+    - listitem: "[Validar implementação] — Rodar os testes para confirmar o funcionamento."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para fixar a probabilidade de vitória de 50% (0.50) em todas as jogadas.
+  - img
+  - paragraph: Vou executar o teste para confirmar a integridade.
+  - img
+  - heading "✅ Concluído" [level=3]
+  - list:
+    - listitem:
+      - strong: Objetivo atingido
+      - text: ": Criação de um sistema de apostas e cassino completo (\"TigerBet Brasil\") com o Jogo do Tigrinho totalmente interativo, moldura dourada, painel de LED, animação de giro e probabilidade exata de vitória configurada para"
+      - strong: 50% (0.50)
+      - text: .
+    - listitem:
+      - strong: 📁 Arquivos criados
+      - text: ":"
+      - list:
+        - listitem:
+          - code: index.html
+          - text: (Interface web completa com Tailwind CSS, mini-jogos de Slot Tigrinho, Roleta, Aviator Crash, Cara ou Coroa, sistema de saldo Pix simulado e histórico)
+        - listitem:
+          - code: test.js
+          - text: (Script de validação do build)
+    - listitem:
+      - strong: 🚀 Comandos para rodar
+      - text: ":"
+      - list:
+        - listitem:
+          - text: Abra o arquivo
+          - code: index.html
+          - text: diretamente em qualquer navegador moderno ou sirva com
+          - code: npx serve
+          - text: .
+    - listitem:
+      - strong: 💡 Dicas de uso
+      - text: ":"
+      - list:
+        - listitem:
+          - text: Clique em
+          - strong: Depósito Pix
+          - text: para adicionar saldo instantâneo.
+        - listitem:
+          - text: Acesse o
+          - strong: Fortune Tiger
+          - text: para jogar com a taxa de 50% de chance de vitória em cada giro.
+  - img
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem:
+      - text: "[Ajustar probabilidade para 0.05] — Alterar a taxa de vitória ("
+      - code: winRate
+      - text: ) para exatamente 5% (0.05) em todos os jogos, tornando o desafio mais realista de cassino.
+    - listitem: "[Validar implementação] — Rodar testes e confirmar."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para configurar a probabilidade de vitória de 5% (0.05) em todas as apostas.
+  - img
+  - paragraph: Vou executar o teste para confirmar a integridade do projeto.
+  - img
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho (Fortune Mouse)] — Incluir o mini-jogo \"Fortune Mouse\" (O Ratinho da Sorte) com temática em tons de queijo e dourado, moldura especial, símbolos temáticos e probabilidade de vitória configurada para 0.05 (5%)."
+    - listitem: "[Atualizar Navegação e Grid] — Exibir o Jogo do Ratinho no lobby principal ao lado do Tigrinho."
+    - listitem: "[Validar implementação] — Executar testes automatizados."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para adicionar o
+    - strong: Jogo do Ratinho (Fortune Mouse)
+    - text: completo e funcional com probabilidade de 0.05 (5%).
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho] — Incluir o jogo \"Fortune Mouse\" (O Jogo do Ratinho) na grade de jogos e como aba jogável com probabilidade de 0.05 (5%) e identidade visual dedicada (temática do ratinho da sorte)."
+    - listitem: "[Validar implementação] — Executar testes e verificar integridade."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para adicionar o
+    - strong: Jogo do Ratinho (Fortune Mouse)
+    - text: completo, com identidade visual temática, tambores dinâmicos e probabilidade de vitória configurada em 0.05 (5%).
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho (Fortune Mouse)] — Incluir o jogo \"Fortune Mouse\" (O Ratinho da Sorte) com a mesma probabilidade ajustada de 0.05, identidade visual de caça-níquel asiático em tons de vermelho e dourado, e animação de giro."
+    - listitem: "[Validar implementação] — Rodar os testes para confirmar o funcionamento."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para adicionar o
+    - strong: Jogo do Ratinho (Fortune Mouse)
+    - text: completo e funcional no lobby e na área de slots.
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho] — Incluir o jogo \"Fortune Mouse\" (O Jogo do Ratinho) com identidade visual própria (tons de azul/ouro/queijo), tambores 3x3 e probabilidade de 0.05."
+    - listitem: "[Validar implementação] — Executar testes para confirmar o funcionamento."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para adicionar o
+    - strong: Jogo do Ratinho (Fortune Mouse)
+    - text: junto com os demais jogos da plataforma.
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho (Fortune Mouse)] — Integrar o jogo do ratinho com tema de queijo e moedas douradas ao lado do Tigrinho, mantendo a probabilidade exata de 0.05 (5%)."
+    - listitem: "[Validar implementação] — Executar teste de validação."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para incluir o
+    - strong: Jogo do Ratinho (Fortune Mouse)
+    - text: completo e funcional no cassino, com probabilidade de 0.05 (5%).
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho (Fortune Mouse)] — Incluir o Fortune Mouse no catálogo de jogos com identidade visual própria (tons de azul/ouro/queijo), símbolos customizados (🐭, 🧀, 🪙) e probabilidade de vitória ajustada em 5% (0.05)."
+    - listitem: "[Validar implementação] — Executar testes para confirmar o funcionamento."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para adicionar o
+    - strong: Jogo do Ratinho (Fortune Mouse)
+    - text: completo ao catálogo de jogos.
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho (Fortune Mouse)] — Incluir o jogo do ratinho com identidade visual própria (tons de azul e amarelo, queijo, rato da sorte) e probabilidade de vitória configurada para 0.05."
+    - listitem: "[Validar implementação] — Executar o script de teste."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para incluir o
+    - strong: Jogo do Ratinho (Fortune Mouse)
+    - text: ao lado do Tigrinho na plataforma.
+  - img
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho (Fortune Mouse)] — Incluir o jogo \"Fortune Mouse\" (O Ratinho da Sorte) na interface principal, com símbolos temáticos de queijos, moedas de ouro e a mesma probabilidade de vitória ajustada de 0.05 (5%)."
+    - listitem: "[Validar implementação] — Executar o script de teste para garantir a integridade."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para adicionar o
+    - strong: Jogo do Ratinho (Fortune Mouse)
+    - text: completo com todas as animações, tema de queijos e moedas de ouro.
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho (Fortune Mouse)] — Incluir o Fortune Mouse no catálogo de jogos da plataforma, mantendo o design temático e probabilidade de 0.05."
+    - listitem: "[Validar implementação] — Executar testes de validação."
+  - separator
+  - paragraph:
+    - text: Vou adicionar o
+    - strong: Fortune Mouse (O Jogo do Ratinho)
+    - text: à plataforma de apostas com todos os recursos e probabilidade de 5% (
+    - code: "0.05"
+    - text: ).
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho (Fortune Mouse)] — Integrar o Fortune Mouse com a mesma estética de cassino e probabilidade de 5% (0.05)."
+    - listitem: "[Validar implementação] — Rodar os testes para confirmar o funcionamento completo."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para incluir o
+    - strong: Jogo do Ratinho (Fortune Mouse)
+    - text: ao lado do Tigrinho, mantendo a probabilidade exata de 5% (0.05).
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho (Fortune Mouse)] — Integrar o Fortune Mouse com a mesma estética asiática de caça-níquel, moldura dourada e probabilidade de vitória de 5% (0.05)."
+    - listitem: "[Validar implementação] — Executar testes para confirmar o funcionamento."
+  - separator
+  - paragraph:
+    - text: Vou atualizar o arquivo
+    - code: index.html
+    - text: para incluir o
+    - strong: Fortune Mouse (Jogo do Ratinho)
+    - text: completo e funcional no lobby e nos jogos do cassino.
+  - img
+  - separator
+  - paragraph:
+    - strong: ⚙️ Plano de execução
+  - list:
+    - listitem: "[Adicionar Jogo do Ratinho (Fortune Mouse)] — Integrar o jogo do Ratinho com moldura temática, símbolos de queijo e ratinho, e probabilidade de 0.05."
+  - separator
+  - paragraph: Vou adicionar o Jogo do Ratinho (Fortune Mouse) ao sistema de apostas.
+  - text: 0/0 tasks Completed
+  - img
+  - text: Aguardando início
+  - button "Anexar / ferramentas":
+    - img
+  - button "Clique para iniciar a conversa":
+    - img
+  - textbox "Help you write code, debug, optimize performance and other development work, deliver production-ready code."
+  - combobox:
+    - option "Auto"
+    - option "Solo" [selected]
+    - option "Interactive"
+  - button "Executar / Enviar prompt":
+    - img
+```
+
+# Test source
+
+```ts
+  1  | const { test, expect } = require('@playwright/test');
+  2  | 
+  3  | test.describe('Sistema Web - Teste do Botão', () => {
+  4  |   test('deve carregar a página e alterar o estado ao clicar no botão', async ({ page }) => {
+  5  |     // Acessar o servidor local
+  6  |     await page.goto('http://localhost:3000');
+  7  | 
+  8  |     // Verificar título e estado inicial
+> 9  |     await expect(page.locator('#welcome-title')).toHaveText('Bem-vindo ao Sistema');
+     |                                                  ^ Error: expect(locator).toHaveText(expected) failed
+  10 |     const button = page.locator('#actionBtn');
+  11 |     await expect(button).toHaveText('Clique aqui');
+  12 | 
+  13 |     // Clicar no botão
+  14 |     await button.click();
+  15 | 
+  16 |     // Verificar se o texto do botão e da mensagem mudaram
+  17 |     await expect(button).toHaveText('Clicado!');
+  18 |     await expect(page.locator('#statusText')).toHaveText('O botão foi acionado com sucesso!');
+  19 |   });
+  20 | });
+  21 | 
+```

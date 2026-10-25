@@ -1,0 +1,1505 @@
+{
+  "schemaVersion": "rc28.1",
+  "id": "orc_default_1789879930243_oo6baq",
+  "createdAt": 1789879930243,
+  "updatedAt": 1789944227931,
+  "objetivoAtual": "",
+  "requisitos": {
+    "rf": [],
+    "rnfr": [],
+    "businessRules": []
+  },
+  "arquitetura": {
+    "camadas": [],
+    "estruturaPastas": [],
+    "padroes": []
+  },
+  "tecnologias": {
+    "lang": null,
+    "framework": null,
+    "banco": null,
+    "libs": []
+  },
+  "versoesRelevantes": {},
+  "agentesDisponiveis": {
+    "ARCHITECT": {
+      "ok": true
+    },
+    "DEVELOPER": {
+      "ok": true
+    },
+    "QA": {
+      "ok": true
+    },
+    "SECURITY": {
+      "ok": true
+    },
+    "TEST": {
+      "ok": true
+    },
+    "INTERNET": {
+      "ok": false
+    }
+  },
+  "ferramentasDisponiveis": [
+    "read_file",
+    "write_file",
+    "delete_file",
+    "run_command",
+    "list_dir",
+    "state_get",
+    "state_patch",
+    "task_list",
+    "task_update",
+    "web_request_ask_authorization",
+    "web_search_authorized",
+    "web_fetch_authorized",
+    "run_tests",
+    "rollback_to_checkpoint",
+    "security_audit_and_autofix"
+  ],
+  "tarefas": [],
+  "tarefasConcluidas": 0,
+  "tarefasPendentes": 0,
+  "tarefaEmExecucaoId": null,
+  "dependencias": [],
+  "arquivosRelevantes": {},
+  "arquivosModificados": [],
+  "decisoesTecnicas": [],
+  "pesquisasRealizadasFontes": [],
+  "errosEncontrados": [],
+  "tentativasRealizadas": [
+    {
+      "id": "t_mock_test",
+      "status": "completed",
+      "at": 1789916447329,
+      "detail": {
+        "ok": true,
+        "reason": "npm_test_exit_0_e_teste_passou",
+        "evidences": [
+          {
+            "kind": "run_tests",
+            "data": {
+              "script": "jest --runInBand --detectOpenHandles",
+              "cwd": "/Users/tiagosantos/Desktop/criador/workspace/tester"
+            },
+            "at": 1789916445974
+          },
+          {
+            "kind": "npm_status",
+            "data": {
+              "status": 0,
+              "signal": null,
+              "stdout_len": 475,
+              "stderr_len": 885
+            },
+            "at": 1789916447329
+          },
+          {
+            "kind": "npm_tail_stdout",
+            "data": "\n  console.log\n    Tabela \"itens_casa\" verificada/criada com sucesso.\n\n      at Statement.log (database.js:33:17)\n\n  console.log\n    Tabela \"usuarios\" verificada/criada com sucesso.\n\n      at Statement.log (database.js:48:17)\n\n",
+            "at": 1789916447329
+          }
+        ]
+      },
+      "realEvidences": [
+        {
+          "kind": "run_tests",
+          "data": {
+            "script": "jest --runInBand --detectOpenHandles",
+            "cwd": "/Users/tiagosantos/Desktop/criador/workspace/tester"
+          },
+          "at": 1789916445974
+        },
+        {
+          "kind": "npm_status",
+          "data": {
+            "status": 0,
+            "signal": null,
+            "stdout_len": 475,
+            "stderr_len": 885
+          },
+          "at": 1789916447329
+        },
+        {
+          "kind": "npm_tail_stdout",
+          "data": "\n  console.log\n    Tabela \"itens_casa\" verificada/criada com sucesso.\n\n      at Statement.log (database.js:33:17)\n\n  console.log\n    Tabela \"usuarios\" verificada/criada com sucesso.\n\n      at Statement.log (database.js:48:17)\n\n",
+          "at": 1789916447329
+        }
+      ]
+    }
+  ],
+  "correcoesRealizadas": [],
+  "testesExecutadosResultados": [],
+  "problemasConhecidos": [],
+  "limitacoes": [],
+  "proximaAcao": "AGUARDA_INTERVENCAO_HUMANA_RC28",
+  "faseGeral": "BLOCKED",
+  "needsPersistence": false,
+  "internetAuthorization": null,
+  "checkpoints": [],
+  "toolCallsSinceLastSave": 0,
+  "statusExecucao": "blocked",
+  "decisionTrace": [
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ANALYSIS deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "ANALYSIS",
+      "phaseTo": "PLANNING",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936701
+    },
+    {
+      "v": 2,
+      "ts": 1789879936701,
+      "analysis": "fase=ANALYSIS · tarefas=0/0 · stack=?+? · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "ADVANCE_PHASE",
+        "taskId": null,
+        "phaseTo": "PLANNING"
+      },
+      "successCriteria": [
+        "faseGeral=COMPLETED ou nova fase com tarefas pendentes reduzidas"
+      ],
+      "risks": [
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ANALYSIS deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "ANALYSIS",
+      "phaseTo": "PLANNING",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936703
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual PLANNING deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 2,
+      "phaseFrom": "PLANNING",
+      "phaseTo": "ARCHITECTURE",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936707
+    },
+    {
+      "v": 2,
+      "ts": 1789879936707,
+      "analysis": "fase=PLANNING · tarefas=0/0 · streak_sem_progresso=1 · stack=?+? · historico_acoes=3 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "TEST_DRIVEN_FIX",
+        "riskLevel": "low",
+        "description": "Executar testes existentes primeiro; basear a próxima decisão no resultado real dos testes."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "ADVANCE_PHASE",
+        "taskId": null,
+        "phaseTo": "ARCHITECTURE"
+      },
+      "successCriteria": [
+        "faseGeral=COMPLETED ou nova fase com tarefas pendentes reduzidas"
+      ],
+      "risks": [],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE TEST_DRIVEN_FIX não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 2,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.765,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual PLANNING deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 2,
+      "phaseFrom": "PLANNING",
+      "phaseTo": "ARCHITECTURE",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936709
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ARCHITECTURE deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 3,
+      "phaseFrom": "ARCHITECTURE",
+      "phaseTo": "IMPLEMENTATION",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936713
+    },
+    {
+      "v": 2,
+      "ts": 1789879936713,
+      "analysis": "fase=ARCHITECTURE · tarefas=0/0 · streak_sem_progresso=2 · stack=?+? · historico_acoes=6 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "MINI_STEP_BACKTRACK",
+        "riskLevel": "medium",
+        "description": "Dividir a próxima tarefa em 2+ mini-passos verificáveis, ou rollback ao último checkpoint com sucesso."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "ADVANCE_PHASE",
+        "taskId": null,
+        "phaseTo": "IMPLEMENTATION"
+      },
+      "successCriteria": [
+        "faseGeral=COMPLETED ou nova fase com tarefas pendentes reduzidas",
+        "decisionEngine.progressMetrics.noProgressStreak < valor_anterior"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "trigger": "SE MINI_STEP_BACKTRACK não gerar progresso em 1 ciclo OU 1 novo erro recorrente"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 2,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.8699999999999999,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "ADVANCE_PHASE",
+      "taskId": null,
+      "reason": "Fase atual ARCHITECTURE deve ser resolvida pelo RC27 (ANALYSIS → PLANNING → ARCHITECTURE). Avançando automaticamente.",
+      "heuristic": "fase_menor_que_implementation_avancar",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 3,
+      "phaseFrom": "ARCHITECTURE",
+      "phaseTo": "IMPLEMENTATION",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936715
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 4,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936718
+    },
+    {
+      "v": 2,
+      "ts": 1789879936718,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=9 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 4,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936720
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 5,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936721
+    },
+    {
+      "v": 2,
+      "ts": 1789879936721,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=12 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 5,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936724
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 6,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936726
+    },
+    {
+      "v": 2,
+      "ts": 1789879936726,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=15 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 6,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936728
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 7,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936730
+    },
+    {
+      "v": 2,
+      "ts": 1789879936730,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=18 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "WAIT_OR_CORRECT",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "WAIT_OR_CORRECT",
+      "taskId": null,
+      "reason": "Sem candidatas: todas tarefas pendentes tem dependências não-concluídas ou está em ciclo topológico.",
+      "heuristic": "dependencias_pendentes",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 7,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936733
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "Excedeu maxCycles=8 ciclos (anti-loop §17).",
+      "heuristic": "max_cycles_excedido",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 8,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936734
+    },
+    {
+      "v": 2,
+      "ts": 1789879936734,
+      "analysis": "fase=IMPLEMENTATION · tarefas=0/0 · streak_sem_progresso=3 · stack=?+? · historico_acoes=21 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "riskLevel": "low",
+        "description": "Primeiro analisar arquivos/estado/endpoints do projeto; depois executar com plano ajustado."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_STALL_CONTINUA",
+          "severity": "medium",
+          "description": "Stall pode continuar se a nova estratégia também for ineficaz."
+        },
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 3,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7125,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "Excedeu maxCycles=8 ciclos (anti-loop §17).",
+      "heuristic": "max_cycles_excedido",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 8,
+      "phaseFrom": "IMPLEMENTATION",
+      "phaseTo": "BLOCKED",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789879936736
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789880406952
+    },
+    {
+      "v": 2,
+      "ts": 1789880406952,
+      "analysis": "fase=BLOCKED · tarefas=0/0 · stack=?+? · historico_acoes=24 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": "BLOCKED",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789880406954
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789882608072
+    },
+    {
+      "v": 2,
+      "ts": 1789882608072,
+      "analysis": "fase=BLOCKED · tarefas=0/0 · stack=?+? · historico_acoes=27 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": "BLOCKED",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789882608076
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789884308001
+    },
+    {
+      "v": 2,
+      "ts": 1789884308001,
+      "analysis": "fase=BLOCKED · tarefas=0/0 · stack=?+? · historico_acoes=30 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": "BLOCKED",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789884308003
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789901915277
+    },
+    {
+      "v": 2,
+      "ts": 1789901915277,
+      "analysis": "fase=BLOCKED · tarefas=0/0 · stack=?+? · historico_acoes=33 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": "BLOCKED",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789901915280
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789903100477
+    },
+    {
+      "v": 2,
+      "ts": 1789903100477,
+      "analysis": "fase=BLOCKED · tarefas=0/0 · stack=?+? · historico_acoes=36 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": "BLOCKED",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789903100479
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789908139261
+    },
+    {
+      "v": 2,
+      "ts": 1789908139261,
+      "analysis": "fase=BLOCKED · tarefas=0/0 · stack=?+? · historico_acoes=39 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": "BLOCKED",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789908139263
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789908280698
+    },
+    {
+      "v": 2,
+      "ts": 1789908280698,
+      "analysis": "fase=BLOCKED · tarefas=0/0 · stack=?+? · historico_acoes=42 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": "BLOCKED",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789908280706
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789916395375
+    },
+    {
+      "v": 2,
+      "ts": 1789916395375,
+      "analysis": "fase=BLOCKED · tarefas=0/0 · stack=?+? · historico_acoes=45 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": "BLOCKED",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789916395377
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": null,
+      "v": "rc28.1.loop.v2",
+      "ts": 1789916447341
+    },
+    {
+      "v": 2,
+      "ts": 1789916447341,
+      "analysis": "fase=BLOCKED · tarefas=0/0 · stack=?+? · historico_acoes=48 · resultados_anteriores=1",
+      "selectedStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "riskLevel": "low",
+        "description": "Usar heurística existente (escolha de tarefa por fase + prioridade + dependências)."
+      },
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "taskId": null,
+        "phaseTo": null
+      },
+      "successCriteria": [
+        "progresso_medido: tarefas concluidas aumentou OU gate_19_atingido"
+      ],
+      "risks": [
+        {
+          "id": "R_SEM_ALTERNATIVAS",
+          "severity": "high",
+          "description": "Apenas 1 estratégia disponível; se falhar, requer intervenção humana."
+        }
+      ],
+      "fallbackStrategy": {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "trigger": "Qualquer falha ou ausência de progresso"
+      },
+      "hypothesesCount": 1,
+      "alternativesCount": 1,
+      "meta": {
+        "engineVersion": "rc28.decision.engine.v1",
+        "mode": "heuristic",
+        "confidence": 0.7725,
+        "llmEnhanced": false,
+        "legacyUsed": true
+      }
+    },
+    {
+      "action": "HUMAN_REVIEW",
+      "taskId": null,
+      "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "heuristic": "status_bloqueado",
+      "candidates": [],
+      "bridgeUsed": null,
+      "step": 1,
+      "phaseFrom": "BLOCKED",
+      "phaseTo": "BLOCKED",
+      "v": "rc28.1.loop.v2",
+      "ts": 1789916447343
+    }
+  ],
+  "decisionEngine": {
+    "engineVersion": "rc28.decision.v1",
+    "mode": "heuristic",
+    "hypotheses": [],
+    "strategiesTried": [
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1789879936705,
+        "resultSummary": "avançou_fase_PLANNING · critérios 0/1"
+      },
+      {
+        "strategyType": "TEST_DRIVEN_FIX",
+        "success": false,
+        "atMs": 1789879936711,
+        "resultSummary": "avançou_fase_ARCHITECTURE · critérios 0/1"
+      },
+      {
+        "strategyType": "MINI_STEP_BACKTRACK",
+        "success": false,
+        "atMs": 1789879936716,
+        "resultSummary": "avançou_fase_IMPLEMENTATION · critérios 0/2"
+      },
+      {
+        "strategyType": "RESEARCH_THEN_EXECUTE",
+        "success": false,
+        "atMs": 1789879936737,
+        "resultSummary": "human_review · Excedeu maxCycles=8 ciclos (anti-loop §17)."
+      },
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1789880406956,
+        "resultSummary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1789882608080,
+        "resultSummary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1789884308005,
+        "resultSummary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1789901915281,
+        "resultSummary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1789903100480,
+        "resultSummary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1789908139265,
+        "resultSummary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1789908280712,
+        "resultSummary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1789916395379,
+        "resultSummary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "success": false,
+        "atMs": 1789916447345,
+        "resultSummary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      }
+    ],
+    "ineffectiveStrategies": [
+      {
+        "strategyType": "HEURISTIC_DEFAULT",
+        "discardedAtMs": 1789916447345,
+        "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+        "cycle": 1
+      }
+    ],
+    "alternativesHistory": [
+      {
+        "atMs": 1789879936705,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "avançou_fase_PLANNING · critérios 0/1"
+      },
+      {
+        "atMs": 1789879936711,
+        "selectedStrategy": "TEST_DRIVEN_FIX",
+        "alternativesCount": 2,
+        "outcome": "failure",
+        "summary": "avançou_fase_ARCHITECTURE · critérios 0/1"
+      },
+      {
+        "atMs": 1789879936716,
+        "selectedStrategy": "MINI_STEP_BACKTRACK",
+        "alternativesCount": 2,
+        "outcome": "failure",
+        "summary": "avançou_fase_IMPLEMENTATION · critérios 0/2"
+      },
+      {
+        "atMs": 1789879936737,
+        "selectedStrategy": "RESEARCH_THEN_EXECUTE",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "human_review · Excedeu maxCycles=8 ciclos (anti-loop §17)."
+      },
+      {
+        "atMs": 1789880406956,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "atMs": 1789882608080,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "atMs": 1789884308005,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "atMs": 1789901915281,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "atMs": 1789903100480,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "atMs": 1789908139265,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "atMs": 1789908280712,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "atMs": 1789916395379,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      },
+      {
+        "atMs": 1789916447345,
+        "selectedStrategy": "HEURISTIC_DEFAULT",
+        "alternativesCount": 1,
+        "outcome": "failure",
+        "summary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+      }
+    ],
+    "progressMetrics": {
+      "totalCycles": 13,
+      "cyclesWithProgress": 0,
+      "lastProgressAtMs": 0,
+      "noProgressStreak": 1,
+      "objectiveProgressPct": 0
+    },
+    "lastDecision": {
+      "selectedStrategy": "HEURISTIC_DEFAULT",
+      "selectionReason": "engineMode=heuristic, usando heurística padrão.",
+      "nextAction": {
+        "action": "HUMAN_REVIEW",
+        "phaseTo": "IMPLEMENTATION",
+        "reason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+        "heuristic": "status_bloqueado",
+        "candidates": [],
+        "version": "rc28.1.decisor.v2"
+      },
+      "decidedAtMs": 1789916447345
+    },
+    "lastMeasuredResult": {
+      "success": false,
+      "summary": "human_review · statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+      "cycle": 1,
+      "measuredAtMs": 1789916447345,
+      "failReason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho."
+    },
+    "adaptiveConstraints": {
+      "maxCycles": null,
+      "maxStrategies": null,
+      "confidenceThreshold": 0.7
+    },
+    "objetivoSeedadoAtual": "modo heuristico curto 1 ciclo",
+    "objetivoOrigem": "NOVA_SOLICITACAO",
+    "etapa7Isolated": true,
+    "etapa7SeedAtMs": 1789916447337
+  },
+  "blockedReason": "statusExecucao=blocked · faseGeral=BLOCKED — RC28 não desbloqueia sozinho.",
+  "testesExecutados": [],
+  "resultadosTestes": {
+    "framework": "package_scripts_test",
+    "pass": 0,
+    "fail": 0,
+    "total": 0,
+    "executedAtMs": 1789944227929,
+    "exitCode": 0,
+    "remoto": true,
+    "agentId": "windows-worker-01-mock",
+    "jobId": "job-bea68420c7350ae0"
+  }
+}

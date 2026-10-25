@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "rc28.1",
+  "id": "orc_default_1790054553120_27qp0x",
+  "createdAt": 1790054553120,
+  "updatedAt": 1790054553120,
+  "objetivoAtual": "",
+  "requisitos": {
+    "rf": [],
+    "rnfr": [],
+    "businessRules": []
+  },
+  "arquitetura": {
+    "camadas": [],
+    "estruturaPastas": [],
+    "padroes": []
+  },
+  "tecnologias": {
+    "lang": null,
+    "framework": null,
+    "banco": null,
+    "libs": []
+  },
+  "versoesRelevantes": {},
+  "agentesDisponiveis": {
+    "ARCHITECT": {
+      "ok": true
+    },
+    "DEVELOPER": {
+      "ok": true
+    },
+    "QA": {
+      "ok": true
+    },
+    "SECURITY": {
+      "ok": true
+    },
+    "TEST": {
+      "ok": true
+    },
+    "INTERNET": {
+      "ok": false
+    }
+  },
+  "ferramentasDisponiveis": [
+    "read_file",
+    "write_file",
+    "delete_file",
+    "run_command",
+    "list_dir",
+    "state_get",
+    "state_patch",
+    "task_list",
+    "task_update",
+    "web_request_ask_authorization",
+    "web_search_authorized",
+    "web_fetch_authorized",
+    "run_tests",
+    "rollback_to_checkpoint",
+    "security_audit_and_autofix"
+  ],
+  "tarefas": [],
+  "tarefasConcluidas": 0,
+  "tarefasPendentes": 0,
+  "tarefaEmExecucaoId": null,
+  "dependencias": [],
+  "arquivosRelevantes": {},
+  "arquivosModificados": [],
+  "decisoesTecnicas": [],
+  "pesquisasRealizadasFontes": [],
+  "errosEncontrados": [],
+  "tentativasRealizadas": [],
+  "correcoesRealizadas": [],
+  "testesExecutadosResultados": [],
+  "problemasConhecidos": [],
+  "limitacoes": [],
+  "proximaAcao": "ANALISAR_PROJETO",
+  "faseGeral": "ANALYSIS",
+  "needsPersistence": false,
+  "internetAuthorization": null,
+  "checkpoints": [],
+  "toolCallsSinceLastSave": 0,
+  "statusExecucao": "idle",
+  "decisionTrace": [],
+  "decisionEngine": {
+    "engineVersion": "rc28.decision.v1",
+    "mode": "heuristic",
+    "hypotheses": [],
+    "strategiesTried": [],
+    "ineffectiveStrategies": [],
+    "alternativesHistory": [],
+    "progressMetrics": {
+      "totalCycles": 0,
+      "cyclesWithProgress": 0,
+      "lastProgressAtMs": 0,
+      "noProgressStreak": 0,
+      "objectiveProgressPct": 0
+    },
+    "lastDecision": null,
+    "lastMeasuredResult": null,
+    "adaptiveConstraints": {
+      "maxCycles": null,
+      "maxStrategies": null,
+      "confidenceThreshold": 0.7
+    }
+  },
+  "internetAuthorizationPending": {
+    "scopeId": "inet_muc89gym_c48de",
+    "reason": "Abrir o YouTube para o usuário conforme solicitado",
+    "urls": [],
+    "estimatedScope": "Abertura única da página https://www.youtube.com",
+    "requestedAtMs": 1790054553120,
+    "status": "requested"
+  }
+}

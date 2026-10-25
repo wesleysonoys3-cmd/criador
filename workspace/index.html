@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínica Odontológica Sorriso Perfeito | O seu melhor sorriso</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef9ff',
+                            100: '#d7f1fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        mint: {
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Bar -->
+    <div class="bg-brand-900 text-slate-200 text-xs sm:text-sm py-2 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center gap-6">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-brand-500">></i> Av. Paulista, 1000 - São Paulo, SP</span>
+                <span class="hidden md:flex items-center gap-2"><i class="fa-solid fa-clock text-brand-500"></i> Seg - Sex: 08h às 19h | Sáb: 08h às 14h</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="tel:11999999999" class="hover:text-brand-400 transition flex items-center gap-1.5"><i class="fa-solid fa-phone text-brand-500"></i> (11) 99999-9999</a>
+                <div class="flex items-center gap-3 border-l border-slate-700 pl-4">
+                    <a href="#" class="hover:text-brand-400 transition" aria-label="Instagram"><i class="fa-brands fa-instagram text-base"></i></a>
+                    <a href="#" class="hover:text-brand-400 transition" aria-label="Facebook"><i class="fa-brands fa-facebook text-base"></i></a>
+                    <a href="#" class="hover:text-brand-400 transition" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp text-base"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header / Navigation -->
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition">
+                    <i class="fa-solid fa-tooth text-xl"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl font-extrabold text-slate-900 tracking-tight leading-none">Sorriso <span class="text-brand-600">Perfeito</span></span>
+                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mt-0.5">Clínica Odontológica</span>
+                </div>
+            </a>
+
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
+                <a href="#inicio" class="hover:text-brand-600 transition">Início</a>
+                <a href="#sobre" class="hover:text-brand-600 transition">Sobre Nós</a>
+                <a href="#servicos" class="hover:text-brand-600 transition">Serviços</a>
+                <a href="#depoimentos" class="hover:text-brand-600 transition">Depoimentos</a>
+                <a href="#contato" class="hover:text-brand-600 transition">Contato</a>
+            </nav>
+
+            <!-- CTA Button -->
+            <div class="hidden md:flex items-center gap-4">
+                <a href="#contato" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-brand-600/20 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <span>Agendar Consulta</span>
+                </a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button id="menu-btn" class="md:hidden text-slate-700 hover:text-brand-600 focus:outline-none p-2" aria-label="Menu">
+                <i class="fa-solid fa-bars text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-100 px-4 pt-2 pb-6 space-y-3 shadow-xl">
+            <a href="#inicio" class="block py-2 text-slate-700 font-medium hover:text-brand-600">Início</a>
+            <a href="#sobre" class="block py-2 text-slate-700 font-medium hover:text-brand-600">Sobre Nós</a>
+            <a href="#servicos" class="block py-2 text-slate-700 font-medium hover:text-brand-600">Serviços</a>
+            <a href="#depoimentos" class="block py-2 text-slate-700 font-medium hover:text-brand-600">Depoimentos</a>
+            <a href="#contato" class="block py-2 text-slate-700 font-medium hover:text-brand-600">Contato</a>
+            <div class="pt-2">
+                <a href="#contato" class="w-full text-center bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-3 rounded-xl shadow-md block">
+                    Agendar Consulta
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="relative overflow-hidden bg-gradient-to-b from-brand-50/70 via-white to-white py-16 lg:py-24">
+        <!-- Background Decor Shapes -->
+        <div class="absolute top-0 right-0 -z-10 w-96 h-96 bg-brand-100/60 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
+        <div class="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-mint-500/10 rounded-full blur-3xl transform -translate-x-1/3 translate-y-1/3"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                <!-- Hero Text -->
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 bg-brand-100 text-brand-800 text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+                        <i class="fa-solid fa-sparkles text-brand-600"></i> Tecnologia de Ponta & Atendimento Humanizado
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.1]">
+                        Seu sorriso perfeito <br class="hidden sm:inline">começa <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-mint-600">aqui e agora.</span>
+                    </h1>
+                    <p class="text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 font-normal">
+                        Combinamos especialistas renomados, equipamentos de última geração e um ambiente acolhedor para transformar a sua saúde bucal e elevar sua autoestima.
+                    </p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                        <a href="#contato" class="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white font-bold px-8 py-4 rounded-xl shadow-xl shadow-brand-600/25 transition transform hover:-translate-y-0.5 text-center flex items-center justify-center gap-3">
+                            <span>Agende Sua Avaliação</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                        <a href="https://wa.me/5511999999999" target="_blank" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold px-8 py-4 rounded-xl shadow-sm transition flex items-center justify-center gap-3">
+                            <i class="fa-brands fa-whatsapp text-emerald-500 text-xl"></i>
+                            <span>Fale pelo WhatsApp</span>
+                        </a>
+                    </div>
+                    <!-- Trust Badges -->
+                    <div class="pt-8 border-t border-slate-200 grid grid-cols-3 gap-6 max-w-lg mx-auto lg:mx-0">
+                        <div>
+                            <p class="text-2xl sm:text-3xl font-extrabold text-slate-900">+15 mil</p>
+                            <p class="text-xs sm:text-sm text-slate-500 font-medium">Sorrisos Renovados</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl sm:text-3xl font-extrabold text-slate-900">12 anos</p>
+                            <p class="text-xs sm:text-sm text-slate-500 font-medium">De Tradição</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl sm:text-3xl font-extrabold text-slate-900">4.9/5.0</p>
+                            <p class="text-xs sm:text-sm text-slate-500 font-medium">Avaliação no Google</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hero Image / Card -->
+                <div class="lg:col-span-5 relative">
+                    <div class="relative mx-auto max-w-md lg:max-w-none">
+                        <!-- Main Image -->
+                        <div class="rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-brand-50">
+                            <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=800" alt="Dentista sorrindo na clínica" class="w-full h-[420px] sm:h-[480px] object-cover">
+                        </div>
+                        <!-- Floating Card 1 -->
+                        <div class="absolute -bottom-6 -left-6 sm:left-[-30px] bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-4 max-w-[260px]">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl flex-shrink-0">
+                                <i class="fa-solid fa-shield-heart"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-800">Atendimento Humanizado</h4>
+                                <p class="text-[11px] text-slate-500">Zero dor e total conforto para você.</p>
+                            </div>
+                        </div>
+                        <!-- Floating Card 2 -->
+                        <div class="absolute -top-6 -right-6 bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-3">
+                            <div class="flex -space-x-2">
+                                <img class="w-8 h-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="Cliente">
+                                <img class="w-8 h-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" alt="Cliente">
+                                <img class="w-8 h-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100" alt="Cliente">
+                            </div>
+                            <div class="text-xs font-bold text-slate-800">
+                                <span class="text-amber-500"><i class="fa-solid fa-star"></i> 4.9</span> (1.200+ avaliações)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sobre Nós -->
+    <section id="sobre" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                <!-- Images Grid -->
+                <div class="lg:col-span-6 grid grid-cols-2 gap-4">
+                    <div class="space-y-4">
+                        <img src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&q=80&w=600" alt="Clínica moderna" class="rounded-2xl shadow-md object-cover h-56 w-full">
+                        <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=600" alt="Equipamentos modernos" class="rounded-2xl shadow-md object-cover h-44 w-full">
+                    </div>
+                    <div class="space-y-4 pt-8">
+                        <img src="https://images.unsplash.com/photo-1606811841689-23dfddce6395?auto=format&fit=crop&q=80&w=600" alt="Atendimento odontológico" class="rounded-2xl shadow-md object-cover h-44 w-full">
+                        <img src="https://images.unsplash.com/photo-1629909615184-74f495363b67?auto=format&fit=crop&q=80&w=600" alt="Equipe de dentistas" class="rounded-2xl shadow-md object-cover h-56 w-full">
+                    </div>
+                </div>
+
+                <!-- Text Content -->
+                <div class="lg:col-span-6 space-y-6">
+                    <div class="inline-flex items-center gap-2 bg-brand-100 text-brand-800 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+                        <i class="fa-solid fa-heart-pulse text-brand-600"></i> Sobre a Clínica
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                        Excelência em odontologia com foco no seu bem-estar.
+                    </h2>
+                    <p class="text-slate-600 font-normal leading-relaxed">
+                        Fundada com o propósito de redefinir a experiência odontológica, a <strong>Sorriso Perfeito</strong> conta com uma estrutura ultramoderna, salas de atendimento planejadas para o seu relaxamento e profissionais altamente qualificados em constante atualização nas melhores universidades do mundo.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">Tecnologia Avançada</h4>
+                                <p class="text-xs text-slate-500">Scanner 3D e Raio-X digital.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">Equipe Especializada</h4>
+                                <p class="text-xs text-slate-500">Profissionais mestres e doutores.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">Sedação Consciente</h4>
+                                <p class="text-xs text-slate-500">Tratamentos sem dor e sem medo.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">Planos Acessíveis</h4>
+                                <p class="text-xs text-slate-500">Condições facilitadas de pagamento.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-4">
+                        <a href="#contato" class="inline-flex items-center gap-2 font-bold text-brand-600 hover:text-brand-700 transition">
+                            <span>Conheça nossa estrutura completa</span>
+                            <i class="fa-solid fa-arrow-right-long"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção de Serviços -->
+    <section id="servicos" class="py-20 bg-slate-100/70">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+                <div class="inline-flex items-center gap-2 bg-brand-100 text-brand-800 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+                    <i class="fa-solid fa-stethoscope text-brand-600"></i> Nossos Tratamentos
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                    Soluções completas para cuidar de cada detalhe do seu sorriso
+                </h2>
+                <p class="text-slate-600">
+                    Oferecemos tratamentos odontológicos integrados com foco na estética, saúde funcional e longevidade dos seus dentes.
+                </p>
+            </div>
+
+            <!-- Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Servico 1 -->
+                <div class="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition duration-300 border border-slate-100 group">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-600 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-face-smile"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Implantes Dentários</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        Recupere a função mastigatória e a estética com implantes de titânio de alta qualidade e técnica cirúrgica guiada por computador.
+                    </p>
+                    <a href="#contato" class="inline-flex items-center gap-2 text-sm font-bold text-brand-600 group-hover:text-brand-700 transition">
+                        <span>Saiba mais</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+
+                <!-- Servico 2 -->
+                <div class="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition duration-300 border border-slate-100 group">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-600 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Clareamento a Laser</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        Dentes até 8 tons mais brancos em uma única sessão, com tecnologia LED/Laser segura que não danifica o esmalte dentário.
+                    </p>
+                    <a href="#contato" class="inline-flex items-center gap-2 text-sm font-bold text-brand-600 group-hover:text-brand-700 transition">
+                        <span>Saiba mais</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+
+                <!-- Servico 3 -->
+                <div class="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition duration-300 border border-slate-100 group">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-600 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-teeth"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Ortodontia Estética</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        Alinhe seus dentes com aparelhos transparentes de safira ou alinhadores invisíveis modernos, discretos e confortáveis.
+                    </p>
+                    <a href="#contato" class="inline-flex items-center gap-2 text-sm font-bold text-brand-600 group-hover:text-brand-700 transition">
+                        <span>Saiba mais</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+
+                <!-- Servico 4 -->
+                <div class="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition duration-300 border border-slate-100 group">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-600 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-gem"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Lentes de Contato Dental</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        Facetas de porcelana ultrafinas personalizadas para corrigir formato, cor e pequenos desalinhamentos com naturalidade.
+                    </p>
+                    <a href="#contato" class="inline-flex items-center gap-2 text-sm font-bold text-brand-600 group-hover:text-brand-700 transition">
+                        <span>Saiba mais</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+
+                <!-- Servico 5 -->
+                <div class="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition duration-300 border border-slate-100 group">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-600 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-shield-virus"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Endodontia (Canal)</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        Tratamento de canal automatizado e indolor realizado com microscopia operadora de alta precisão em sessão única.
+                    </p>
+                    <a href="#contato" class="inline-flex items-center gap-2 text-sm font-bold text-brand-600 group-hover:text-brand-700 transition">
+                        <span>Saiba mais</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+
+                <!-- Servico 6 -->
+                <div class="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition duration-300 border border-slate-100 group">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-600 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-child"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Odontopediatria</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        Cuidado especializado para crianças com abordagem lúdica e preventiva para garantir que ir ao dentista seja uma alegria.
+                    </p>
+                    <a href="#contato" class="inline-flex items-center gap-2 text-sm font-bold text-brand-600 group-hover:text-brand-700 transition">
+                        <span>Saiba mais</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Depoimentos -->
+    <section id="depoimentos" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+                <div class="inline-flex items-center gap-2 bg-brand-100 text-brand-800 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+                    <i class="fa-solid fa-comments text-brand-600"></i> Depoimentos
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                    O que dizem nossos pacientes
+                </h2>
+                <p class="text-slate-600">
+                    Histórias reais de pessoas que transformaram suas vidas através do sorriso.
+                </p>
+            </div>
+
+            <!-- Depoimentos Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Testemunho 1 -->
+                <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100 flex flex-col justify-between relative shadow-sm">
+                    <div>
+                        <div class="flex items-center gap-1 text-amber-400 text-sm mb-4">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="text-slate-700 text-sm leading-relaxed italic mb-6">
+                            "Sempre tive pavor de dentista, mas a equipe da Sorriso Perfeito mudou completamente minha visão. Fiz implantes sem sentir dor alguma. Atendimento impecável!"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-4 pt-4 border-t border-slate-200">
+                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=120" alt="Mariana Silva" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">Mariana Silva</h4>
+                            <p class="text-xs text-slate-500">Paciente há 2 anos</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testemunho 2 -->
+                <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100 flex flex-col justify-between relative shadow-sm">
+                    <div>
+                        <div class="flex items-center gap-1 text-amber-400 text-sm mb-4">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="text-slate-700 text-sm leading-relaxed italic mb-6">
+                            "Fiz o clareamento a laser e lentes de contato. Meu sorriso ficou simplesmente cinematográfico! Recebo elogios todos os dias. Parabéns pelo profissionalismo."
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-4 pt-4 border-t border-slate-200">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120" alt="Carlos Eduardo" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">Carlos Eduardo</h4>
+                            <p class="text-xs text-slate-500">Empresário</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testemunho 3 -->
+                <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100 flex flex-col justify-between relative shadow-sm">
+                    <div>
+                        <div class="flex items-center gap-1 text-amber-400 text-sm mb-4">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="text-slate-700 text-sm leading-relaxed italic mb-6">
+                            "Levo meus dois filhos na odontopediatria da clínica. Eles adoram os dentistas! É um ambiente muito acolhedor e com profissionais extremamente pacientes."
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-4 pt-4 border-t border-slate-200">
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=120" alt="Juliana Mendes" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">Juliana Mendes</h4>
+                            <p class="text-xs text-slate-500">Mãe e paciente</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contato e Mapa Section -->
+    <section id="contato" class="py-20 bg-slate-900 text-white relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#0ea5e9_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                <!-- Info & Form -->
+                <div class="lg:col-span-7 space-y-8">
+                    <div class="space-y-4">
+                        <div class="inline-flex items-center gap-2 bg-brand-900/80 text-brand-400 border border-brand-800 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+                            <i class="fa-solid fa-paper-plane text-brand-400"></i> Agende Sua Visita
+                        </div>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">
+                            Pronto para transformar seu sorriso?
+                        </h2>
+                        <p class="text-slate-400 text-sm sm:text-base">
+                            Preencha o formulário abaixo ou entre em contato diretamente pelo nosso WhatsApp. Retornaremos em minutos!
+                        </p>
+                    </div>
+
+                    <!-- Formulário -->
+                    <form id="contact-form" class="bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-4" onsubmit="handleSubmit(event)">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-semibold text-slate-300">Seu Nome Completo</label>
+                                <input type="text" required placeholder="Ex: João da Silva" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-semibold text-slate-300">Telefone / WhatsApp</label>
+                                <input type="tel" required placeholder="(11) 98888-8888" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition">
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-semibold text-slate-300">Serviço de Interesse</label>
+                            <select class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 transition">
+                                <option class="bg-slate-900">Avaliação Geral / Check-up</option>
+                                <option class="bg-slate-900">Implantes Dentários</option>
+                                <option class="bg-slate-900">Clareamento a Laser</option>
+                                <option class="bg-slate-900">Ortodontia (Aparelho)</option>
+                                <option class="bg-slate-900">Lentes de Contato Dental</option>
+                                <option class="bg-slate-900">Outro Tratamento</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-semibold text-slate-300">Mensagem (Opcional)</label>
+                            <textarea rows="3" placeholder="Conte-nos brevemente sobre o que precisa..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-600/30 transition flex items-center justify-center gap-2 text-base">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Solicitar Agendamento</span>
+                        </button>
+                        
+                        <div id="form-success" class="hidden text-center text-emerald-400 font-semibold text-sm pt-2">
+                            <i class="fa-solid fa-circle-check"></i> Mensagem enviada com sucesso! Entraremos em contato em breve.
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Mapa & Dados de Contato -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-6">
+                        <h3 class="text-xl font-bold text-white">Nossa Localização</h3>
+                        <p class="text-slate-400 text-sm">
+                            Estamos localizados em ponto nobre de São Paulo, com fácil acesso por metrô e estacionamento próprio no local.
+                        </p>
+                        <!-- Mapa incorporado via iframe do Google Maps -->
+                        <div class="w-full h-64 rounded-2xl overflow-hidden border border-slate-700">
+                            <iframe 
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.1974635102555!2d-46.65588042345155!3d-23.561384878799434!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce59c8da0aa315%3A0xd59f437992cfcb67!2sAv.%20Paulista%2C%201000%20-%20Bela%20Vista%2C%20S%C3%A3o%20Paulo%20-%20SP%2C%2001310-100!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr" 
+                                width="100%" 
+                                height="100%" 
+                                style="border:0;" 
+                                allowfullscreen="" 
+                                loading="lazy" 
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+
+                        <div class="space-y-4 pt-2 border-t border-slate-800 text-sm">
+                            <div class="flex items-center gap-3 text-slate-300">
+                                <div class="w-9 h-9 rounded-xl bg-brand-900/60 text-brand-400 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </div>
+                                <span>Av. Paulista, 1000, Conj 42 - Bela Vista, São Paulo - SP</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-slate-300">
+                                <div class="w-9 h-9 rounded-xl bg-brand-900/60 text-brand-400 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-phone"></i>
+                                </div>
+                                <span>(11) 99999-9999 / (11) 3333-4444</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-slate-300">
+                                <div class="w-9 h-9 rounded-xl bg-brand-900/60 text-brand-400 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-envelope"></i>
+                                </div>
+                                <span>contato@sorrisoperfeito.com.br</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-slate-400 py-12 border-t border-slate-900 text-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 pb-12 border-b border-slate-900">
+                <div class="space-y-4 md:col-span-1">
+                    <a href="#" class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-500 flex items-center justify-center text-white shadow-md">
+                            <i class="fa-solid fa-tooth"></i>
+                        </div>
+                        <span class="text-lg font-extrabold text-white tracking-tight">Sorriso <span class="text-brand-500">Perfeito</span></span>
+                    </a>
+                    <p class="text-xs text-slate-400">
+                        Sua clínica odontológica de confiança em São Paulo. Excelência, tecnologia e humanização em cada sorriso.
+                    </p>
+                    <div class="flex items-center gap-3 pt-2">
+                        <a href="#" class="w-8 h-8 rounded-lg bg-slate-900 text-slate-300 hover:bg-brand-600 hover:text-white flex items-center justify-center transition"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-lg bg-slate-900 text-slate-300 hover:bg-brand-600 hover:text-white flex items-center justify-center transition"><i class="fa-brands fa-facebook"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-lg bg-slate-900 text-slate-300 hover:bg-brand-600 hover:text-white flex items-center justify-center transition"><i class="fa-brands fa-whatsapp"></i></a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4 text-xs uppercase tracking-wider">Links Rápidos</h4>
+                    <ul class="space-y-2.5 text-xs">
+                        <li><a href="#inicio" class="hover:text-white transition">Início</a></li>
+                        <li><a href="#sobre" class="hover:text-white transition">Sobre Nós</a></li>
+                        <li><a href="#servicos" class="hover:text-white transition">Nossos Serviços</a></li>
+                        <li><a href="#depoimentos" class="hover:text-white transition">Depoimentos</a></li>
+                        <li><a href="#contato" class="hover:text-white transition">Contato</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4 text-xs uppercase tracking-wider">Tratamentos</h4>
+                    <ul class="space-y-2.5 text-xs">
+                        <li><a href="#servicos" class="hover:text-white transition">Implantes Dentários</a></li>
+                        <li><a href="#servicos" class="hover:text-white transition">Clareamento a Laser</a></li>
+                        <li><a href="#servicos" class="hover:text-white transition">Ortodontia Estética</a></li>
+                        <li><a href="#servicos" class="hover:text-white transition">Lentes de Contato Dental</a></li>
+                        <li><a href="#servicos" class="hover:text-white transition">Odontopediatria</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4 text-xs uppercase tracking-wider">Horário de Atendimento</h4>
+                    <ul class="space-y-2.5 text-xs">
+                        <li class="flex justify-between"><span>Segunda a Sexta:</span> <span class="text-white font-medium">08:00 - 19:00</span></li>
+                        <li class="flex justify-between"><span>Sábados:</span> <span class="text-white font-medium">08:00 - 14:00</span></li>
+                        <li class="flex justify-between"><span>Domingos:</span> <span class="text-rose-400 font-medium">Fechado</span></li>
+                    </ul>
+                    <div class="mt-4 pt-4 border-t border-slate-900">
+                        <p class="text-[11px] text-slate-500">Resp. Técnico: Dr. Roberto Alves - CRO-SP 123456</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+                <p>&copy; 2024 Clínica Odontológica Sorriso Perfeito. Todos os direitos reservados.</p>
+                <div class="flex gap-6">
+                    <a href="#" class="hover:text-slate-400 transition">Política de Privacidade</a>
+                    <a href="#" class="hover:text-slate-400 transition">Termos de Uso</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript para interatividade (Menu Mobile e Form) -->
+    <script>
+        // Toggle mobile menu
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Fechar menu mobile ao clicar em um link
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+
+        // Simulação de envio do formulário
+        function handleSubmit(event) {
+            event.preventDefault();
+            const formSuccess = document.getElementById('form-success');
+            formSuccess.classList.remove('hidden');
+            document.getElementById('contact-form').reset();
+            setTimeout(() => {
+                formSuccess.classList.add('hidden');
+            }, 6000);
+        }
+    </script>
+</body>
+</html>

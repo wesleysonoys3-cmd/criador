@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: tatie-ateliê-flutter
+    env: static
+    buildCommand: flutter build web --release
+    staticPublishPath: build/web
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache

@@ -1,0 +1,21 @@
+# ===============================================
+# TiAgente Security — APENAS o que pode acidentalmente ser comitado
+# ===============================================
+
+# Segredos e estados
+.env
+.env.bak.*
+*.bak.*
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Dados runtime (auditorias, backups)
+audits/*.json
+backups/*.tar.gz
+backups/*.zip
+.tmp/
+*.swp
+.DS_Store
+server.log

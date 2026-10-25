@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "rc24.1",
+  "id": "agent_5cda4c54a47c",
+  "name": "agente",
+  "slug": "agente",
+  "version": "0.1.0",
+  "company": {
+    "name": "empresa",
+    "slug": "empresa",
+    "segmento": "",
+    "size": "media",
+    "notes": ""
+  },
+  "persona": "",
+  "problemStatement": "Em construção.",
+  "assumptions": [],
+  "requirements": {
+    "functional": [],
+    "nonFunctional": [],
+    "businessRules": []
+  },
+  "capabilities": [],
+  "tools_declared": [],
+  "securityRules": [
+    "Nunca expor chaves de API (API_KEY, _PASS, TOKEN) no frontend, localStorage ou logs.",
+    "Nunca servir dotfiles ou .env via static; Paths de arquivos devem validar base dir (path traversal)."
+  ],
+  "deliverable": {
+    "kind": "node_express_app"
+  },
+  "createdAt": 1789844047722,
+  "updatedAt": 1789844047722,
+  "author": "orchestrator_rc24"
+}

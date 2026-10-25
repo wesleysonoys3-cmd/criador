@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TigerBet Brasil - Fortune Tiger Oficial</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        tiger: {
+                            bg: '#080c14',
+                            card: '#131b2e',
+                            gold: '#f59e0b',
+                            red: '#dc2626'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-[#080c14] text-slate-100 font-sans min-h-screen flex flex-col selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- Topbar Promocional Estilo Tigrinho -->
+    <div class="bg-gradient-to-r from-red-700 via-amber-600 to-red-700 text-white font-black text-xs py-2 px-4 text-center tracking-wider uppercase shadow-md flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-fire text-yellow-300 animate-bounce"></i>
+        <span>PROBABILIDADE DE VITÓRIA CONFIGURADA PARA 5% (0.05) - ESTILO CASSINO REAL!</span>
+        <i class="fa-solid fa-fire text-yellow-300 animate-bounce"></i>
+    </div>
+
+    <!-- Navbar Principal -->
+    <header class="bg-[#111827]/95 backdrop-blur-md border-b border-amber-500/30 sticky top-0 z-50 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('lobby')">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-red-600 flex items-center justify-center shadow-lg shadow-amber-500/40 border-2 border-yellow-300">
+                    <i class="fa-solid fa-otter text-slate-950 text-2xl"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-wider bg-gradient-to-r from-yellow-400 via-amber-300 to-red-500 bg-clip-text text-transparent">FORTUNE TIGER</span>
+                    <span class="block text-[10px] text-amber-400 font-bold tracking-widest uppercase">BRASIL VIP</span>
+                </div>
+            </div>
+
+            <!-- Saldo e Depósito Pix -->
+            <div class="flex items-center space-x-4">
+                <div class="bg-[#192237] border border-amber-500/40 rounded-2xl px-4 py-2 flex items-center space-x-3 shadow-inner">
+                    <div class="text-right">
+                        <div class="text-[10px] uppercase tracking-wider text-amber-300/80 font-bold">Saldo Disponível</div>
+                        <div class="text-lg font-black text-emerald-400" id="user-balance">R$ 1.000,00</div>
+                    </div>
+                    <button onclick="openDepositModal()" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 text-slate-950 font-black px-4 py-2.5 rounded-xl text-sm shadow-lg shadow-emerald-500/30 transition transform active:scale-95 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-wallet"></i>
+                        <span>DEPÓSITO PIX</span>
+                    </button>
+                </div>
+
+                <button onclick="switchTab('history')" class="bg-[#192237] hover:bg-slate-800 text-slate-200 p-3 rounded-xl border border-slate-700 transition" title="Histórico">
+                    <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <!-- LOBBY TAB -->
+        <div id="tab-lobby" class="space-y-8">
+            <!-- Banner Principal Estilo Jogo do Tigrinho -->
+            <div class="relative rounded-3xl overflow-hidden bg-gradient-to-r from-red-950 via-amber-950 to-slate-900 border-2 border-amber-500 p-8 md:p-12 shadow-2xl">
+                <div class="relative z-10 max-w-xl space-y-4">
+                    <span class="inline-block bg-yellow-400 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-full uppercase tracking-wider shadow-md">🔥 5% DE CHANCE DE VITÓRIA (0.05)</span>
+                    <h1 class="text-3xl md:text-5xl font-black tracking-tight text-yellow-300 drop-shadow-md">Fortune Tiger: O Slot Oficial</h1>
+                    <p class="text-slate-200 text-sm md:text-base font-medium">Gire os tambores dourados. Probabilidade de 0.05 em cada rodada!</p>
+                    <div class="pt-2 flex flex-wrap gap-4">
+                        <button onclick="switchTab('slot')" class="bg-gradient-to-r from-yellow-400 via-amber-500 to-red-600 hover:from-yellow-300 text-slate-950 font-black px-8 py-4 rounded-2xl shadow-xl shadow-amber-500/30 transition transform active:scale-95 flex items-center space-x-2 text-lg border border-yellow-300">
+                            <i class="fa-solid fa-play text-xl"></i>
+                            <span>JOGAR TIGRINHO AGORA</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="absolute right-4 bottom-[-1rem] opacity-50 md:opacity-80 pointer-events-none text-9xl text-amber-400">
+                    <i class="fa-solid fa-otter"></i>
+                </div>
+            </div>
+
+            <!-- Grid de Jogos -->
+            <div>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-black flex items-center space-x-2 text-amber-400">
+                        <i class="fa-solid fa-crown"></i>
+                        <span>Jogos em Destaque</span>
+                    </h2>
+                    <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">4 Jogos Disponíveis</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Jogo 1: Tigrinho -->
+                    <div onclick="switchTab('slot')" class="group bg-[#131b2e] border-2 border-amber-500 hover:border-yellow-300 rounded-3xl overflow-hidden shadow-2xl transition transform hover:-translate-y-1.5 cursor-pointer flex flex-col">
+                        <div class="h-48 bg-gradient-to-br from-amber-600 via-red-600 to-yellow-700 relative flex items-center justify-center overflow-hidden">
+                            <i class="fa-solid fa-otter text-7xl text-yellow-200 group-hover:scale-110 transition duration-300"></i>
+                            <span class="absolute top-3 left-3 bg-red-600 text-white font-black text-[10px] px-2.5 py-1 rounded-lg uppercase shadow">WinRate 5%</span>
+                        </div>
+                        <div class="p-5 flex flex-col flex-grow justify-between">
+                            <div>
+                                <h3 class="font-black text-lg text-yellow-300">Fortune Tiger</h3>
+                                <p class="text-xs text-slate-300 mt-1">O caça-níquel do tigre com 5% de chance de prêmio.</p>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-slate-800 flex items-center justify-between">
+                                <span class="text-xs font-bold text-emerald-400">Prêmio 100x</span>
+                                <span class="bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow">JOGAR</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jogo 2: Roleta -->
+                    <div onclick="switchTab('roulette')" class="group bg-[#131b2e] border border-slate-800 hover:border-amber-500/50 rounded-3xl overflow-hidden shadow-2xl transition transform hover:-translate-y-1.5 cursor-pointer flex flex-col">
+                        <div class="h-48 bg-gradient-to-br from-red-800 to-rose-950 relative flex items-center justify-center overflow-hidden">
+                            <i class="fa-solid fa-circle-notch text-7xl text-rose-300 group-hover:rotate-180 transition duration-500"></i>
+                            <span class="absolute top-3 left-3 bg-blue-600 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg uppercase">Clássico</span>
+                        </div>
+                        <div class="p-5 flex flex-col flex-grow justify-between">
+                            <div>
+                                <h3 class="font-black text-lg text-slate-100">Roleta Europeia</h3>
+                                <p class="text-xs text-slate-300 mt-1">Aposte em vermelho, preto ou verde.</p>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-slate-800 flex items-center justify-between">
+                                <span class="text-xs font-bold text-emerald-400">Até 36x</span>
+                                <span class="bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow">JOGAR</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jogo 3: Aviator -->
+                    <div onclick="switchTab('crash')" class="group bg-[#131b2e] border border-slate-800 hover:border-amber-500/50 rounded-3xl overflow-hidden shadow-2xl transition transform hover:-translate-y-1.5 cursor-pointer flex flex-col">
+                        <div class="h-48 bg-gradient-to-br from-sky-800 to-blue-950 relative flex items-center justify-center overflow-hidden">
+                            <i class="fa-solid fa-plane-departure text-7xl text-sky-200 group-hover:translate-x-2 group-hover:-translate-y-2 transition duration-300"></i>
+                            <span class="absolute top-3 left-3 bg-purple-600 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg uppercase">Em alta</span>
+                        </div>
+                        <div class="p-5 flex flex-col flex-grow justify-between">
+                            <div>
+                                <h3 class="font-black text-lg text-slate-100">Aviator Crash</h3>
+                                <p class="text-xs text-slate-300 mt-1">Resgate antes do avião explodir.</p>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-slate-800 flex items-center justify-between">
+                                <span class="text-xs font-bold text-emerald-400">Ilimitado</span>
+                                <span class="bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow">JOGAR</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jogo 4: Coin Flip -->
+                    <div onclick="switchTab('coinflip')" class="group bg-[#131b2e] border border-slate-800 hover:border-amber-500/50 rounded-3xl overflow-hidden shadow-2xl transition transform hover:-translate-y-1.5 cursor-pointer flex flex-col">
+                        <div class="h-48 bg-gradient-to-br from-emerald-800 to-teal-950 relative flex items-center justify-center overflow-hidden">
+                            <i class="fa-solid fa-coins text-7xl text-emerald-300 group-hover:scale-110 transition duration-300"></i>
+                            <span class="absolute top-3 left-3 bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg uppercase">Rápido</span>
+                        </div>
+                        <div class="p-5 flex flex-col flex-grow justify-between">
+                            <div>
+                                <h3 class="font-black text-lg text-slate-100">Cara ou Coroa</h3>
+                                <p class="text-xs text-slate-300 mt-1">Dobre seu dinheiro em segundos.</p>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-slate-800 flex items-center justify-between">
+                                <span class="text-xs font-bold text-emerald-400">2x Fixo</span>
+                                <span class="bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow">JOGAR</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLOT MACHINE TAB (TIGRINHO COM 0.05 DE PROBABILIDADE EXATA) -->
+        <div id="tab-slot" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <button onclick="switchTab('lobby')" class="text-slate-400 hover:text-slate-100 flex items-center space-x-2 text-sm font-semibold transition">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Voltar ao Lobby</span>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <span class="bg-red-600 text-white font-black text-xs px-3 py-1 rounded-full uppercase shadow border border-yellow-300">🐯 TIGRINHO (WINRATE 5%)</span>
+                </div>
+            </div>
+
+            <div class="max-w-xl mx-auto bg-gradient-to-b from-[#192237] via-[#101726] to-[#080c14] border-4 border-amber-400 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(245,158,11,0.3)] space-y-6 relative overflow-hidden">
+                <div class="absolute -top-12 -right-12 w-40 h-40 bg-amber-500/30 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-red-600/20 rounded-full blur-3xl"></div>
+
+                <div class="text-center space-y-1 relative z-10">
+                    <div class="inline-block bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 text-slate-950 font-black text-xs px-4 py-1 rounded-full uppercase shadow">CHANCE DE VITÓRIA: 5% (0.05)</div>
+                    <h2 class="text-3xl font-black text-yellow-400 tracking-wider pt-1 drop-shadow">FORTUNE TIGER</h2>
+                </div>
+
+                <!-- Visor dos Tambores -->
+                <div class="bg-slate-950 border-4 border-amber-400 rounded-2xl p-4 sm:p-6 shadow-2xl space-y-3 relative z-10">
+                    <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-24 bg-amber-500/20 border-y-2 border-yellow-400 pointer-events-none z-10 flex items-center justify-between px-3">
+                        <i class="fa-solid fa-chevron-right text-yellow-300 text-xl animate-pulse"></i>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-yellow-300 bg-red-700 px-3 py-0.5 rounded-full shadow">LINHA DE PAGAMENTO</span>
+                        <i class="fa-solid fa-chevron-left text-yellow-300 text-xl animate-pulse"></i>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div id="slot-0" class="h-20 sm:h-24 bg-slate-900 border-2 border-amber-500/50 rounded-xl flex items-center justify-center text-4xl sm:text-6xl shadow-inner transition-transform">🍊</div>
+                        <div id="slot-1" class="h-20 sm:h-24 bg-slate-900 border-2 border-amber-500/50 rounded-xl flex items-center justify-center text-4xl sm:text-6xl shadow-inner transition-transform">🧧</div>
+                        <div id="slot-2" class="h-20 sm:h-24 bg-slate-900 border-2 border-amber-500/50 rounded-xl flex items-center justify-center text-4xl sm:text-6xl shadow-inner transition-transform">🪙</div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 border-t-2 border-dashed border-amber-500/60 pt-3">
+                        <div id="slot-3" class="h-20 sm:h-24 bg-slate-900 border-2 border-yellow-400 rounded-xl flex items-center justify-center text-4xl sm:text-6xl shadow-inner bg-amber-500/20 transition-transform">🐯</div>
+                        <div id="slot-4" class="h-20 sm:h-24 bg-slate-900 border-2 border-yellow-400 rounded-xl flex items-center justify-center text-4xl sm:text-6xl shadow-inner bg-amber-500/20 transition-transform">🐯</div>
+                        <div id="slot-5" class="h-20 sm:h-24 bg-slate-900 border-2 border-yellow-400 rounded-xl flex items-center justify-center text-4xl sm:text-6xl shadow-inner bg-amber-500/20 transition-transform">🐯</div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 border-t-2 border-dashed border-amber-500/60 pt-3">
+                        <div id="slot-6" class="h-20 sm:h-24 bg-slate-900 border-2 border-amber-500/50 rounded-xl flex items-center justify-center text-4xl sm:text-6xl shadow-inner transition-transform">💰</div>
+                        <div id="slot-7" class="h-20 sm:h-24 bg-slate-900 border-2 border-amber-500/50 rounded-xl flex items-center justify-center text-4xl sm:text-6xl shadow-inner transition-transform">💎</div>
+                        <div id="slot-8" class="h-20 sm:h-24 bg-slate-900 border-2 border-amber-500/50 rounded-xl flex items-center justify-center text-4xl sm:text-6xl shadow-inner transition-transform">🍊</div>
+                    </div>
+                </div>
+
+                <!-- Mensagem de Resultado -->
+                <div id="slot-message" class="text-center font-bold text-sm h-12 flex items-center justify-center text-amber-200 bg-slate-950/90 rounded-2xl border-2 border-amber-500/40 px-4 relative z-10 shadow-inner">
+                    Pressione o botão para girar com 5% de chance de vitória!
+                </div>
+
+                <!-- Controles de Aposta -->
+                <div class="space-y-4 relative z-10">
+                    <div class="flex justify-between items-center bg-slate-950 p-4 rounded-2xl border-2 border-amber-500/40">
+                        <span class="text-xs uppercase text-amber-300 font-black">Aposta por Giro</span>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="adjustSlotBet(-5)" class="bg-slate-800 hover:bg-slate-700 w-9 h-9 rounded-xl font-bold text-slate-200 text-lg">-</button>
+                            <span id="slot-bet-val" class="font-black text-xl text-yellow-400 w-28 text-center">R$ 10,00</span>
+                            <button onclick="adjustSlotBet(5)" class="bg-slate-800 hover:bg-slate-700 w-9 h-9 rounded-xl font-bold text-slate-200 text-lg">+</button>
+                        </div>
+                    </div>
+
+                    <button id="spin-btn" onclick="playSlot()" class="w-full bg-gradient-to-r from-yellow-400 via-amber-500 to-red-600 hover:from-yellow-300 text-slate-950 font-black py-5 rounded-2xl text-xl shadow-[0_0_30px_rgba(245,158,11,0.5)] transition transform active:scale-95 flex items-center justify-center space-x-3 border-2 border-yellow-200">
+                        <i class="fa-solid fa-otter text-2xl"></i>
+                        <span>GIRAR TIGRINHO (5% WIN)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROULETTE TAB -->
+        <div id="tab-roulette" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <button onclick="switchTab('lobby')" class="text-slate-400 hover:text-slate-100 flex items-center space-x-2 text-sm font-semibold transition">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Voltar ao Lobby</span>
+                </button>
+                <h2 class="text-xl font-black text-rose-400">Roleta Europeia</h2>
+            </div>
+
+            <div class="max-w-2xl mx-auto bg-[#131b2e] border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+                <div class="text-center space-y-2">
+                    <div id="roulette-wheel-display" class="w-32 h-32 mx-auto rounded-full bg-gradient-to-tr from-red-900 via-slate-900 to-slate-950 border-4 border-yellow-500/60 flex items-center justify-center text-4xl font-black shadow-2xl animate-pulse">
+                        <span id="roulette-result-num">?</span>
+                    </div>
+                    <div id="roulette-message" class="text-sm font-bold text-slate-300 pt-2">Probabilidade de 5% (0.05) de vitória!</div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="selectRouletteColor('red')" id="btn-color-red" class="bg-red-700 hover:bg-red-600 border-2 border-red-500 py-4 rounded-2xl font-black text-white text-center transition shadow-lg">
+                        VERMELHO (2x)
+                    </button>
+                    <button onclick="selectRouletteColor('green')" id="btn-color-green" class="bg-emerald-700 hover:bg-emerald-600 border-2 border-emerald-500 py-4 rounded-2xl font-black text-white text-center transition shadow-lg">
+                        VERDE 0 (14x)
+                    </button>
+                    <button onclick="selectRouletteColor('black')" id="btn-color-black" class="bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 py-4 rounded-2xl font-black text-white text-center transition shadow-lg">
+                        PRETO (2x)
+                    </button>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-slate-800">
+                    <div class="flex justify-between items-center bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-xs uppercase text-slate-400 font-bold">Valor da Aposta</span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="adjustRouletteBet(-10)" class="bg-slate-800 hover:bg-slate-700 w-9 h-9 rounded-xl font-bold text-slate-200">-</button>
+                            <span id="roulette-bet-val" class="font-black text-lg text-rose-400 w-24 text-center">R$ 20,00</span>
+                            <button onclick="adjustRouletteBet(10)" class="bg-slate-800 hover:bg-slate-700 w-9 h-9 rounded-xl font-bold text-slate-200">+</button>
+                        </div>
+                    </div>
+
+                    <button id="roulette-spin-btn" onclick="playRoulette()" class="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 text-white font-black py-4 rounded-2xl text-lg shadow-xl shadow-rose-600/25 transition transform active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-circle-notch"></i>
+                        <span>GIRAR ROLETA</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CRASH AVIATOR TAB -->
+        <div id="tab-crash" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <button onclick="switchTab('lobby')" class="text-slate-400 hover:text-slate-100 flex items-center space-x-2 text-sm font-semibold transition">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Voltar ao Lobby</span>
+                </button>
+                <h2 class="text-xl font-black text-sky-400">Aviator Crash</h2>
+            </div>
+
+            <div class="max-w-2xl mx-auto bg-[#131b2e] border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+                <div class="bg-slate-950 border border-slate-800 h-56 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden shadow-inner">
+                    <div id="crash-multiplier" class="text-5xl sm:text-7xl font-black text-sky-400 tracking-wider">1.00x</div>
+                    <div id="crash-status-text" class="text-xs uppercase tracking-widest text-slate-400 font-bold mt-2">Pronto para decolar (WinRate 5%)</div>
+                    <div id="crash-plane-icon" class="absolute bottom-4 left-4 text-3xl text-sky-300 transition-all duration-300">
+                        <i class="fa-solid fa-plane"></i>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-xs uppercase text-slate-400 font-bold">Aposta Crash</span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="adjustCrashBet(-10)" class="bg-slate-800 hover:bg-slate-700 w-9 h-9 rounded-xl font-bold text-slate-200">-</button>
+                            <span id="crash-bet-val" class="font-black text-lg text-sky-400 w-24 text-center">R$ 20,00</span>
+                            <button onclick="adjustCrashBet(10)" class="bg-slate-800 hover:bg-slate-700 w-9 h-9 rounded-xl font-bold text-slate-200">+</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="crash-start-btn" onclick="startCrashGame()" class="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 text-slate-950 font-black py-4 rounded-2xl text-base shadow-xl shadow-sky-500/25 transition transform active:scale-95">
+                            INICIAR VOO
+                        </button>
+                        <button id="crash-cashout-btn" onclick="cashoutCrash()" disabled class="bg-slate-800 text-slate-500 font-black py-4 rounded-2xl text-base transition">
+                            RETIRAR (CASHOUT)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COIN FLIP TAB -->
+        <div id="tab-coinflip" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <button onclick="switchTab('lobby')" class="text-slate-400 hover:text-slate-100 flex items-center space-x-2 text-sm font-semibold transition">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Voltar ao Lobby</span>
+                </button>
+                <h2 class="text-xl font-black text-emerald-400">Cara ou Coroa (WinRate 5%)</h2>
+            </div>
+
+            <div class="max-w-xl mx-auto bg-[#131b2e] border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+                <div class="text-center space-y-4">
+                    <div id="coin-display" class="w-28 h-28 mx-auto rounded-full bg-gradient-to-tr from-yellow-600 to-amber-400 border-4 border-yellow-300 flex items-center justify-center text-4xl font-black text-slate-950 shadow-2xl">
+                        👑
+                    </div>
+                    <div id="coin-message" class="text-sm font-bold text-slate-300">Probabilidade de 5% (0.05) de vitória!</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="selectCoinChoice('cara')" id="btn-choice-cara" class="bg-slate-800 hover:bg-slate-700 border-2 border-yellow-500/50 py-3.5 rounded-2xl font-black text-yellow-400 text-center transition">
+                        CARA (👑)
+                    </button>
+                    <button onclick="selectCoinChoice('coroa')" id="btn-choice-coroa" class="bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 py-3.5 rounded-2xl font-black text-slate-300 text-center transition">
+                        COROA (🦅)
+                    </button>
+                </div>
+
+                <div class="space-y-4 pt-2">
+                    <div class="flex justify-between items-center bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-xs uppercase text-slate-400 font-bold">Valor da Aposta</span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="adjustCoinBet(-10)" class="bg-slate-800 hover:bg-slate-700 w-9 h-9 rounded-xl font-bold text-slate-200">-</button>
+                            <span id="coin-bet-val" class="font-black text-lg text-emerald-400 w-24 text-center">R$ 20,00</span>
+                            <button onclick="adjustCoinBet(10)" class="bg-slate-800 hover:bg-slate-700 w-9 h-9 rounded-xl font-bold text-slate-200">+</button>
+                        </div>
+                    </div>
+
+                    <button id="coin-play-btn" onclick="playCoinFlip()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-slate-950 font-black py-4 rounded-2xl text-lg shadow-xl shadow-emerald-500/25 transition transform active:scale-95">
+                        JOGAR MOEDA
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORY TAB -->
+        <div id="tab-history" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <button onclick="switchTab('lobby')" class="text-slate-400 hover:text-slate-100 flex items-center space-x-2 text-sm font-semibold transition">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Voltar ao Lobby</span>
+                </button>
+                <h2 class="text-xl font-black text-yellow-400">Histórico de Apostas</h2>
+            </div>
+
+            <div class="bg-[#131b2e] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-950 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
+                                <th class="p-4">Jogo</th>
+                                <th class="p-4">Aposta</th>
+                                <th class="p-4">Resultado</th>
+                                <th class="p-4">Lucro / Prejuízo</th>
+                                <th class="p-4">Horário</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body" class="divide-y divide-slate-800 text-sm">
+                            <tr>
+                                <td colspan="5" class="p-6 text-center text-slate-500">Nenhuma aposta realizada ainda.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal de Depósito -->
+    <div id="deposit-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-[#131b2e] border-2 border-amber-500 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-amber-400 flex items-center space-x-2">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span>Depósito Instantâneo Pix</span>
+                </h3>
+                <button onclick="closeDepositModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+            </div>
+            <p class="text-xs text-slate-300">Escolha um valor para depositar e receber saldo imediato no Tigrinho:</p>
+            <div class="grid grid-cols-3 gap-3">
+                <button onclick="addDeposit(50)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-emerald-500 p-3 rounded-2xl font-bold text-slate-200 transition">R$ 50</button>
+                <button onclick="addDeposit(100)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-emerald-500 p-3 rounded-2xl font-bold text-slate-200 transition">R$ 100</button>
+                <button onclick="addDeposit(500)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-emerald-500 p-3 rounded-2xl font-bold text-slate-200 transition">R$ 500</button>
+            </div>
+            <div class="pt-4 border-t border-slate-800 flex justify-end">
+                <button onclick="closeDepositModal()" class="bg-slate-800 text-slate-300 font-bold px-6 py-3 rounded-2xl text-sm">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-[#080c14] border-t border-slate-800 py-6 text-center text-xs text-slate-500 space-y-1">
+        <p>&copy; 2025 Fortune Tiger Brasil. Probabilidade de 0.05 (5%). Jogue com responsabilidade (+18).</p>
+        <p>Plataforma simulada para entretenimento e lazer.</p>
+    </footer>
+
+    <!-- JavaScript Game Logic (WinRate 0.05 Exato) -->
+    <script>
+        let balance = 1000.00;
+        let history = [];
+
+        function updateBalanceUI() {
+            const el = document.getElementById('user-balance');
+            el.innerText = `R$ ${balance.toFixed(2).replace('.', ',')}`;
+            if (balance <= 0) {
+                el.classList.remove('text-emerald-400');
+                el.classList.add('text-red-500');
+            } else {
+                el.classList.remove('text-red-500');
+                el.classList.add('text-emerald-400');
+            }
+        }
+
+        function switchTab(tabName) {
+            const tabs = ['lobby', 'slot', 'roulette', 'crash', 'coinflip', 'history'];
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+            });
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if(tabName === 'history') {
+                renderHistory();
+            }
+        }
+
+        function openDepositModal() {
+            document.getElementById('deposit-modal').classList.remove('hidden');
+        }
+
+        function closeDepositModal() {
+            document.getElementById('deposit-modal').classList.add('hidden');
+        }
+
+        function addDeposit(amount) {
+            balance += amount;
+            updateBalanceUI();
+            addHistoryEntry('Depósito Pix', amount, amount, true);
+            closeDepositModal();
+            alert(`Depósito Pix de R$ ${amount.toFixed(2)} creditado com sucesso!`);
+        }
+
+        function addHistoryEntry(game, bet, profit, isWin) {
+            history.unshift({
+                game,
+                bet,
+                profit,
+                isWin,
+                time: new Date().toLocaleTimeString()
+            });
+        }
+
+        function renderHistory() {
+            const tbody = document.getElementById('history-table-body');
+            if (history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Nenhuma aposta realizada ainda.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = history.map(h => `
+                <tr class="hover:bg-slate-900/50">
+                    <td class="p-4 font-semibold text-slate-200">${h.game}</td>
+                    <td class="p-4 text-slate-300">R$ ${h.bet.toFixed(2).replace('.', ',')}</td>
+                    <td class="p-4">
+                        <span class="px-2.5 py-1 rounded-md text-xs font-bold ${h.isWin ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}">
+                            ${h.isWin ? 'Vitória' : 'Derrota'}
+                        </span>
+                    </td>
+                    <td class="p-4 font-bold ${h.isWin ? 'text-emerald-400' : 'text-red-400'}">
+                        ${h.isWin ? '+' : ''}R$ ${h.profit.toFixed(2).replace('.', ',')}
+                    </td>
+                    <td class="p-4 text-slate-400 text-xs">${h.time}</td>
+                </tr>
+            `).join('');
+        }
+
+        // --- SLOT MACHINE LOGIC (TIGRINHO COM WINRATE EXATO DE 0.05) ---
+        let slotBet = 10.00;
+        function adjustSlotBet(delta) {
+            slotBet = Math.max(5, Math.min(balance, slotBet + delta));
+            document.getElementById('slot-bet-val').innerText = `R$ ${slotBet.toFixed(2).replace('.', ',')}`;
+            document.getElementById('spin-btn').innerHTML = `<i class="fa-solid fa-otter text-2xl"></i><span>GIRAR TIGRINHO (R$ ${slotBet.toFixed(2).replace('.', ',')})</span>`;
+        }
+
+        const tigrinhoSymbols = ['🐯', '🧧', '🪙', '💰', '💎', '🍊'];
+        function playSlot() {
+            if (balance < slotBet) {
+                alert('Saldo insuficiente! Faça um depósito.');
+                openDepositModal();
+                return;
+            }
+
+            balance -= slotBet;
+            updateBalanceUI();
+
+            const slots = [];
+            for (let i = 0; i < 9; i++) {
+                slots[i] = document.getElementById(`slot-${i}`);
+            }
+            const msg = document.getElementById('slot-message');
+            msg.innerText = '🐯 GIRANDO OS TAMBORES (Probabilidade 5%)...';
+            document.getElementById('spin-btn').disabled = true;
+
+            let spinTimer = setInterval(() => {
+                for (let i = 0; i < 9; i++) {
+                    const randomSym = tigrinhoSymbols[Math.floor(Math.random() * tigrinhoSymbols.length)];
+                    slots[i].innerText = randomSym;
+                    slots[i].style.transform = `translateY(${Math.random() * 10 - 5}px)`;
+                }
+            }, 60);
+
+            setTimeout(() => {
+                clearInterval(spinTimer);
+                for (let i = 0; i < 9; i++) {
+                    slots[i].style.transform = 'translateY(0px)';
+                }
+
+                // Probabilidade exata de 0.05 (5% de chance de vitória)
+                const isWin = Math.random() < 0.05;
+                const boardSymbols = [];
+
+                if (isWin) {
+                    const winSym = Math.random() < 0.5 ? '🐯' : tigrinhoSymbols[Math.floor(Math.random() * tigrinhoSymbols.length)];
+                    for (let i = 0; i < 9; i++) {
+                        if (i >= 3 && i <= 5) {
+                            boardSymbols[i] = winSym;
+                        } else {
+                            boardSymbols[i] = tigrinhoSymbols[Math.floor(Math.random() * tigrinhoSymbols.length)];
+                        }
+                        slots[i].innerText = boardSymbols[i];
+                    }
+
+                    const winAmt = slotBet * (winSym === '🐯' ? 100 : 30);
+                    balance += winAmt;
+                    msg.innerHTML = `<span class="text-yellow-400 font-black text-base">🎉 JACKPOT (5% chance)! Ganhou R$ ${winAmt.toFixed(2)}!</span>`;
+                    addHistoryEntry('Fortune Tiger (Tigrinho)', slotBet, winAmt - slotBet, true);
+                } else {
+                    for (let i = 0; i < 9; i++) {
+                        boardSymbols[i] = tigrinhoSymbols[Math.floor(Math.random() * tigrinhoSymbols.length)];
+                        slots[i].innerText = boardSymbols[i];
+                    }
+                    boardSymbols[3] = '🍊';
+                    boardSymbols[4] = '🧧';
+                    boardSymbols[5] = '💎';
+                    slots[3].innerText = '🍊';
+                    slots[4].innerText = '🧧';
+                    slots[5].innerText = '💎';
+
+                    msg.innerHTML = `<span class="text-red-400 font-bold">O Tigrinho guardou as moedas (95% chance de derrota). Tente de novo!</span>`;
+                    addHistoryEntry('Fortune Tiger (Tigrinho)', slotBet, -slotBet, false);
+                }
+                updateBalanceUI();
+                document.getElementById('spin-btn').disabled = false;
+            }, 1400);
+        }
+
+        // --- ROULETTE LOGIC (0.05 CHANCE) ---
+        let rouletteBet = 20.00;
+        let selectedColor = 'red';
+
+        function adjustRouletteBet(delta) {
+            rouletteBet = Math.max(10, Math.min(balance, rouletteBet + delta));
+            document.getElementById('roulette-bet-val').innerText = `R$ ${rouletteBet.toFixed(2).replace('.', ',')}`;
+        }
+
+        function selectRouletteColor(color) {
+            selectedColor = color;
+            document.getElementById('btn-color-red').classList.remove('border-yellow-400', 'scale-105');
+            document.getElementById('btn-color-green').classList.remove('border-yellow-400', 'scale-105');
+            document.getElementById('btn-color-black').classList.remove('border-yellow-400', 'scale-105');
+
+            document.getElementById(`btn-color-${color}`).classList.add('border-yellow-400', 'scale-105');
+        }
+
+        function playRoulette() {
+            if (balance < rouletteBet) {
+                alert('Saldo insuficiente!');
+                openDepositModal();
+                return;
+            }
+
+            balance -= rouletteBet;
+            updateBalanceUI();
+
+            const numDisplay = document.getElementById('roulette-result-num');
+            const msg = document.getElementById('roulette-message');
+            const wheel = document.getElementById('roulette-wheel-display');
+
+            msg.innerText = 'Girando a roleta (WinRate 5%)...';
+            wheel.classList.add('animate-spin');
+
+            setTimeout(() => {
+                wheel.classList.remove('animate-spin');
+                const isWin = Math.random() < 0.05;
+
+                if (isWin) {
+                    const roll = selectedColor === 'red' ? 1 : 2;
+                    numDisplay.innerText = roll;
+                    const winAmt = rouletteBet * 2;
+                    balance += winAmt;
+                    msg.innerHTML = `<span class="text-emerald-400 font-extrabold">Vitória rara (5%)! Ganhou R$ ${winAmt.toFixed(2)}!</span>`;
+                    addHistoryEntry('Roleta Europeia', rouletteBet, winAmt - rouletteBet, true);
+                } else {
+                    const roll = selectedColor === 'red' ? 2 : 1;
+                    numDisplay.innerText = roll;
+                    msg.innerHTML = `<span class="text-red-400 font-bold">Derrota. Tente de novo!</span>`;
+                    addHistoryEntry('Roleta Europeia', rouletteBet, -rouletteBet, false);
+                }
+                updateBalanceUI();
+            }, 1200);
+        }
+
+        // --- CRASH AVIATOR LOGIC (0.05 CHANCE) ---
+        let crashBet = 20.00;
+        let crashInterval = null;
+        let currentMultiplier = 1.00;
+        let crashTarget = 1.00;
+        let isFlying = false;
+
+        function adjustCrashBet(delta) {
+            if (isFlying) return;
+            crashBet = Math.max(10, Math.min(balance, crashBet + delta));
+            document.getElementById('crash-bet-val').innerText = `R$ ${crashBet.toFixed(2).replace('.', ',')}`;
+        }
+
+        function startCrashGame() {
+            if (balance < crashBet) {
+                alert('Saldo insuficiente!');
+                openDepositModal();
+                return;
+            }
+
+            balance -= crashBet;
+            updateBalanceUI();
+
+            isFlying = true;
+            currentMultiplier = 1.00;
+            const isLucky = Math.random() < 0.05;
+            crashTarget = isLucky ? parseFloat((3.0 + Math.random() * 5.0).toFixed(2)) : parseFloat((1.01 + Math.random() * 0.15).toFixed(2));
+
+            document.getElementById('crash-start-btn').disabled = true;
+            document.getElementById('crash-start-btn').classList.add('opacity-50');
+            document.getElementById('crash-cashout-btn').disabled = false;
+            document.getElementById('crash-cashout-btn').classList.remove('bg-slate-800', 'text-slate-500');
+            document.getElementById('crash-cashout-btn').classList.add('bg-gradient-to-r', 'from-emerald-500', 'to-green-600', 'text-slate-950', 'shadow-lg', 'shadow-emerald-500/25');
+            document.getElementById('crash-status-text').innerText = 'Em voo (WinRate 5%)... Resgate rápido!';
+
+            crashInterval = setInterval(() => {
+                currentMultiplier += 0.05;
+                document.getElementById('crash-multiplier').innerText = `${currentMultiplier.toFixed(2)}x`;
+
+                if (currentMultiplier >= crashTarget) {
+                    clearInterval(crashInterval);
+                    isFlying = false;
+                    document.getElementById('crash-multiplier').innerText = `${crashTarget.toFixed(2)}x (CRASH!)`;
+                    document.getElementById('crash-status-text').innerHTML = '<span class="text-red-500">Avião explodiu! Você perdeu.</span>';
+                    addHistoryEntry('Aviator Crash', crashBet, -crashBet, false);
+                    resetCrashButtons();
+                }
+            }, 100);
+        }
+
+        function cashoutCrash() {
+            if (!isFlying) return;
+            clearInterval(crashInterval);
+            isFlying = false;
+
+            const winAmt = crashBet * currentMultiplier;
+            balance += winAmt;
+            updateBalanceUI();
+
+            document.getElementById('crash-status-text').innerHTML = `<span class="text-emerald-400 font-extrabold">Resgatado em ${currentMultiplier.toFixed(2)}x! Ganhou R$ ${winAmt.toFixed(2)}</span>`;
+            addHistoryEntry('Aviator Crash', crashBet, winAmt - crashBet, true);
+            resetCrashButtons();
+        }
+
+        function resetCrashButtons() {
+            document.getElementById('crash-start-btn').disabled = false;
+            document.getElementById('crash-start-btn').classList.remove('opacity-50');
+            document.getElementById('crash-cashout-btn').disabled = true;
+            document.getElementById('crash-cashout-btn').classList.remove('bg-gradient-to-r', 'from-emerald-500', 'to-green-600', 'text-slate-950', 'shadow-lg', 'shadow-emerald-500/25');
+            document.getElementById('crash-cashout-btn').classList.add('bg-slate-800', 'text-slate-500');
+        }
+
+        // --- COIN FLIP LOGIC (0.05 EXATO) ---
+        let coinBet = 20.00;
+        let coinChoice = 'cara';
+
+        function adjustCoinBet(delta) {
+            coinBet = Math.max(10, Math.min(balance, coinBet + delta));
+            document.getElementById('coin-bet-val').innerText = `R$ ${coinBet.toFixed(2).replace('.', ',')}`;
+        }
+
+        function selectCoinChoice(choice) {
+            coinChoice = choice;
+            document.getElementById('btn-choice-cara').classList.remove('border-yellow-400', 'text-yellow-400');
+            document.getElementById('btn-choice-coroa').classList.remove('border-yellow-400', 'text-yellow-400');
+
+            document.getElementById(`btn-choice-${choice}`).classList.add('border-yellow-400', 'text-yellow-400');
+        }
+
+        function playCoinFlip() {
+            if (balance < coinBet) {
+                alert('Saldo insuficiente!');
+                openDepositModal();
+                return;
+            }
+
+            balance -= coinBet;
+            updateBalanceUI();
+
+            const coinEl = document.getElementById('coin-display');
+            const msg = document.getElementById('coin-message');
+
+            msg.innerText = 'Lançando a moeda (WinRate 5%)...';
+            coinEl.classList.add('animate-spin');
+
+            setTimeout(() => {
+                coinEl.classList.remove('animate-spin');
+                const isWin = Math.random() < 0.05;
+                const result = isWin ? coinChoice : (coinChoice === 'cara' ? 'coroa' : 'cara');
+                coinEl.innerText = result === 'cara' ? '👑' : '🦅';
+
+                if (isWin) {
+                    const winAmt = coinBet * 2;
+                    balance += winAmt;
+                    msg.innerHTML = `<span class="text-emerald-400 font-extrabold">Deu ${result.toUpperCase()} (5% Win)! Ganhou R$ ${winAmt.toFixed(2)}!</span>`;
+                    addHistoryEntry('Cara ou Coroa', coinBet, winAmt - coinBet, true);
+                } else {
+                    msg.innerHTML = `<span class="text-red-400 font-bold">Deu ${result.toUpperCase()}. Você perdeu.</span>`;
+                    addHistoryEntry('Cara ou Coroa', coinBet, -coinBet, false);
+                }
+                updateBalanceUI();
+            }, 800);
+        }
+
+        // Inicialização
+        updateBalanceUI();
+    </script>
+</body>
+</html>

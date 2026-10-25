@@ -1,0 +1,24 @@
+{
+  "name": "api-usuarios-sqlite",
+  "version": "1.0.0",
+  "description": "API REST CRUD em Node.js com Express e SQLite para gerenciamento de usuários",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "express",
+    "sqlite",
+    "crud",
+    "rest",
+    "api"
+  ],
+  "author": "TRAE IA",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "sqlite3": "^5.1.7"
+  }
+}

@@ -1,0 +1,6 @@
+{"ts":1790054513635,"role":"user","text":"oi boa noite","kind":"rc22_user"}
+{"ts":1790054519654,"role":"assistant","text":"Oi! Boa noite! Como posso ajudar você hoje?","kind":"rc22_assistant_step"}
+{"ts":1790054537315,"role":"user","text":"abra o youtube","kind":"rc22_user"}
+{"ts":1790054538283,"role":"assistant","text":"Oi, boa noite! 😊  \nPosso abrir o YouTube para você, mas preciso da sua autorização para acessar a internet. Você concorda?","kind":"rc22_assistant_step"}
+{"ts":1790054548038,"role":"user","text":"sim","kind":"rc22_user"}
+{"ts":1790054625286,"role":"assistant","text":"O YouTube foi aberto com sucesso. Você pode acessá‑lo diretamente por este link:\n\nhttps://www.youtube.com/ \n\nSe precisar de algo mais, é só falar!","kind":"rc22_assistant_step"}

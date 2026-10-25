@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tatiane Moda Nordeste — Elegância e Estilo</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- BARRA SUPERIOR DE AVISO -->
+    <div class="bg-amber-800 text-amber-50 text-xs py-2 px-4 text-center font-medium">
+        🌵 Frete grátis para todo o Nordeste em compras acima de R$ 150,00 | Use o cupom <span class="font-bold underline text-amber-300">TATIANE10</span> para 10% OFF
+    </div>
+
+    <!-- HEADER / NAVEGAÇÃO -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+                <a href="#" class="text-xl sm:text-2xl font-black tracking-tight text-zinc-900 flex items-center gap-2">
+                    <span class="bg-amber-700 text-white p-2 rounded-lg text-lg"><i class="fa-solid fa-sun"></i></span>
+                    TATIANE <span class="text-amber-700 font-light">Moda Nordeste</span>
+                </a>
+            </div>
+
+            <!-- Navegação Desktop -->
+            <nav class="hidden md:flex items-center space-x-8 font-medium text-sm text-zinc-600">
+                <a href="#catalogo" class="hover:text-amber-700 transition">Início</a>
+                <a href="#catalogo" onclick="filtrarCategoria('todos')" class="hover:text-amber-700 transition">Catálogo</a>
+                <a href="#catalogo" onclick="filtrarCategoria('masculino')" class="hover:text-amber-700 transition">Masculino</a>
+                <a href="#catalogo" onclick="filtrarCategoria('feminino')" class="hover:text-amber-700 transition">Feminino</a>
+                <a href="#catalogo" onclick="filtrarCategoria('acessórios')" class="hover:text-amber-700 transition">Acessórios</a>
+            </nav>
+
+            <!-- Ações (Busca e Carrinho) -->
+            <div class="flex items-center space-x-4">
+                <!-- Barra de pesquisa rápida -->
+                <div class="relative hidden lg:block">
+                    <input type="text" id="searchInput" placeholder="Buscar peças..." oninput="buscarProdutos(this.value)"
+                           class="w-48 xl:w-64 pl-9 pr-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-amber-700 transition">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-sm"></i>
+                </div>
+
+                <!-- Botão Carrinho -->
+                <button onclick="toggleCarrinho()" class="relative p-2.5 rounded-full hover:bg-gray-100 transition text-zinc-700 hover:text-amber-700">
+                    <i class="fa-solid fa-bag-shopping text-xl"></i>
+                    <span id="contadorCarrinho" class="absolute -top-1 -right-1 bg-amber-700 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow">0</span>
+                </button>
+
+                <!-- Menu Mobile Toggle -->
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2.5 rounded-lg hover:bg-gray-100 text-zinc-700">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Menu Mobile Dropdown -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-b border-gray-200 px-4 pt-2 pb-6 space-y-3">
+            <div class="relative mb-4">
+                <input type="text" placeholder="Buscar peças..." oninput="buscarProdutos(this.value)"
+                       class="w-full pl-9 pr-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-amber-700">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-sm"></i>
+            </div>
+            <a href="#catalogo" onclick="toggleMobileMenu()" class="block py-2 font-medium text-zinc-700 hover:text-amber-700">Início</a>
+            <a href="#catalogo" onclick="filtrarCategoria('todos'); toggleMobileMenu();" class="block py-2 font-medium text-zinc-700 hover:text-amber-700">Todos os Produtos</a>
+            <a href="#catalogo" onclick="filtrarCategoria('masculino'); toggleMobileMenu();" class="block py-2 font-medium text-zinc-700 hover:text-amber-700">Masculino</a>
+            <a href="#catalogo" onclick="filtrarCategoria('feminino'); toggleMobileMenu();" class="block py-2 font-medium text-zinc-700 hover:text-amber-700">Feminino</a>
+            <a href="#catalogo" onclick="filtrarCategoria('acessórios'); toggleMobileMenu();" class="block py-2 font-medium text-zinc-700 hover:text-amber-700">Acessórios</a>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-grow">
+
+        <!-- HERO SECTION -->
+        <section class="relative bg-zinc-900 text-white overflow-hidden py-20 lg:py-32">
+            <div class="absolute inset-0 opacity-40 bg-cover bg-center mix-blend-overlay" style="background-image: url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1600&auto=format&fit=crop')"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-amber-950/90 via-zinc-900/80 to-transparent"></div>
+            
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="max-w-xl space-y-6">
+                    <span class="inline-block bg-amber-700 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Coleção Exclusiva 2025</span>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-none">
+                        A essência da <span class="text-amber-400">moda nordestina</span> com atitude.
+                    </h1>
+                    <p class="text-lg text-zinc-300">
+                        Looks autênticos, confortáveis e cheios de personalidade. Vista-se com orgulho e elegância em todas as ocasiões.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 pt-2">
+                        <a href="#catalogo" class="bg-amber-700 text-white font-semibold px-8 py-3.5 rounded-full hover:bg-amber-800 transition shadow-lg text-center">
+                            Ver Coleção <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </a>
+                        <a href="#catalogo" onclick="filtrarCategoria('feminino')" class="border border-zinc-500 text-white font-semibold px-8 py-3.5 rounded-full hover:bg-white/10 transition text-center">
+                            Moda Feminina
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DESTAQUES / BENEFÍCIOS -->
+        <section class="bg-white border-b border-gray-200 py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="flex items-center space-x-4 p-4 rounded-xl bg-gray-50">
+                    <div class="bg-amber-700 text-white p-3 rounded-lg"><i class="fa-solid fa-truck-fast text-xl"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">Entrega Ágil</h4>
+                        <p class="text-xs text-gray-500">Em todo o Nordeste</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 p-4 rounded-xl bg-gray-50">
+                    <div class="bg-amber-700 text-white p-3 rounded-lg"><i class="fa-solid fa-shield-halved text-xl"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">Compra 100% Segura</h4>
+                        <p class="text-xs text-gray-500">Proteção total de dados</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 p-4 rounded-xl bg-gray-50">
+                    <div class="bg-amber-700 text-white p-3 rounded-lg"><i class="fa-solid fa-rotate-left text-xl"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">Primeira Troca Grátis</h4>
+                        <p class="text-xs text-gray-500">Até 30 dias</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 p-4 rounded-xl bg-gray-50">
+                    <div class="bg-amber-700 text-white p-3 rounded-lg"><i class="fa-solid fa-headset text-xl"></i></div>
+                    <div>
+                        <h4 class="font-bold text-sm">Atendimento VIP</h4>
+                        <p class="text-xs text-gray-500">Suporte via WhatsApp</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CATÁLOGO DE PRODUTOS -->
+        <section id="catalogo" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-10">
+                <div>
+                    <span class="text-amber-700 font-semibold text-sm uppercase tracking-wider">Catálogo Tatiane Moda</span>
+                    <h2 class="text-3xl font-extrabold text-zinc-900 mt-1">Escolhas em Destaque</h2>
+                </div>
+
+                <!-- Filtros de Categoria -->
+                <div class="flex flex-wrap gap-2 mt-4 md:mt-0" id="filtrosContainer">
+                    <button onclick="filtrarCategoria('todos')" class="filtro-btn px-4 py-2 rounded-full text-sm font-medium bg-amber-700 text-white transition shadow-sm">Todos</button>
+                    <button onclick="filtrarCategoria('masculino')" class="filtro-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-zinc-700 hover:bg-gray-300 transition">Masculino</button>
+                    <button onclick="filtrarCategoria('feminino')" class="filtro-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-zinc-700 hover:bg-gray-300 transition">Feminino</button>
+                    <button onclick="filtrarCategoria('acessórios')" class="filtro-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-zinc-700 hover:bg-gray-300 transition">Acessórios</button>
+                </div>
+            </div>
+
+            <!-- Grade de Produtos -->
+            <div id="produtosGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Renderizado via JavaScript -->
+            </div>
+
+            <!-- Mensagem se nenhum produto for encontrado -->
+            <div id="semProdutos" class="hidden text-center py-20">
+                <i class="fa-solid fa-box-open text-4xl text-gray-400 mb-3"></i>
+                <h3 class="text-lg font-bold text-zinc-700">Nenhum produto encontrado</h3>
+                <p class="text-sm text-gray-500">Tente buscar por outro termo ou categoria.</p>
+            </div>
+        </section>
+
+        <!-- SEÇÃO NEWSLETTER -->
+        <section class="bg-amber-50/50 py-16 border-t border-gray-200">
+            <div class="max-w-3xl mx-auto px-4 text-center space-y-4">
+                <span class="bg-amber-700 text-white text-xs font-bold px-3 py-1 rounded-full">CLUBE VIP TATIANE MODA</span>
+                <h2 class="text-3xl font-bold text-zinc-900">Ganhe 15% OFF na sua primeira compra</h2>
+                <p class="text-gray-600 text-sm">Cadastre seu e-mail para receber lançamentos exclusivos, dicas de looks e cupons de desconto.</p>
+                
+                <form onsubmit="inscreverNewsletter(event)" class="flex flex-col sm:flex-row gap-2 max-w-md mx-auto pt-2">
+                    <input type="email" id="emailNewsletter" placeholder="Seu melhor e-mail" required
+                           class="flex-grow px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-700 text-sm">
+                    <button type="submit" class="bg-amber-700 text-white px-6 py-3 rounded-full font-semibold text-sm hover:bg-amber-800 transition">
+                        Cadastrar
+                    </button>
+                </form>
+                <div id="msgSucessoNews" class="hidden text-emerald-600 font-semibold text-sm pt-2">
+                    <i class="fa-solid fa-circle-check mr-1"></i> Inscrição realizada com sucesso! Bem-vindo(a) ao clube.
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-zinc-900 text-zinc-400 text-sm border-t border-zinc-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="space-y-4">
+                <span class="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                    <span class="bg-amber-700 text-white p-1.5 rounded-lg"><i class="fa-solid fa-sun"></i></span>
+                    TATIANE <span class="text-amber-500 font-light">Moda Nordeste</span>
+                </span>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Moda com identidade, conforto e elegância. Levando o melhor estilo para todo o Nordeste e o Brasil.
+                </p>
+                <div class="flex space-x-4 text-lg text-amber-500">
+                    <a href="#" class="hover:text-white transition"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="hover:text-white transition"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#" class="hover:text-white transition"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="#" class="hover:text-white transition"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="font-bold text-white text-sm mb-4">Departamentos</h4>
+                <ul class="space-y-2 text-xs">
+                    <li><a href="#catalogo" onclick="filtrarCategoria('masculino')" class="hover:text-white transition">Moda Masculina</a></li>
+                    <li><a href="#catalogo" onclick="filtrarCategoria('feminino')" class="hover:text-white transition">Moda Feminina</a></li>
+                    <li><a href="#catalogo" onclick="filtrarCategoria('acessórios')" class="hover:text-white transition">Acessórios & Estilo</a></li>
+                    <li><a href="#catalogo" onclick="filtrarCategoria('todos')" class="hover:text-white transition">Novidades 2025</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-bold text-white text-sm mb-4">Atendimento & Ajuda</h4>
+                <ul class="space-y-2 text-xs">
+                    <li><a href="#" class="hover:text-white transition">Rastrear meu Pedido</a></li>
+                    <li><a href="#" class="hover:text-white transition">Trocas e Devoluções</a></li>
+                    <li><a href="#" class="hover:text-white transition">Prazos de Entrega Nordeste</a></li>
+                    <li><a href="#" class="hover:text-white transition">Fale Conosco (WhatsApp)</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-bold text-white text-sm mb-4">Formas de Pagamento</h4>
+                <p class="text-xs text-zinc-400 mb-3">PIX com desconto, cartões e boleto bancário.</p>
+                <div class="flex flex-wrap gap-2 text-2xl text-zinc-300">
+                    <i class="fa-brands fa-cc-visa"></i>
+                    <i class="fa-brands fa-cc-mastercard"></i>
+                    <i class="fa-brands fa-cc-amex"></i>
+                    <i class="fa-solid fa-qrcode" title="PIX"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-zinc-950 py-4 text-center text-xs text-zinc-500 border-t border-zinc-800">
+            &copy; 2025 Tatiane Moda Nordeste LTDA. Todos os direitos reservados.
+        </div>
+    </footer>
+
+    <!-- DRAWER / SLIDEOVER DO CARRINHO -->
+    <div id="carrinhoOverlay" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity" onclick="toggleCarrinho()"></div>
+    
+    <div id="carrinhoDrawer" class="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between">
+        
+        <!-- Cabeçalho do Carrinho -->
+        <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="font-bold text-lg text-zinc-900 flex items-center gap-2">
+                <i class="fa-solid fa-bag-shopping text-amber-700"></i> Carrinho <span id="carrinhoQtdBadge" class="text-xs bg-gray-200 text-zinc-700 px-2 py-0.5 rounded-full">0 itens</span>
+            </h3>
+            <button onclick="toggleCarrinho()" class="p-2 rounded-full hover:bg-gray-100 text-zinc-500 hover:text-black">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Lista de Itens do Carrinho -->
+        <div id="carrinhoItens" class="p-6 overflow-y-auto flex-grow space-y-4 divide-y divide-gray-100">
+            <!-- Renderizado via JS -->
+        </div>
+
+        <!-- Rodapé do Carrinho / Checkout -->
+        <div class="p-6 border-t border-gray-200 bg-gray-50 space-y-4">
+            <!-- Cupom de Desconto -->
+            <div class="flex gap-2">
+                <input type="text" id="cupomInput" placeholder="Cupom (ex: TATIANE10)" class="flex-grow px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-700 uppercase">
+                <button onclick="aplicarCupom()" class="bg-amber-700 text-white px-4 py-2 text-sm rounded-lg hover:bg-amber-800 transition">Aplicar</button>
+            </div>
+            <div id="msgCupom" class="text-xs font-semibold"></div>
+
+            <!-- Subtotal e Total -->
+            <div class="space-y-1.5 text-sm">
+                <div class="flex justify-between text-gray-600">
+                    <span>Subtotal</span>
+                    <span id="carrinhoSubtotal">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between text-gray-600">
+                    <span>Desconto</span>
+                    <span id="carrinhoDesconto" class="text-emerald-600 font-semibold">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between font-bold text-base text-zinc-900 pt-2 border-t border-gray-200">
+                    <span>Total</span>
+                    <span id="carrinhoTotal">R$ 0,00</span>
+                </div>
+            </div>
+
+            <button onclick="iniciarCheckout()" id="btnFinalizar" class="w-full bg-amber-700 text-white font-semibold py-3.5 rounded-xl hover:bg-amber-800 transition shadow-lg text-center disabled:opacity-50 disabled:cursor-not-allowed">
+                Finalizar Compra
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALHES DO PRODUTO -->
+    <div id="produtoModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl relative animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
+            <button onclick="fecharModal()" class="absolute top-4 right-4 z-10 bg-white/80 hover:bg-white text-zinc-700 p-2 rounded-full shadow transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="modalConteudo" class="grid grid-cols-1 md:grid-cols-2">
+                <!-- Renderizado via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CHECKOUT SIMULADO -->
+    <div id="checkoutModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-4">
+                <h3 class="font-bold text-lg text-zinc-900"><i class="fa-solid fa-lock mr-2 text-amber-700"></i> Finalizar Pedido</h3>
+                <button onclick="fecharCheckout()" class="text-gray-400 hover:text-black"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <form onsubmit="finalizarPedido(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Nome Completo</label>
+                    <input type="text" required placeholder="Tatiane Souza" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-700">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">E-mail para Acompanhamento</label>
+                    <input type="email" required placeholder="tatiane@email.com" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-700">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">CEP</label>
+                        <input type="text" required placeholder="50000-000" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">WhatsApp</label>
+                        <input type="text" required placeholder="(81) 99999-9999" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-700">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Endereço de Entrega (Nordeste)</label>
+                    <input type="text" required placeholder="Rua Principal, 456 - Bairro" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-700">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Forma de Pagamento</label>
+                    <select class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-700">
+                        <option>PIX (5% de desconto)</option>
+                        <option>Cartão de Crédito (Até 6x sem juros)</option>
+                        <option>Boleto Bancário</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 transition shadow-lg">
+                    Confirmar Pedido (<span id="checkoutTotalValor">R$ 0,00</span>)
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT DA APLICAÇÃO -->
+    <script>
+        // BASE DE DADOS DE ROUPAS E ACESSÓRIOS
+        const produtos = [
+            {
+                id: 1,
+                nome: "Vestido Midi Linho Sol e Brisa",
+                categoria: "feminino",
+                preco: 199.90,
+                precoAntigo: 249.90,
+                imagem: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?q=80&w=800&auto=format&fit=crop",
+                imagensExtras: [
+                    "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?q=80&w=800&auto=format&fit=crop"
+                ],
+                descricao: "Vestido midi fluido confeccionado em linho misto, ideal para o clima tropical com muito charme e elegância.",
+                tamanhos: ["PP", "P", "M", "G"],
+                cores: ["Terracota", "Areia", "Verde Oliva"],
+                destaque: true
+            },
+            {
+                id: 2,
+                nome: "Conjunto Cropped & Pantalona Chic",
+                categoria: "feminino",
+                preco: 289.90,
+                precoAntigo: 349.90,
+                imagem: "https://images.unsplash.com/photo-1583846386715-7f28795ac0a2?q=80&w=800&auto=format&fit=crop",
+                imagensExtras: [
+                    "https://images.unsplash.com/photo-1583846386715-7f28795ac0a2?q=80&w=800&auto=format&fit=crop"
+                ],
+                descricao: "Conjunto sofisticado com cropped delicado e calça pantalona de cintura alta. Perfeito para eventos especiais.",
+                tamanhos: ["P", "M", "G"],
+                cores: ["Off-White", "Azul Sereno", "Preto"],
+                destaque: true
+            },
+            {
+                id: 3,
+                nome: "Camisa Casual Linho Masculina",
+                categoria: "masculino",
+                preco: 169.90,
+                precoAntigo: 199.90,
+                imagem: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=800&auto=format&fit=crop",
+                imagensExtras: [
+                    "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=800&auto=format&fit=crop"
+                ],
+                descricao: "Camisa de manga longa em linho leve. Confortável e fresca, ideal para compor um visual elegante em dias quentes.",
+                tamanhos: ["P", "M", "G", "GG"],
+                cores: ["Branco", "Areia", "Azul Marinho"],
+                destaque: false
+            },
+            {
+                id: 4,
+                nome: "Calça Jeans Wide Leg Premium",
+                categoria: "feminino",
+                preco: 219.90,
+                precoAntigo: 269.90,
+                imagem: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=800&auto=format&fit=crop",
+                imagensExtras: [
+                    "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=800&auto=format&fit=crop"
+                ],
+                descricao: "Modelagem wide leg moderna com caimento impecável e jeans de alta durabilidade.",
+                tamanhos: ["36", "38", "40", "42", "44"],
+                cores: ["Jeans Médio", "Jeans Escuro"],
+                destaque: true
+            },
+            {
+                id: 5,
+                nome: "Polo Masculina Algodão Egípcio",
+                categoria: "masculino",
+                preco: 139.90,
+                precoAntigo: 169.90,
+                imagem: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=800&auto=format&fit=crop",
+                imagensExtras: [
+                    "https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=800&auto=format&fit=crop"
+                ],
+                descricao: "Camisa polo clássica em algodão egípcio de toque extremamente macio e acabamento refinado.",
+                tamanhos: ["P", "M", "G", "GG"],
+                cores: ["Azul Marinho", "Verde Militar", "Branco"],
+                destaque: false
+            },
+            {
+                id: 6,
+                nome: "Shorts Saia Alfaiataria Verão",
+                categoria: "feminino",
+                preco: 129.90,
+                precoAntigo: 159.90,
+                imagem: "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?q=80&w=800&auto=format&fit=crop",
+                imagensExtras: [
+                    "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?q=80&w=800&auto=format&fit=crop"
+                ],
+                descricao: "Shorts saia com pregas frontais e cinto encapado. Combinação perfeita de conforto com toque de alfaiataria.",
+                tamanhos: ["P", "M", "G"],
+                cores: ["Off-White", "Terracota", "Preto"],
+                destaque: false
+            },
+            {
+                id: 7,
+                nome: "Chapéu Panamá Artesanal",
+                categoria: "acessórios",
+                preco: 119.90,
+                precoAntigo: 149.90,
+                imagem: "https://images.unsplash.com/photo-1514327605112-789d3ae33c95?q=80&w=800&auto=format&fit=crop",
+                imagensExtras: [
+                    "https://images.unsplash.com/photo-1514327605112-789d3ae33c95?q=80&w=800&auto=format&fit=crop"
+                ],
+                descricao: "Chapéu estilo panamá leve e elegante, essencial para dias ensolarados com muito estilo.",
+                tamanhos: ["Único"],
+                cores: ["Natural", "Marrom"],
+                destaque: false
+            },
+            {
+                id: 8,
+                nome: "Bolsa Tote em Couro Sintético",
+                categoria: "acessórios",
+                preco: 249.90,
+                precoAntigo: 299.90,
+                imagem: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=800&auto=format&fit=crop",
+                imagensExtras: [
+                    "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=800&auto=format&fit=crop"
+                ],
+                descricao: "Bolsa tote espaçosa e elegante, com divisórias internas e acabamento premium.",
+                tamanhos: ["Único"],
+                cores: ["Caramelo", "Preto", "Off-White"],
+                destaque: true
+            }
+        ];
+
+        let carrinho = JSON.parse(localStorage.getItem('tatiane_carrinho')) || [];
+        let categoriaAtual = 'todos';
+        let termoBusca = '';
+        let descontoAplicado = 0;
+        let codigoCupomAtivo = '';
+
+        // INICIALIZAÇÃO DA PÁGINA
+        document.addEventListener('DOMContentLoaded', () => {
+            renderizarProdutos();
+            atualizarCarrinhoUI();
+        });
+
+        // RENDERIZAR PRODUTOS NO CATÁLOGO
+        function renderizarProdutos() {
+            const grid = document.getElementById('produtosGrid');
+            const semProd = document.getElementById('semProdutos');
+
+            let filtrados = produtos.filter(p => {
+                const matchCategoria = categoriaAtual === 'todos' || p.categoria === categoriaAtual;
+                const matchBusca = p.nome.toLowerCase().includes(termoBusca.toLowerCase()) || p.descricao.toLowerCase().includes(termoBusca.toLowerCase());
+                return matchCategoria && matchBusca;
+            });
+
+            if (filtrados.length === 0) {
+                grid.innerHTML = '';
+                semProd.classList.remove('hidden');
+                return;
+            }
+
+            semProd.classList.add('hidden');
+            grid.innerHTML = filtrados.map(p => `
+                <div class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition duration-300 overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="relative overflow-hidden bg-gray-100 aspect-[3/4] cursor-pointer" onclick="abrirModal(${p.id})">
+                            ${p.destaque ? '<span class="absolute top-3 left-3 z-10 bg-amber-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Destaque</span>' : ''}
+                            <img src="${p.imagem}" alt="${p.nome}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <span class="bg-white text-zinc-900 font-semibold text-xs px-4 py-2 rounded-full shadow">Ver Detalhes</span>
+                            </div>
+                        </div>
+                        <div class="p-5 space-y-2">
+                            <span class="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">${p.categoria}</span>
+                            <h3 class="font-bold text-sm text-zinc-900 line-clamp-1 cursor-pointer hover:underline" onclick="abrirModal(${p.id})">${p.nome}</h3>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-lg font-black text-zinc-900">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
+                                ${p.precoAntigo ? `<span class="text-xs text-gray-400 line-through">R$ ${p.precoAntigo.toFixed(2).replace('.', ',')}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-5 pb-5 pt-0">
+                        <button onclick="adicionarAoCarrinhoDireto(${p.id})" class="w-full bg-amber-700 text-white text-xs font-bold py-3 rounded-xl hover:bg-amber-800 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-cart-plus"></i> Adicionar ao Carrinho
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // FILTRAR POR CATEGORIA
+        function filtrarCategoria(cat) {
+            categoriaAtual = cat;
+            document.querySelectorAll('.filtro-btn').forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(cat) || (cat === 'todos' && btn.textContent === 'Todos')) {
+                    btn.className = "filtro-btn px-4 py-2 rounded-full text-sm font-medium bg-amber-700 text-white transition shadow-sm";
+                } else {
+                    btn.className = "filtro-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-zinc-700 hover:bg-gray-300 transition";
+                }
+            });
+            renderizarProdutos();
+        }
+
+        // BUSCAR PRODUTOS
+        function buscarProdutos(termo) {
+            termoBusca = termo;
+            renderizarProdutos();
+        }
+
+        // MODAL DO PRODUTO
+        function abrirModal(id) {
+            const p = produtos.find(item => item.id === id);
+            if (!p) return;
+
+            const modalConteudo = document.getElementById('modalConteudo');
+            modalConteudo.innerHTML = `
+                <div class="bg-gray-100 aspect-square">
+                    <img src="${p.imagem}" alt="${p.nome}" class="w-full h-full object-cover">
+                </div>
+                <div class="p-6 sm:p-8 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <span class="text-xs font-bold text-amber-700 uppercase tracking-wider">${p.categoria}</span>
+                        <h2 class="text-2xl font-black text-zinc-900">${p.nome}</h2>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl font-black text-zinc-900">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
+                            ${p.precoAntigo ? `<span class="text-sm text-gray-400 line-through">R$ ${p.precoAntigo.toFixed(2).replace('.', ',')}</span>` : ''}
+                        </div>
+                        <p class="text-sm text-gray-600 leading-relaxed">${p.descricao}</p>
+                        
+                        <!-- Tamanhos -->
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-700 uppercase mb-1.5">Escolha o Tamanho:</label>
+                            <div class="flex flex-wrap gap-2" id="tamanhoSelecionadoContainer">
+                                ${p.tamanhos.map((t, idx) => `
+                                    <button onclick="selecionarTamanho(this, '${t}')" class="tam-btn px-3.5 py-1.5 text-xs font-bold border rounded-lg ${idx === 0 ? 'border-amber-700 bg-amber-700 text-white' : 'border-gray-200 text-zinc-700 hover:border-amber-700'}">${t}</button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="adicionarDoModal(${p.id})" class="w-full bg-amber-700 text-white font-bold py-3.5 rounded-xl hover:bg-amber-800 transition shadow-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bag-shopping"></i> Adicionar ao Carrinho
+                    </button>
+                </div>
+            `;
+            document.getElementById('produtoModal').classList.remove('hidden');
+        }
+
+        let tamanhoEscolhidoGlobal = null;
+        function selecionarTamanho(btn, tam) {
+            document.querySelectorAll('.tam-btn').forEach(b => {
+                b.className = "tam-btn px-3.5 py-1.5 text-xs font-bold border rounded-lg border-gray-200 text-zinc-700 hover:border-amber-700";
+            });
+            btn.className = "tam-btn px-3.5 py-1.5 text-xs font-bold border rounded-lg border-amber-700 bg-amber-700 text-white";
+            tamanhoEscolhidoGlobal = tam;
+        }
+
+        function fecharModal() {
+            document.getElementById('produtoModal').classList.add('hidden');
+        }
+
+        // GERENCIAMENTO DO CARRINHO
+        function adicionarAoCarrinhoDireto(id) {
+            const p = produtos.find(item => item.id === id);
+            if (!p) return;
+            adicionarItemComTamanho(p, p.tamanhos[0]);
+        }
+
+        function adicionarDoModal(id) {
+            const p = produtos.find(item => item.id === id);
+            const tamanho = tamanhoEscolhidoGlobal || p.tamanhos[0];
+            adicionarItemComTamanho(p, tamanho);
+            fecharModal();
+            toggleCarrinho();
+        }
+
+        function adicionarItemComTamanho(produto, tamanho) {
+            const existente = carrinho.find(item => item.id === produto.id && item.tamanho === tamanho);
+            if (existente) {
+                existente.qtd += 1;
+            } else {
+                carrinho.push({
+                    id: produto.id,
+                    nome: produto.nome,
+                    preco: produto.preco,
+                    imagem: produto.imagem,
+                    tamanho: tamanho,
+                    qtd: 1
+                });
+            }
+            salvarCarrinho();
+            atualizarCarrinhoUI();
+        }
+
+        function alterarQtd(id, tamanho, delta) {
+            const item = carrinho.find(i => i.id === id && i.tamanho === tamanho);
+            if (!item) return;
+            item.qtd += delta;
+            if (item.qtd <= 0) {
+                carrinho = carrinho.filter(i => !(i.id === id && i.tamanho === tamanho));
+            }
+            salvarCarrinho();
+            atualizarCarrinhoUI();
+        }
+
+        function removerItem(id, tamanho) {
+            carrinho = carrinho.filter(i => !(i.id === id && i.tamanho === tamanho));
+            salvarCarrinho();
+            atualizarCarrinhoUI();
+        }
+
+        function salvarCarrinho() {
+            localStorage.setItem('tatiane_carrinho', JSON.stringify(carrinho));
+        }
+
+        function atualizarCarrinhoUI() {
+            const totalItens = carrinho.reduce((sum, item) => sum + item.qtd, 0);
+            document.getElementById('contadorCarrinho').innerText = totalItens;
+            document.getElementById('carrinhoQtdBadge').innerText = `${totalItens} ${totalItens === 1 ? 'item' : 'itens'}`;
+
+            const container = document.getElementById('carrinhoItens');
+            if (carrinho.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 space-y-3">
+                        <i class="fa-solid fa-bag-shopping text-4xl text-gray-300"></i>
+                        <p class="text-sm font-semibold text-zinc-600">Seu carrinho está vazio</p>
+                        <p class="text-xs text-gray-400">Explore nosso catálogo e adicione suas peças favoritas.</p>
+                    </div>
+                `;
+                document.getElementById('carrinhoSubtotal').innerText = 'R$ 0,00';
+                document.getElementById('carrinhoDesconto').innerText = 'R$ 0,00';
+                document.getElementById('carrinhoTotal').innerText = 'R$ 0,00';
+                document.getElementById('btnFinalizar').disabled = true;
+                return;
+            }
+
+            document.getElementById('btnFinalizar').disabled = false;
+
+            container.innerHTML = carrinho.map(item => `
+                <div class="flex items-center space-x-4 py-4">
+                    <img src="${item.imagem}" alt="${item.nome}" class="w-16 h-20 object-cover rounded-lg bg-gray-100 flex-shrink-0">
+                    <div class="flex-grow space-y-1">
+                        <h4 class="font-bold text-xs text-zinc-900 line-clamp-1">${item.nome}</h4>
+                        <p class="text-xs text-gray-500">Tam: <span class="font-semibold text-zinc-700">${item.tamanho}</span></p>
+                        <p class="text-sm font-black text-zinc-900">R$ ${(item.preco * item.qtd).toFixed(2).replace('.', ',')}</p>
+                        <div class="flex items-center space-x-2 pt-1">
+                            <button onclick="alterarQtd(${item.id}, '${item.tamanho}', -1)" class="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-xs font-bold flex items-center justify-center">-</button>
+                            <span class="text-xs font-bold px-1">${item.qtd}</span>
+                            <button onclick="alterarQtd(${item.id}, '${item.tamanho}', 1)" class="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-xs font-bold flex items-center justify-center">+</button>
+                        </div>
+                    </div>
+                    <button onclick="removerItem(${item.id}, '${item.tamanho}')" class="text-gray-400 hover:text-red-500 p-2">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            const subtotal = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+            const valorDesconto = subtotal * descontoAplicado;
+            const total = subtotal - valorDesconto;
+
+            document.getElementById('carrinhoSubtotal').innerText = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+            document.getElementById('carrinhoDesconto').innerText = `- R$ ${valorDesconto.toFixed(2).replace('.', ',')}`;
+            document.getElementById('carrinhoTotal').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        // CUPOM DE DESCONTO
+        function aplicarCupom() {
+            const input = document.getElementById('cupomInput').value.trim().toUpperCase();
+            const msg = document.getElementById('msgCupom');
+
+            if (input === 'TATIANE10') {
+                descontoAplicado = 0.10;
+                codigoCupomAtivo = 'TATIANE10';
+                msg.className = "text-xs font-semibold text-emerald-600";
+                msg.innerText = "✓ Cupom TATIANE10 aplicado (10% OFF)!";
+                atualizarCarrinhoUI();
+            } else {
+                descontoAplicado = 0;
+                codigoCupomAtivo = '';
+                msg.className = "text-xs font-semibold text-red-500";
+                msg.innerText = "✕ Cupom inválido ou expirado.";
+                atualizarCarrinhoUI();
+            }
+        }
+
+        // TOGGLE CARRINHO (DRAWER)
+        function toggleCarrinho() {
+            const overlay = document.getElementById('carrinhoOverlay');
+            const drawer = document.getElementById('carrinhoDrawer');
+            
+            if (drawer.classList.contains('translate-x-full')) {
+                overlay.classList.remove('hidden');
+                setTimeout(() => drawer.classList.remove('translate-x-full'), 10);
+            } else {
+                drawer.classList.add('translate-x-full');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+
+        // MENU MOBILE
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // NEWSLETTER
+        function inscreverNewsletter(e) {
+            e.preventDefault();
+            document.getElementById('msgSucessoNews').classList.remove('hidden');
+            document.getElementById('emailNewsletter').value = '';
+        }
+
+        // CHECKOUT
+        function iniciarCheckout() {
+            toggleCarrinho();
+            const subtotal = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+            const valorDesconto = subtotal * descontoAplicado;
+            const total = subtotal - valorDesconto;
+            document.getElementById('checkoutTotalValor').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+            document.getElementById('checkoutModal').classList.remove('hidden');
+        }
+
+        function fecharCheckout() {
+            document.getElementById('checkoutModal').classList.add('hidden');
+        }
+
+        function finalizarPedido(e) {
+            e.preventDefault();
+            alert('🎉 Pedido realizado com sucesso! Muito obrigado por comprar na Tatiane Moda Nordeste.');
+            carrinho = [];
+            salvarCarrinho();
+            atualizarCarrinhoUI();
+            fecharCheckout();
+        }
+    </script>
+</body>
+</html>

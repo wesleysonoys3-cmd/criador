@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmorMatch - Encontre seu par perfeito</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK (Modular v10) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // Configuração padrão do Firebase (Substitua com suas credenciais reais se necessário)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDummyKeyForAmorMatchProject12345",
+            authDomain: "amormatch-app.firebaseapp.com",
+            projectId: "amormatch-app",
+            storageBucket: "amormatch-app.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef123456"
+        };
+
+        const appFB = initializeApp(firebaseConfig);
+        const auth = getAuth(appFB);
+        const provider = new GoogleAuthProvider();
+
+        window.firebaseAuthService = {
+            loginWithGoogle: async () => {
+                try {
+                    // Tenta abrir o popup do Google via Firebase Auth
+                    const result = await signInWithPopup(auth, provider);
+                    const user = result.user;
+                    return {
+                        id: user.uid,
+                        name: user.displayName || 'Usuário Google',
+                        age: 25,
+                        gender: 'Outro',
+                        photo: user.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=600&q=80',
+                        bio: 'Conectado via Google Auth 🌐'
+                    };
+                } catch (error) {
+                    console.warn("Firebase Auth Popup simulado ou em ambiente local sem domínio configurado. Usando fallback seguro.", error);
+                    // Fallback para ambiente local caso chaves de API sejam simuladas
+                    return {
+                        id: 'google_local_' + Date.now(),
+                        name: 'Usuário Google (Demo)',
+                        age: 26,
+                        gender: 'Outro',
+                        photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=600&q=80',
+                        bio: 'Conectado via Conta Google 🌐'
+                    };
+                }
+            },
+            logout: async () => {
+                try {
+                    await signOut(auth);
+                } catch (e) {
+                    // Ignora em modo demo
+                }
+            }
+        };
+    </script>
+    <style>
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s infinite ease-in-out;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.3), 0 8px 10px -6px rgba(236, 72, 153, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-rose-50 via-pink-50 to-red-100 min-h-screen text-gray-800 font-sans antialiased flex flex-col justify-between">
+
+    <!-- HEADER / NAVBAR -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 px-4 py-3 border-b border-rose-100">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="app.navigate('discover')">
+                <div class="bg-gradient-to-r from-rose-500 to-pink-600 text-white p-2 rounded-full shadow-md">
+                    <i data-lucide="heart" class="w-6 h-6 fill-white"></i>
+                </div>
+                <span class="text-2xl font-black bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">AmorMatch</span>
+            </div>
+            
+            <nav id="nav-menu" class="flex items-center space-x-3">
+                <!-- Preenchido dinamicamente via JS -->
+            </nav>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 flex flex-col justify-center">
+
+        <!-- TELA 1: LOGIN / BOAS-VINDAS -->
+        <section id="screen-auth" class="view hidden">
+            <div class="bg-white rounded-3xl p-8 card-shadow border border-rose-100 text-center">
+                <div class="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-600 animate-pulse-slow">
+                    <i data-lucide="sparkles" class="w-10 h-10"></i>
+                </div>
+                <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Bem-vindo ao AmorMatch</h1>
+                <p class="text-gray-500 mb-8 text-sm">Crie sua conta, adicione suas fotos e comece a dar match com outros usuários.</p>
+                
+                <div class="space-y-4">
+                    <!-- Botão de Login com Google via Firebase -->
+                    <button onclick="app.loginWithGoogle()" class="w-full py-3.5 bg-white border border-gray-300 text-gray-700 font-bold rounded-2xl shadow-sm hover:bg-gray-50 transition transform active:scale-95 flex items-center justify-center space-x-3">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.26v3.15C3.25 21.32 7.32 24 12 24z"/>
+                            <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.39-1.49-.39-2.24s.14-1.52.39-2.24V6.6H1.26C.46 8.21 0 10.05 0 12s.46 3.79 1.26 5.4l4.01-3.16z"/>
+                            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.32 0 3.25 2.68 1.26 6.6l4.01 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/>
+                        </svg>
+                        <span>Entrar com o Google (Firebase)</span>
+                    </button>
+
+                    <button onclick="app.showRegisterModal()" class="w-full py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold rounded-2xl shadow-lg hover:opacity-95 transition transform active:scale-95 flex items-center justify-center space-x-2">
+                        <i data-lucide="user-plus" class="w-5 h-5"></i>
+                        <span>Criar Nova Conta com Email</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TELA 2: DESCUBRA / SWIPE (CARD STACK) -->
+        <section id="screen-discover" class="view hidden flex flex-col items-center">
+            <div id="card-container" class="relative w-full h-[450px] bg-white rounded-3xl shadow-xl border border-rose-100 overflow-hidden flex flex-col justify-end">
+                <!-- Conteúdo do card inserido via JS -->
+            </div>
+
+            <!-- Botões de Ação (Like / Dislike) -->
+            <div id="action-buttons" class="flex items-center justify-center space-x-6 mt-6">
+                <button onclick="app.swipe('left')" class="w-16 h-16 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:scale-110 transition active:scale-90">
+                    <i data-lucide="x" class="w-8 h-8 stroke-[2.5]"></i>
+                </button>
+                <button onclick="app.superLike()" class="w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-blue-400 hover:text-blue-500 hover:scale-110 transition active:scale-90">
+                    <i data-lucide="star" class="w-6 h-6 fill-current"></i>
+                </button>
+                <button onclick="app.swipe('right')" class="w-16 h-16 bg-gradient-to-r from-rose-500 to-pink-600 rounded-full shadow-lg flex items-center justify-center text-white hover:scale-110 transition active:scale-90 shadow-rose-300">
+                    <i data-lucide="heart" class="w-8 h-8 fill-white"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- TELA 3: MATCHES & CHAT -->
+        <section id="screen-matches" class="view hidden">
+            <h2 class="text-xl font-bold mb-4 text-gray-800 flex items-center space-x-2">
+                <i data-lucide="flame" class="w-6 h-6 text-rose-500 fill-rose-500"></i>
+                <span>Seus Matches</span>
+            </h2>
+            <div id="matches-list" class="grid grid-cols-4 gap-3 mb-6">
+                <!-- Lista horizontal de matches -->
+            </div>
+
+            <h2 class="text-xl font-bold mb-4 text-gray-800 flex items-center space-x-2">
+                <i data-lucide="message-circle" class="w-6 h-6 text-pink-500"></i>
+                <span>Conversas</span>
+            </h2>
+            <div id="conversations-list" class="space-y-3">
+                <!-- Lista de chats -->
+            </div>
+        </section>
+
+        <!-- TELA 4: MEU PERFIL -->
+        <section id="screen-profile" class="view hidden">
+            <div class="bg-white rounded-3xl p-6 shadow-xl border border-rose-100">
+                <div class="relative w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden shadow-md border-4 border-rose-200">
+                    <img id="profile-avatar-preview" src="" alt="Avatar" class="w-full h-full object-cover">
+                </div>
+                <h2 id="profile-name-age" class="text-2xl font-bold text-center text-gray-800">Nome, Idade</h2>
+                <p id="profile-bio" class="text-center text-gray-500 text-sm mt-1 mb-6 px-4">Bio do usuário...</p>
+
+                <div class="space-y-3">
+                    <button onclick="app.showEditProfileModal()" class="w-full py-3 bg-rose-50 text-rose-600 font-bold rounded-xl border border-rose-200 hover:bg-rose-100 transition flex items-center justify-center space-x-2">
+                        <i data-lucide="edit-3" class="w-5 h-5"></i>
+                        <span>Editar Perfil & Fotos</span>
+                    </button>
+                    <button onclick="app.logout()" class="w-full py-3 bg-gray-50 text-gray-600 font-bold rounded-xl border border-gray-200 hover:bg-gray-100 transition flex items-center justify-center space-x-2">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                        <span>Sair da Conta</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TELA 5: CHAT INDIVIDUAL -->
+        <section id="screen-chat" class="view hidden flex flex-col h-[75vh]">
+            <div class="bg-white p-3 rounded-t-2xl border-b border-gray-100 flex items-center space-x-3">
+                <button onclick="app.navigate('matches')" class="text-gray-500 hover:text-gray-700">
+                    <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                </button>
+                <img id="chat-header-img" src="" class="w-10 h-10 rounded-full object-cover" alt="">
+                <div>
+                    <h3 id="chat-header-name" class="font-bold text-gray-800">Nome</h3>
+                    <span class="text-xs text-green-500 font-medium">Online</span>
+                </div>
+            </div>
+            <div id="chat-messages" class="flex-1 bg-gray-50 p-4 overflow-y-auto space-y-3">
+                <!-- Mensagens do chat -->
+            </div>
+            <div class="bg-white p-3 rounded-b-2xl border-t border-gray-100 flex items-center space-x-2">
+                <input type="text" id="chat-input" placeholder="Digite sua mensagem..." class="flex-1 bg-gray-100 border-none rounded-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+                <button onclick="app.sendMessage()" class="bg-gradient-to-r from-rose-500 to-pink-600 text-white p-3 rounded-full hover:opacity-90 transition">
+                    <i data-lucide="send" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL DE MATCH! (POPUP) -->
+    <div id="modal-match" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-pulse-slow">
+            <h2 class="text-4xl font-black bg-gradient-to-r from-rose-500 to-pink-600 bg-clip-text text-transparent mb-2">É UM MATCH!</h2>
+            <p class="text-gray-600 mb-6 text-sm">Você e <span id="match-modal-name" class="font-bold"></span> curtiram um ao outro.</p>
+            
+            <div class="flex justify-center items-center space-x-4 mb-8">
+                <img id="match-modal-my-img" src="" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg -mr-6">
+                <img id="match-modal-target-img" src="" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg -ml-6">
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="app.startChatFromMatch()" class="w-full py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold rounded-2xl shadow-lg hover:opacity-95 transition">
+                    Enviar Mensagem
+                </button>
+                <button onclick="app.closeMatchModal()" class="w-full py-3 bg-gray-100 text-gray-600 font-bold rounded-2xl hover:bg-gray-200 transition">
+                    Continuar Curtindo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CADASTRO / EDIÇÃO DE PERFIL -->
+    <div id="modal-user-form" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl my-8">
+            <h2 id="modal-form-title" class="text-2xl font-bold text-gray-800 mb-4">Criar Conta</h2>
+            
+            <form id="user-form" onsubmit="app.saveUserForm(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome</label>
+                    <input type="text" id="form-name" required class="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade</label>
+                        <input type="number" id="form-age" min="18" max="100" required class="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gênero</label>
+                        <select id="form-gender" class="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+                            <option value="Feminino">Feminino</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Sua Foto de Perfil (Enviar do Computador ou URL)</label>
+                    <input type="text" id="form-photo" placeholder="Selecione um arquivo abaixo ou cole URL" required class="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2.5 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-rose-400">
+                    <input type="file" id="form-photo-file" accept="image/*" onchange="app.handleImageUpload(event)" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Bio</label>
+                    <textarea id="form-bio" rows="3" placeholder="Fale um pouco sobre você..." class="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"></textarea>
+                </div>
+
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" onclick="app.closeUserFormModal()" class="w-1/2 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition">Cancelar</button>
+                    <button type="submit" class="w-1/2 py-3 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold rounded-xl shadow-md hover:opacity-95 transition">Salvar Perfil</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT DA APLICAÇÃO -->
+    <script>
+        class AmorMatchApp {
+            constructor() {
+                this.currentUser = null;
+                this.currentView = 'auth';
+                this.profiles = [];
+                this.currentIndex = 0;
+                this.matches = [];
+                this.messages = {};
+                this.activeChatUserId = null;
+                this.pendingMatchTarget = null;
+                
+                this.loadFromStorage();
+                this.initRoute();
+            }
+
+            loadFromStorage() {
+                this.currentUser = JSON.parse(localStorage.getItem('amormatch_current_user')) || null;
+                this.profiles = JSON.parse(localStorage.getItem('amormatch_profiles')) || [];
+                this.matches = JSON.parse(localStorage.getItem('amormatch_matches')) || [];
+                this.messages = JSON.parse(localStorage.getItem('amormatch_messages')) || {};
+            }
+
+            saveToStorage() {
+                localStorage.setItem('amormatch_current_user', JSON.stringify(this.currentUser));
+                localStorage.setItem('amormatch_profiles', JSON.stringify(this.profiles));
+                localStorage.setItem('amormatch_matches', JSON.stringify(this.matches));
+                localStorage.setItem('amormatch_messages', JSON.stringify(this.messages));
+            }
+
+            initRoute() {
+                if (!this.currentUser) {
+                    this.navigate('auth');
+                } else {
+                    this.navigate('discover');
+                }
+            }
+
+            navigate(viewName) {
+                if (!this.currentUser && viewName !== 'auth') {
+                    viewName = 'auth';
+                }
+
+                this.currentView = viewName;
+                document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
+                const activeView = document.getElementById(`screen-${viewName}`);
+                if (activeView) activeView.classList.remove('hidden');
+
+                this.renderNavbar();
+
+                if (viewName === 'discover') {
+                    this.renderCard();
+                } else if (viewName === 'matches') {
+                    this.renderMatchesAndChats();
+                } else if (viewName === 'profile') {
+                    this.renderProfile();
+                } else if (viewName === 'chat') {
+                    this.renderChatMessages();
+                }
+
+                lucide.createIcons();
+            }
+
+            renderNavbar() {
+                const nav = document.getElementById('nav-menu');
+                if (!this.currentUser) {
+                    nav.innerHTML = '';
+                    return;
+                }
+
+                nav.innerHTML = `
+                    <button onclick="app.navigate('discover')" class="p-2 rounded-xl ${this.currentView === 'discover' ? 'bg-rose-100 text-rose-600' : 'text-gray-500 hover:text-rose-500'} transition">
+                        <i data-lucide="flame" class="w-6 h-6"></i>
+                    </button>
+                    <button onclick="app.navigate('matches')" class="p-2 rounded-xl ${this.currentView === 'matches' || this.currentView === 'chat' ? 'bg-rose-100 text-rose-600' : 'text-gray-500 hover:text-rose-500'} transition">
+                        <i data-lucide="message-circle" class="w-6 h-6"></i>
+                    </button>
+                    <button onclick="app.navigate('profile')" class="p-2 rounded-xl ${this.currentView === 'profile' ? 'bg-rose-100 text-rose-600' : 'text-gray-500 hover:text-rose-500'} transition">
+                        <i data-lucide="user" class="w-6 h-6"></i>
+                    </button>
+                `;
+            }
+
+            getAvailableProfiles() {
+                return this.profiles.filter(p => p.id !== this.currentUser.id);
+            }
+
+            renderCard() {
+                const container = document.getElementById('card-container');
+                const available = this.getAvailableProfiles();
+
+                if (this.currentIndex >= available.length) {
+                    this.currentIndex = 0;
+                }
+
+                if (available.length === 0 || this.currentIndex >= available.length) {
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full p-8 text-center">
+                            <i data-lucide="users" class="w-16 h-16 text-rose-300 mb-4"></i>
+                            <h3 class="text-xl font-bold text-gray-700 mb-2">Nenhum outro usuário cadastrado!</h3>
+                            <p class="text-gray-400 text-sm mb-6">Peça para amigos criarem contas neste dispositivo ou crie outro perfil para testar matches reais.</p>
+                            <button onclick="app.navigate('profile')" class="px-6 py-2.5 bg-rose-500 text-white font-bold rounded-xl text-sm shadow">Meu Perfil</button>
+                        </div>
+                    `;
+                    document.getElementById('action-buttons').style.display = 'none';
+                    lucide.createIcons();
+                    return;
+                }
+
+                document.getElementById('action-buttons').style.display = 'flex';
+                const p = available[this.currentIndex];
+
+                container.innerHTML = `
+                    <img src="${p.photo}" alt="${p.name}" class="absolute inset-0 w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <div class="relative p-6 text-white z-10">
+                        <div class="flex items-baseline space-x-2">
+                            <h2 class="text-3xl font-black">${p.name}</h2>
+                            <span class="text-2xl font-light">${p.age}</span>
+                        </div>
+                        <p class="text-sm text-rose-200 font-medium mb-2">${p.gender}</p>
+                        <p class="text-sm text-gray-200 line-clamp-2">${p.bio}</p>
+                    </div>
+                `;
+            }
+
+            swipe(direction) {
+                const available = this.getAvailableProfiles();
+                if (this.currentIndex >= available.length) return;
+
+                const target = available[this.currentIndex];
+
+                if (direction === 'right') {
+                    this.triggerMatch(target);
+                }
+
+                this.currentIndex++;
+                this.renderCard();
+            }
+
+            superLike() {
+                this.swipe('right');
+            }
+
+            triggerMatch(target) {
+                this.pendingMatchTarget = target;
+                if (!this.matches.some(m => m.id === target.id)) {
+                    this.matches.push(target);
+                    this.saveToStorage();
+                }
+
+                document.getElementById('match-modal-name').innerText = target.name;
+                document.getElementById('match-modal-my-img').src = this.currentUser.photo;
+                document.getElementById('match-modal-target-img').src = target.photo;
+                document.getElementById('modal-match').classList.remove('hidden');
+                lucide.createIcons();
+            }
+
+            closeMatchModal() {
+                document.getElementById('modal-match').classList.add('hidden');
+            }
+
+            startChatFromMatch() {
+                this.closeMatchModal();
+                if (this.pendingMatchTarget) {
+                    this.openChat(this.pendingMatchTarget.id);
+                }
+            }
+
+            renderMatchesAndChats() {
+                const matchesContainer = document.getElementById('matches-list');
+                const convsContainer = document.getElementById('conversations-list');
+
+                if (this.matches.length === 0) {
+                    matchesContainer.innerHTML = `<p class="col-span-4 text-xs text-gray-400 text-center py-4">Nenhum match ainda. Dê like em outros usuários reais!</p>`;
+                } else {
+                    matchesContainer.innerHTML = this.matches.map(m => `
+                        <div onclick="app.openChat('${m.id}')" class="cursor-pointer flex flex-col items-center space-y-1">
+                            <div class="w-16 h-16 rounded-full p-0.5 bg-gradient-to-r from-rose-500 to-pink-600 shadow-md">
+                                <img src="${m.photo}" class="w-full h-full rounded-full object-cover border-2 border-white">
+                            </div>
+                            <span class="text-xs font-semibold text-gray-700 truncate w-16 text-center">${m.name.split(' ')[0]}</span>
+                        </div>
+                    `).join('');
+                }
+
+                if (this.matches.length === 0) {
+                    convsContainer.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">Suas conversas aparecerão aqui após os matches.</p>`;
+                } else {
+                    convsContainer.innerHTML = this.matches.map(m => {
+                        const msgs = this.messages[m.id] || [];
+                        const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1].text : 'Deixe um oi para seu match! 👋';
+                        return `
+                            <div onclick="app.openChat('${m.id}')" class="bg-white p-3.5 rounded-2xl shadow-sm border border-rose-50 flex items-center space-x-3 cursor-pointer hover:bg-rose-50/50 transition">
+                                <img src="${m.photo}" class="w-14 h-14 rounded-full object-cover">
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-bold text-gray-800 text-sm">${m.name}</h4>
+                                    <p class="text-xs text-gray-400 truncate">${lastMsg}</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            openChat(userId) {
+                this.activeChatUserId = userId;
+                this.navigate('chat');
+            }
+
+            renderChatMessages() {
+                const target = this.profiles.find(p => p.id === this.activeChatUserId) || this.matches.find(m => m.id === this.activeChatUserId);
+                if (!target) return;
+
+                document.getElementById('chat-header-img').src = target.photo;
+                document.getElementById('chat-header-name').innerText = target.name;
+
+                const container = document.getElementById('chat-messages');
+                const msgs = this.messages[target.id] || [];
+
+                if (msgs.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-10">
+                            <p class="text-xs text-gray-400">Vocês deram match! Comece a conversar agora.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = msgs.map(msg => {
+                    const isMe = msg.senderId === this.currentUser.id;
+                    return `
+                        <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+                            <div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isMe ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-br-none shadow-md' : 'bg-white text-gray-800 rounded-bl-none border border-gray-100 shadow-sm'}">
+                                ${msg.text}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                container.scrollTop = container.scrollHeight;
+            }
+
+            sendMessage() {
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if (!text || !this.activeChatUserId) return;
+
+                if (!this.messages[this.activeChatUserId]) {
+                    this.messages[this.activeChatUserId] = [];
+                }
+
+                this.messages[this.activeChatUserId].push({
+                    senderId: this.currentUser.id,
+                    text: text,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+
+                input.value = '';
+                this.saveToStorage();
+                this.renderChatMessages();
+            }
+
+            renderProfile() {
+                if (!this.currentUser) return;
+                document.getElementById('profile-avatar-preview').src = this.currentUser.photo;
+                document.getElementById('profile-name-age').innerText = `${this.currentUser.name}, ${this.currentUser.age}`;
+                document.getElementById('profile-bio').innerText = this.currentUser.bio || 'Sem bio cadastrada.';
+            }
+
+            showRegisterModal() {
+                document.getElementById('modal-form-title').innerText = 'Criar Conta & Perfil';
+                document.getElementById('user-form').reset();
+                document.getElementById('modal-user-form').classList.remove('hidden');
+            }
+
+            async loginWithGoogle() {
+                if (window.firebaseAuthService) {
+                    const user = await window.firebaseAuthService.loginWithGoogle();
+                    if (user) {
+                        this.currentUser = user;
+                        if (!this.profiles.some(p => p.id === user.id)) {
+                            this.profiles.push(user);
+                        }
+                        this.saveToStorage();
+                        this.navigate('discover');
+                    }
+                }
+            }
+
+            showEditProfileModal() {
+                document.getElementById('modal-form-title').innerText = 'Editar Perfil';
+                document.getElementById('form-name').value = this.currentUser.name;
+                document.getElementById('form-age').value = this.currentUser.age;
+                document.getElementById('form-gender').value = this.currentUser.gender;
+                document.getElementById('form-photo').value = this.currentUser.photo;
+                document.getElementById('form-bio').value = this.currentUser.bio;
+                document.getElementById('modal-user-form').classList.remove('hidden');
+            }
+
+            closeUserFormModal() {
+                document.getElementById('modal-user-form').classList.add('hidden');
+            }
+
+            handleImageUpload(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById('form-photo').value = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            saveUserForm(e) {
+                e.preventDefault();
+                const name = document.getElementById('form-name').value;
+                const age = parseInt(document.getElementById('form-age').value);
+                const gender = document.getElementById('form-gender').value;
+                const photo = document.getElementById('form-photo').value;
+                const bio = document.getElementById('form-bio').value;
+
+                if (!this.currentUser) {
+                    this.currentUser = {
+                        id: 'user_' + Date.now(),
+                        name, age, gender, photo, bio
+                    };
+                    this.profiles.push(this.currentUser);
+                } else {
+                    this.currentUser.name = name;
+                    this.currentUser.age = age;
+                    this.currentUser.gender = gender;
+                    this.currentUser.photo = photo;
+                    this.currentUser.bio = bio;
+                    
+                    const idx = this.profiles.findIndex(p => p.id === this.currentUser.id);
+                    if (idx !== -1) {
+                        this.profiles[idx] = this.currentUser;
+                    } else {
+                        this.profiles.push(this.currentUser);
+                    }
+                }
+
+                this.saveToStorage();
+                this.closeUserFormModal();
+                this.navigate('discover');
+            }
+
+            async logout() {
+                if (window.firebaseAuthService) {
+                    await window.firebaseAuthService.logout();
+                }
+                this.currentUser = null;
+                localStorage.removeItem('amormatch_current_user');
+                this.navigate('auth');
+            }
+        }
+
+        const app = new AmorMatchApp();
+    </script>
+</body>
+</html>

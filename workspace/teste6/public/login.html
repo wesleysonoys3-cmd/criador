@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Cadastro Empresa - Portal de Empregos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col justify-between">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold flex items-center gap-2">
+        <span>📄</span> Portal de Empregos
+      </h1>
+      <a href="index.html" class="hover:underline font-medium">← Voltar ao site</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-md mx-auto px-4 py-12 w-full">
+    <div class="bg-white rounded-xl shadow-md p-8">
+      <!-- Tabs -->
+      <div class="flex border-b mb-6">
+        <button onclick="alternarTab('login')" id="btnTabLogin" class="w-1/2 pb-3 font-bold text-blue-600 border-b-2 border-blue-600">Login</button>
+        <button onclick="alternarTab('registro')" id="btnTabRegistro" class="w-1/2 pb-3 font-semibold text-gray-500">Cadastrar Empresa</button>
+      </div>
+
+      <div id="mensagemStatus" class="hidden mb-4 p-3 rounded-lg text-sm font-medium"></div>
+
+      <!-- Form Login -->
+      <form id="formLogin" onsubmit="fazerLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">E-mail corporativo</label>
+          <input type="email" id="loginEmail" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+          <input type="password" id="loginSenha" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition">Entrar</button>
+      </form>
+
+      <!-- Form Registro -->
+      <form id="formRegistro" onsubmit="fazerRegistro(event)" class="space-y-4 hidden">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Empresa</label>
+          <input type="text" id="regNome" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">E-mail corporativo</label>
+          <input type="email" id="regEmail" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+          <input type="password" id="regSenha" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition">Cadastrar Empresa</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white text-center py-6">
+    <p>&copy; 2025 Portal de Empregos e Currículos. Todos os direitos reservados.</p>
+  </footer>
+
+  <script>
+    function alternarTab(tab) {
+      const formLogin = document.getElementById('formLogin');
+      const formRegistro = document.getElementById('formRegistro');
+      const btnLogin = document.getElementById('btnTabLogin');
+      const btnReg = document.getElementById('btnTabRegistro');
+      const status = document.getElementById('mensagemStatus');
+      status.classList.add('hidden');
+
+      if (tab === 'login') {
+        formLogin.classList.remove('hidden');
+        formRegistro.classList.add('hidden');
+        btnLogin.className = "w-1/2 pb-3 font-bold text-blue-600 border-b-2 border-blue-600";
+        btnReg.className = "w-1/2 pb-3 font-semibold text-gray-500";
+      } else {
+        formRegistro.classList.remove('hidden');
+        formLogin.classList.add('hidden');
+        btnReg.className = "w-1/2 pb-3 font-bold text-blue-600 border-b-2 border-blue-600";
+        btnLogin.className = "w-1/2 pb-3 font-semibold text-gray-500";
+      }
+    }
+
+    async function fazerLogin(e) {
+      e.preventDefault();
+      const status = document.getElementById('mensagemStatus');
+      const email = document.getElementById('loginEmail').value;
+      const senha = document.getElementById('loginSenha').value;
+
+      try {
+        const res = await fetch('/api/empresas/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, senha })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('empresa', JSON.stringify(data.empresa));
+          window.location.href = 'dashboard.html';
+        } else {
+          throw new Error(data.error || 'Erro ao fazer login.');
+        }
+      } catch (err) {
+        status.className = "mb-4 p-3 rounded-lg text-sm font-medium bg-red-100 text-red-700";
+        status.textContent = "❌ " + err.message;
+        status.classList.remove('hidden');
+      }
+    }
+
+    async function fazerRegistro(e) {
+      e.preventDefault();
+      const status = document.getElementById('mensagemStatus');
+      const nome = document.getElementById('regNome').value;
+      const email = document.getElementById('regEmail').value;
+      const senha = document.getElementById('regSenha').value;
+
+      try {
+        const res = await fetch('/api/empresas/registro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, email, senha })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          status.className = "mb-4 p-3 rounded-lg text-sm font-medium bg-green-100 text-green-700";
+          status.textContent = "✅ Empresa cadastrada com sucesso! Faça login.";
+          status.classList.remove('hidden');
+          alternarTab('login');
+          document.getElementById('formRegistro').reset();
+        } else {
+          throw new Error(data.error || 'Erro ao cadastrar empresa.');
+        }
+      } catch (err) {
+        status.className = "mb-4 p-3 rounded-lg text-sm font-medium bg-red-100 text-red-700";
+        status.textContent = "❌ " + err.message;
+        status.classList.remove('hidden');
+      }
+    }
+  </script>
+</body>
+</html>

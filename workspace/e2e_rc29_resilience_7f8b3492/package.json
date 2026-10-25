@@ -1,0 +1,16 @@
+{
+  "name": "e2e_rc29_resilience_7f8b3492",
+  "version": "1.0.0",
+  "description": "Pequeno sistema web com página inicial, botão funcional e teste automatizado",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.0"
+  }
+}

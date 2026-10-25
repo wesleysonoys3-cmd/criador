@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Enigma dos Três Deuses — Verdade, Mentira e Acaso</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="h-full bg-slate-900 text-slate-100 flex flex-col font-sans antialiased">
+
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 py-4 px-6 shadow-md">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-600 text-white p-2.5 rounded-xl shadow-lg flex items-center justify-center">
+                    <i class="fa-solid fa-brain text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white">O Enigma dos Três Deuses</h1>
+                    <p class="text-xs text-slate-400">Verdade, Mentira e Acaso (George Boolos / The Hardest Logic Puzzle Ever)</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="app.resetGame()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg transition border border-slate-600 flex items-center space-x-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Reiniciar Jogo</span>
+                </button>
+                <button onclick="app.toggleSolutionModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold rounded-lg transition shadow flex items-center space-x-2">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span>Ver Solução Lógica</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-y-auto">
+        
+        <!-- Left Column: Deuses & Status (1 col) -->
+        <div class="lg:col-span-1 flex flex-col space-y-6">
+            
+            <!-- Regras card -->
+            <div class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-5 shadow-lg">
+                <h2 class="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center space-x-2">
+                    <i class="fa-solid fa-scroll"></i>
+                    <span>As Regras do Enigma</span>
+                </h2>
+                <ul class="text-xs space-y-2 text-slate-300">
+                    <li class="flex items-start space-x-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
+                        <span><strong>A, B e C</strong> são, em alguma ordem: Verdade, Mentira e Acaso.</span>
+                    </li>
+                    <li class="flex items-start space-x-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
+                        <span><strong>Verdade</strong> sempre diz a verdade.</span>
+                    </li>
+                    <li class="flex items-start space-x-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
+                        <span><strong>Mentira</strong> sempre mente.</span>
+                    </li>
+                    <li class="flex items-start space-x-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
+                        <span><strong>Acaso</strong> responde aleatoriamente (cara ou coroa mental).</span>
+                    </li>
+                    <li class="flex items-start space-x-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
+                        <span>Você tem direito a apenas <strong>3 perguntas de "Sim" ou "Não"</strong> no total.</span>
+                    </li>
+                    <li class="flex items-start space-x-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
+                        <span>Cada pergunta deve ser feita a <strong>apenas um deus por vez</strong>.</span>
+                    </li>
+                    <li class="flex items-start space-x-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
+                        <span>Eles compreendem português, mas respondem em sua própria língua com <strong>"Da"</strong> (Sim) e <strong>"Ja"</strong> (Não), sem sabermos qual é qual! (Aqui traduziremos para clareza).</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Status card -->
+            <div class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                <div>
+                    <h2 class="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Progresso da Missão</span>
+                    </h2>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 text-center">
+                            <span class="block text-2xl font-black text-white" id="questions-left">3</span>
+                            <span class="text-[11px] text-slate-400">Perguntas Restantes</span>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 text-center">
+                            <span class="block text-2xl font-black text-emerald-400" id="mode-status">Ativo</span>
+                            <span class="text-[11px] text-slate-400">Estado do Jogo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-700">
+                    <p class="text-xs text-slate-400 mb-2">Deseja tentar adivinhar a identidade dos deuses agora?</p>
+                    <button onclick="app.toggleGuessModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-bullseye"></i>
+                        <span>Fazer Suposição Final</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Interactive Arena & Chat (2 cols) -->
+        <div class="lg:col-span-2 flex flex-col space-y-6">
+            
+            <!-- Deuses Cards -->
+            <div class="grid grid-cols-3 gap-4">
+                <!-- Deus A -->
+                <div id="god-card-A" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 text-center shadow-lg relative overflow-hidden transition-all">
+                    <div class="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded bg-slate-700 text-slate-300 font-mono">Deus A</div>
+                    <div class="w-14 h-14 bg-slate-700 rounded-full mx-auto mb-3 flex items-center justify-center text-emerald-400 text-xl shadow-inner">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <h3 class="font-bold text-sm text-white mb-1">Deus A</h3>
+                    <p class="text-[11px] text-slate-400 mb-3" id="god-identity-label-A">Identidade Oculta</p>
+                    <button onclick="app.selectGod('A')" id="btn-select-A" class="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition shadow">
+                        Perguntar a A
+                    </button>
+                </div>
+
+                <!-- Deus B -->
+                <div id="god-card-B" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 text-center shadow-lg relative overflow-hidden transition-all">
+                    <div class="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded bg-slate-700 text-slate-300 font-mono">Deus B</div>
+                    <div class="w-14 h-14 bg-slate-700 rounded-full mx-auto mb-3 flex items-center justify-center text-emerald-400 text-xl shadow-inner">
+                        <i class="fa-solid fa-user-secret"></i>
+                    </div>
+                    <h3 class="font-bold text-sm text-white mb-1">Deus B</h3>
+                    <p class="text-[11px] text-slate-400 mb-3" id="god-identity-label-B">Identidade Oculta</p>
+                    <button onclick="app.selectGod('B')" id="btn-select-B" class="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition shadow">
+                        Perguntar a B
+                    </button>
+                </div>
+
+                <!-- Deus C -->
+                <div id="god-card-C" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 text-center shadow-lg relative overflow-hidden transition-all">
+                    <div class="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded bg-slate-700 text-slate-300 font-mono">Deus C</div>
+                    <div class="w-14 h-14 bg-slate-700 rounded-full mx-auto mb-3 flex items-center justify-center text-emerald-400 text-xl shadow-inner">
+                        <i class="fa-solid fa-user-ninja"></i>
+                    </div>
+                    <h3 class="font-bold text-sm text-white mb-1">Deus C</h3>
+                    <p class="text-[11px] text-slate-400 mb-3" id="god-identity-label-C">Identidade Oculta</p>
+                    <button onclick="app.selectGod('C')" id="btn-select-C" class="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition shadow">
+                        Perguntar a C
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dialogue / Interaction Box -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg flex-1 flex flex-col min-h-[320px]">
+                <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center space-x-2">
+                    <i class="fa-solid fa-comments text-emerald-400"></i>
+                    <span>Diálogo com os Deuses</span>
+                </h3>
+
+                <!-- Chat Log -->
+                <div id="chat-log" class="flex-1 bg-slate-900/80 rounded-xl p-4 mb-4 overflow-y-auto space-y-3 border border-slate-700/60 max-h-[260px] text-xs">
+                    <div class="text-slate-400 text-center italic py-4">
+                        Selecione um deus acima ou use uma pergunta padrão para iniciar o interrogatório.
+                    </div>
+                </div>
+
+                <!-- Pergunta Form -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-medium text-slate-300" id="current-target-label">Nenhum deus selecionado</span>
+                        <div class="space-x-1">
+                            <button onclick="app.loadMasterQuestion(1)" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-emerald-300 transition">Carregar Pergunta Mestra 1</button>
+                            <button onclick="app.loadMasterQuestion(2)" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-emerald-300 transition">Carregar Pergunta Mestra 2</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <input type="text" id="question-input" placeholder="Digite sua pergunta de 'Sim' ou 'Não' (ex: 'O deus B é o Acaso?')..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
+                        <button onclick="app.sendQuestion()" id="btn-send" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition shadow flex items-center space-x-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Perguntar</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 border-t border-slate-700 py-3 px-6 text-center text-xs text-slate-400">
+        TiAgente Autonomous Engine (RC28) &bull; Projeto de Lógica Computacional — Três Deuses
+    </footer>
+
+    <!-- Solution Modal -->
+    <div id="solution-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="app.toggleSolutionModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h2 class="text-lg font-bold text-emerald-400 mb-3 flex items-center space-x-2">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>A Solução Lógica Definitiva (George Boolos)</span>
+            </h2>
+            <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
+                <p>O grande segredo deste enigma consiste em fazer uma <strong>pergunta condicional aninhada</strong> (uma pergunta do tipo "se eu te perguntasse X, você diria Y?").</p>
+                
+                <h4 class="font-bold text-white mt-2">Passo 1: Encontrar alguém que NÃO seja o Acaso</h4>
+                <p>Como não sabemos quem é o Acaso, nossa primeira prioridade é encontrar um deus que certamente <strong>não</strong> seja o Acaso (ou seja, que seja ou a Verdade ou a Mentira).</p>
+                <p>Perguntamos ao <strong>Deus B</strong>: <em>"Se eu te perguntasse se o Deus A é o Acaso, você responderia 'Da' (Sim)?"</em></p>
+                <p>Independentemente de B ser Verdade, Mentira ou Acaso, a matemática lógica garante que podemos identificar com certeza um deus que <strong>não é o Acaso</strong> (ou o próprio B, ou o Deus C).</p>
+
+                <h4 class="font-bold text-white mt-2">Passo 2 e 3: Revelar as Identidades</h4>
+                <p>Com o deus identificado como não sendo o Acaso, fazemos a segunda pergunta a ele sobre o verdadeiro status do Acaso e da Verdade/Mentira.</p>
+                <p class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/60 font-mono text-emerald-300">
+                    Dica: Use os botões <strong>"Carregar Pergunta Mestra 1"</strong> na interface para testar a estratégia campeã do enigma!
+                </p>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="app.toggleSolutionModal()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guess Modal -->
+    <div id="guess-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="app.toggleGuessModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h2 class="text-lg font-bold text-indigo-400 mb-3 flex items-center space-x-2">
+                <i class="fa-solid fa-bullseye"></i>
+                <span>Qual é a Identidade dos Deuses?</span>
+            </h2>
+            <p class="text-xs text-slate-300 mb-4">Atribua a identidade correta para cada deus com base nas suas deduções:</p>
+            
+            <div class="space-y-3 mb-6">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Deus A é:</label>
+                    <select id="guess-A" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <option value="Verdade">Verdade</option>
+                        <option value="Mentira">Mentira</option>
+                        <option value="Acaso">Acaso</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Deus B é:</label>
+                    <select id="guess-B" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <option value="Verdade">Verdade</option>
+                        <option value="Mentira">Mentira</option>
+                        <option value="Acaso">Acaso</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Deus C é:</label>
+                    <select id="guess-C" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <option value="Verdade">Verdade</option>
+                        <option value="Mentira">Mentira</option>
+                        <option value="Acaso">Acaso</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex space-x-3">
+                <button onclick="app.toggleGuessModal()" class="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-xl transition">
+                    Cancelar
+                </button>
+                <button onclick="app.submitGuess()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition shadow">
+                    Verificar Suposição
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal (Victory/Defeat) -->
+    <div id="result-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl">
+            <div id="result-icon" class="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 id="result-title" class="text-xl font-bold text-white mb-2">Parabéns!</h2>
+            <p id="result-message" class="text-xs text-slate-300 mb-6">Você descobriu corretamente a identidade de todos os deuses.</p>
+            <button onclick="app.resetGame()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition shadow">
+                Jogar Novamente
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script src="script.js"></script>
+</body>
+</html>

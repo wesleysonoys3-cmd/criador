@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ajeita AI · Inteligência Artificial para Aluguel & Serviços. Inventário inteligente, contratos automáticos e rede de parceiros verificados.">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' x2='1'><stop offset='0%25' stop-color='%234f46e5'/><stop offset='100%25' stop-color='%2322d3ee'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><text x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-family='Inter,Arial' font-size='38' font-weight='800' fill='white'>A</text></svg>">
+    <title>Ajeita AI · Inteligência Artificial para Aluguel & Serviços</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .scroll-smooth{scroll-behavior:smooth}
+        .modal-open { overflow: hidden; }
+        @keyframes toastIn {
+          from { transform: translateY(16px); opacity: 0; }
+          to   { transform: translateY(0); opacity: 1; }
+        }
+        .toast-anim { animation: toastIn 0.25s ease-out both; }
+        .brand-logo-hover { transition: transform 0.12s ease; }
+        .brand-logo-hover:active { transform: scale(0.985); }
+        /* mobile hide:placeholder { color: #64748b; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- =========================================================
+         APP LOADER (primeiro paint — nunca expõe detalhes)
+         ========================================================= -->
+    <div id="app-loader" class="fixed inset-0 z-[70] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center">
+        <div class="text-center max-w-sm px-4">
+            <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                <i data-lucide="loader-2" class="w-8 h-8 text-white animate-spin"></i>
+            </div>
+            <h2 class="text-lg font-semibold text-white mb-2">Carregando sua conta...</h2>
+            <p id="loader-sub" class="text-sm text-slate-400">Um momento, por favor.</p>
+            <button id="loader-retry" onclick="location.reload()" class="hidden mt-6 mx-auto px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-medium hover:bg-slate-800 transition">
+                Tentar novamente
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         TOAST CONTAINER
+         ========================================================= -->
+    <div id="toast-container" class="fixed bottom-6 right-6 space-y-2 z-[80] max-w-sm w-[calc(100%-2rem)] sm:w-96 pointer-events-none"></div>
+
+    <!-- =========================================================
+         HEADER
+         ========================================================= -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+            <div id="brand-logo" class="flex items-center space-x-3 brand-logo-hover cursor-pointer select-none" title="Ajeita AI">
+                <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
+                    <i data-lucide="bot" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Ajeita AI</h1>
+                    <p class="text-xs text-slate-400">Plataforma de Aluguel, Serviços & Parceiros</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                    <span class="w-2 h-2 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                    Agente IA Ativo
+                </span>
+                <button onclick="switchTab('partner-apply')" class="inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-lg shadow-amber-600/20">
+                    <i data-lucide="handshake" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Seja Parceiro</span>
+                    <span class="sm:hidden">Parceiro</span>
+                </button>
+                <button onclick="openNewContractModal()" class="hidden sm:inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-lg shadow-indigo-600/20">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Novo Contrato IA</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- =========================================================
+         MAIN GRID
+         ========================================================= -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
+
+        <!-- SIDEBAR -->
+        <aside class="lg:col-span-1 space-y-2">
+            <nav id="sidebar-nav" class="space-y-1 bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition bg-indigo-600 text-white shadow-md">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800/60 hover:text-white">
+                    <i data-lucide="message-square-code" class="w-5 h-5"></i>
+                    <span>Agente Chat IA</span>
+                </button>
+                <button onclick="switchTab('equipment')" id="nav-equipment" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800/60 hover:text-white">
+                    <i data-lucide="box" class="w-5 h-5"></i>
+                    <span>Inventário Material</span>
+                </button>
+                <button onclick="switchTab('contracts')" id="nav-contracts" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800/60 hover:text-white">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                    <span>Contratos & Propostas</span>
+                </button>
+                <button onclick="switchTab('automations')" id="nav-automations" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800/60 hover:text-white">
+                    <i data-lucide="cpu" class="w-5 h-5"></i>
+                    <span>Automações & Regras</span>
+                </button>
+                <div class="my-2 border-t border-slate-800/70"></div>
+                <button onclick="switchTab('partners')" id="nav-partners" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800/60 hover:text-white">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span>Nossos Parceiros</span>
+                </button>
+                <button onclick="switchTab('partner-apply')" id="nav-partner-apply" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 border border-amber-500/20">
+                    <i data-lucide="handshake" class="w-5 h-5"></i>
+                    <span>Seja Parceiro</span>
+                </button>
+                <!-- ABA ADMIN É INJETADA VIA JS SOMENTE SE isAdmin=true -->
+            </nav>
+
+            <div class="bg-gradient-to-br from-indigo-950/50 to-slate-900 p-4 rounded-2xl border border-indigo-500/20">
+                <div class="flex items-center space-x-2 text-indigo-400 mb-2">
+                    <i data-lucide="zap" class="w-4 h-4"></i>
+                    <span class="text-xs font-semibold uppercase tracking-wider">Sistema Conectado</span>
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Inventário e parceiros verificados. Automações ativadas.
+                </p>
+            </div>
+        </aside>
+
+        <!-- CONTENT -->
+        <main class="lg:col-span-4 space-y-6">
+
+            <!-- TAB: DASHBOARD -->
+            <section id="tab-dashboard" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl">
+                        <div class="flex items-center justify-between text-slate-400 mb-3">
+                            <span class="text-sm font-medium">Contratos Ativos</span>
+                            <div class="bg-indigo-500/10 text-indigo-400 p-2 rounded-xl"><i data-lucide="file-check" class="w-5 h-5"></i></div>
+                        </div>
+                        <div class="text-3xl font-bold text-white" id="stat-active-contracts">-</div>
+                        <span class="text-xs text-emerald-400 font-medium flex items-center mt-2">
+                            <i data-lucide="trending-up" class="w-3.5 h-3.5 mr-1"></i> Em operação
+                        </span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl">
+                        <div class="flex items-center justify-between text-slate-400 mb-3">
+                            <span class="text-sm font-medium">Faturamento</span>
+                            <div class="bg-emerald-500/10 text-emerald-400 p-2 rounded-xl"><i data-lucide="banknote" class="w-5 h-5"></i></div>
+                        </div>
+                        <div class="text-3xl font-bold text-white" id="stat-revenue">-</div>
+                        <span class="text-xs text-emerald-400 font-medium flex items-center mt-2">
+                            <i data-lucide="trending-up" class="w-3.5 h-3.5 mr-1"></i> Acumulado
+                        </span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl">
+                        <div class="flex items-center justify-between text-slate-400 mb-3">
+                            <span class="text-sm font-medium">Material Disponível</span>
+                            <div class="bg-cyan-500/10 text-cyan-400 p-2 rounded-xl"><i data-lucide="box" class="w-5 h-5"></i></div>
+                        </div>
+                        <div class="text-3xl font-bold text-white" id="stat-available">-</div>
+                        <span class="text-xs text-cyan-400 font-medium flex items-center mt-2">
+                            <i data-lucide="check-circle" class="w-3.5 h-3.5 mr-1"></i> Pronto para entrega
+                        </span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl">
+                        <div class="flex items-center justify-between text-slate-400 mb-3">
+                            <span class="text-sm font-medium">Parceiros Verificados</span>
+                            <div class="bg-amber-500/10 text-amber-400 p-2 rounded-xl"><i data-lucide="users" class="w-5 h-5"></i></div>
+                        </div>
+                        <div class="text-3xl font-bold text-white" id="stat-partners">-</div>
+                        <span class="text-xs text-amber-400 font-medium flex items-center mt-2">
+                            <i data-lucide="award" class="w-3.5 h-3.5 mr-1"></i> Rede Ajeita AI
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-white">Contratos Recentes</h3>
+                            <button onclick="switchTab('contracts')" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">Ver todos</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-300">
+                                <thead class="border-b border-slate-800 text-slate-400 text-xs uppercase">
+                                    <tr>
+                                        <th class="pb-3">Evento</th>
+                                        <th class="pb-3">Cliente</th>
+                                        <th class="pb-3">Datas</th>
+                                        <th class="pb-3">Valor</th>
+                                        <th class="pb-3">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-contracts-table" class="divide-y divide-slate-800/60"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-b from-slate-900 to-indigo-950/30 border border-slate-800 p-6 rounded-2xl shadow-xl flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center space-x-3 mb-4">
+                                <div class="bg-indigo-600/20 text-indigo-400 p-2 rounded-xl border border-indigo-500/30">
+                                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-semibold text-white">Agente Rápido IA</h3>
+                                    <p class="text-xs text-slate-400">Atendimento e Orçamentos</p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+                                Peça ao agente para verificar estoque, calcular orçamentos ou conectar com parceiros verificados da Ajeita AI.
+                            </p>
+                            <div class="space-y-2 mb-4">
+                                <button onclick="quickPrompt('Quais cadeiras executivas temos disponíveis?')" class="w-full text-left text-xs bg-slate-800/80 hover:bg-slate-800 text-slate-300 p-2.5 rounded-xl border border-slate-700/50 transition flex items-center justify-between">
+                                    <span>Verificar estoque</span>
+                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                </button>
+                                <button onclick="switchTab('partner-apply')" class="w-full text-left text-xs bg-slate-800/80 hover:bg-slate-800 text-slate-300 p-2.5 rounded-xl border border-amber-500/20 transition flex items-center justify-between">
+                                    <span class="text-amber-300">Divulgar minha empresa</span>
+                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-amber-400"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button onclick="switchTab('chat')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-xs font-semibold transition shadow-md shadow-indigo-600/20">
+                            Abrir Chat IA
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: CHAT -->
+            <section id="tab-chat" class="tab-content hidden space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl flex flex-col h-[600px] sm:h-[700px]">
+                    <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50 rounded-t-2xl">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/30">
+                                <i data-lucide="bot" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-white">Ajeita AI Copilot</h3>
+                                <p class="text-xs text-emerald-400 flex items-center">
+                                    <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5 animate-pulse"></span>
+                                    Pronto para automatizar
+                                </p>
+                            </div>
+                        </div>
+                        <button onclick="clearChat()" class="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700/50 transition">Limpar</button>
+                    </div>
+                    <div id="chat-messages" class="flex-1 p-6 overflow-y-auto space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0 mt-1">
+                                <i data-lucide="bot" class="w-4 h-4"></i>
+                            </div>
+                            <div class="bg-slate-800 text-slate-200 p-4 rounded-2xl max-w-2xl text-sm leading-relaxed border border-slate-700/50">
+                                Olá! Sou o assistente da Ajeita AI. Posso ajudar com inventário, orçamentos, contratos ou conectar você com nossos parceiros. Como posso ajudar?
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 border-t border-slate-800 bg-slate-900/50 rounded-b-2xl">
+                        <form id="chat-form" onsubmit="handleChatSubmit(event)" class="flex items-center space-x-3">
+                            <input type="text" id="chat-input" placeholder="Ex: Preciso de 20 cadeiras para um evento..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 sm:px-6 py-3 rounded-xl font-medium text-sm transition flex items-center space-x-2 shadow-lg shadow-indigo-600/20">
+                                <span class="hidden sm:inline">Enviar</span>
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: INVENTÁRIO -->
+            <section id="tab-equipment" class="tab-content hidden space-y-6">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Inventário de Material</h3>
+                            <p class="text-xs text-slate-400">Controle de estoque com armazenamento permanente</p>
+                        </div>
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+                            <input type="text" id="equipment-search" oninput="filterEquipment()" placeholder="Pesquisar equipamento..." class="w-full sm:w-auto bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                            <button onclick="openNewEquipmentModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-md shadow-indigo-600/20 flex items-center space-x-1.5 whitespace-nowrap">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                <span>Adicionar Material</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="border-b border-slate-800 text-slate-400 text-xs uppercase">
+                                <tr>
+                                    <th class="pb-3">Ref.</th>
+                                    <th class="pb-3">Equipamento</th>
+                                    <th class="pb-3">Categoria</th>
+                                    <th class="pb-3">Estoque</th>
+                                    <th class="pb-3">Disp.</th>
+                                    <th class="pb-3">Preço/Dia</th>
+                                    <th class="pb-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipment-table" class="divide-y divide-slate-800/60"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: CONTRATOS -->
+            <section id="tab-contracts" class="tab-content hidden space-y-6">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Contratos de Locação</h3>
+                            <p class="text-xs text-slate-400">Gestão de prazos, entregas e faturamento</p>
+                        </div>
+                        <button onclick="openNewContractModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-md shadow-indigo-600/20 whitespace-nowrap">
+                            + Novo Contrato
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="border-b border-slate-800 text-slate-400 text-xs uppercase">
+                                <tr>
+                                    <th class="pb-3">Ref.</th>
+                                    <th class="pb-3">Cliente</th>
+                                    <th class="pb-3">Evento</th>
+                                    <th class="pb-3">Período</th>
+                                    <th class="pb-3">Valor Total</th>
+                                    <th class="pb-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contracts-table" class="divide-y divide-slate-800/60"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: AUTOMAÇÕES -->
+            <section id="tab-automations" class="tab-content hidden space-y-6">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-white">Regras de Automação & Workflows</h3>
+                        <p class="text-xs text-slate-400">Triggers configurados para otimizar o ciclo de locação</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="automations-grid"></div>
+                </div>
+            </section>
+
+            <!-- TAB: SEJA PARCEIRO -->
+            <section id="tab-partner-apply" class="tab-content hidden space-y-6">
+                <div class="relative overflow-hidden bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-indigo-500/10 border border-amber-500/20 rounded-3xl p-6 sm:p-10 shadow-2xl">
+                    <div class="absolute -top-10 -right-10 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl"></div>
+                    <div class="relative z-10 grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+                        <div class="lg:col-span-3 space-y-4">
+                            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold uppercase tracking-wider">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i><span>Oportunidade</span>
+                            </div>
+                            <h2 class="text-3xl sm:text-4xl font-bold text-white leading-tight">
+                                Divulgue sua empresa no <span class="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Ajeita AI</span>
+                            </h2>
+                            <p class="text-slate-300 leading-relaxed max-w-2xl">
+                                Milhares de clientes buscam serviços todos os dias. Seja um parceiro verificado e apareça para clientes certos. Equipe de curadoria, página personalizada e suporte dedicado.
+                            </p>
+                            <div class="grid grid-cols-3 gap-4 pt-2 text-xs sm:text-sm text-slate-300">
+                                <div class="flex items-start space-x-2"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 mt-0.5 shrink-0"></i><span>Selo de parceiro verificado</span></div>
+                                <div class="flex items-start space-x-2"><i data-lucide="users" class="w-4 h-4 text-indigo-400 mt-0.5 shrink-0"></i><span>Clientes segmentados</span></div>
+                                <div class="flex items-start space-x-2"><i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400 mt-0.5 shrink-0"></i><span>Mais visibilidade</span></div>
+                            </div>
+                            <button onclick="openPartnerFormModal()" class="mt-6 inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white px-6 py-3 rounded-xl text-sm font-semibold transition shadow-xl shadow-amber-600/30">
+                                <i data-lucide="send" class="w-4 h-4"></i><span>Enviar solicitação de parceria</span>
+                            </button>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                                <div class="flex items-center space-x-2 text-xs text-slate-400 mb-3"><i data-lucide="info" class="w-4 h-4"></i><span>Como funciona</span></div>
+                                <ol class="space-y-3 text-sm">
+                                    <li class="flex items-start space-x-3"><div class="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 flex items-center justify-center text-xs font-bold shrink-0">1</div><div><strong class="text-white">Preencha o formulário</strong><p class="text-slate-400 text-xs mt-0.5">Dados da empresa, contato e logo.</p></div></li>
+                                    <li class="flex items-start space-x-3"><div class="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 flex items-center justify-center text-xs font-bold shrink-0">2</div><div><strong class="text-white">Análise da equipe</strong><p class="text-slate-400 text-xs mt-0.5">Validação em até 48h úteis.</p></div></li>
+                                    <li class="flex items-start space-x-3"><div class="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 flex items-center justify-center text-xs font-bold shrink-0">3</div><div><strong class="text-white">Publicação na página</strong><p class="text-slate-400 text-xs mt-0.5">Card em "Nossos Parceiros" + selo verificado.</p></div></li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: NOSSOS PARCEIROS -->
+            <section id="tab-partners" class="tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl sm:text-3xl font-bold text-white">Nossos Parceiros</h2>
+                        <p class="text-slate-400 text-sm mt-1">Empresas verificadas pela curadoria Ajeita AI</p>
+                    </div>
+                    <button onclick="switchTab('partner-apply')" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-800/70 text-amber-300 border border-amber-500/20 px-4 py-2 rounded-xl text-xs font-medium transition whitespace-nowrap">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i><span>Quero ser parceiro</span>
+                    </button>
+                </div>
+                <div id="partners-empty" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-10 sm:p-16 text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500">
+                        <i data-lucide="store" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Em breve teremos novos parceiros.</h3>
+                    <p class="text-slate-400 text-sm max-w-md mx-auto">
+                        Estamos selecionando as melhores empresas para compor nossa rede. Volte em breve ou candidate sua empresa.
+                    </p>
+                    <button onclick="switchTab('partner-apply')" class="mt-6 inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition shadow-lg shadow-amber-600/20">
+                        <i data-lucide="handshake" class="w-4 h-4"></i><span>Quero divulgar minha empresa</span>
+                    </button>
+                </div>
+                <div id="partners-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+            </section>
+
+            <!-- TAB: ADMIN (SÓ VISÍVEL SE isAdmin=true; injetada no menu + conteúdo) -->
+            <section id="tab-admin" class="tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white flex items-center space-x-2">
+                            <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-300"><i data-lucide="shield-check" class="w-5 h-5"></i></span>
+                            <span>Painel Administrativo</span>
+                        </h2>
+                        <p class="text-slate-400 text-sm mt-1">Gerenciar solicitações de parceiros</p>
+                    </div>
+                    <button onclick="adminLogout()" id="admin-logout-btn" class="hidden inline-flex items-center space-x-2 bg-red-500/10 text-red-300 border border-red-500/20 hover:bg-red-500/20 px-4 py-2 rounded-xl text-xs font-medium transition">
+                        <i data-lucide="log-out" class="w-4 h-4"></i><span>Sair do admin</span>
+                    </button>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <h3 class="text-lg font-semibold text-white">Solicitações de Parceiros</h3>
+                        <button onclick="loadAdminApplications()" class="inline-flex items-center space-x-2 text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-slate-600 px-3 py-1.5 rounded-lg transition">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span>Atualizar</span>
+                        </button>
+                    </div>
+                    <div id="admin-apps-empty" class="hidden text-center py-10 text-slate-400 text-sm">Nenhuma solicitação encontrada.</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="border-b border-slate-800 text-slate-400 text-xs uppercase">
+                                <tr>
+                                    <th class="pb-3">Logo</th>
+                                    <th class="pb-3">Empresa</th>
+                                    <th class="pb-3">Responsável</th>
+                                    <th class="pb-3">Categoria</th>
+                                    <th class="pb-3">Cidade</th>
+                                    <th class="pb-3">Data</th>
+                                    <th class="pb-3">Status</th>
+                                    <th class="pb-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-apps-table" class="divide-y divide-slate-800/60"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- =========================================================
+         MODAL: NOVO CONTRATO
+         ========================================================= -->
+    <div id="contract-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600/20 text-indigo-400 p-2 rounded-xl border border-indigo-500/30">
+                        <i data-lucide="file-plus" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-white">Gerar Novo Contrato</h3>
+                        <p class="text-xs text-slate-400">Automatize reserva e atualização de estoque</p>
+                    </div>
+                </div>
+                <button onclick="closeNewContractModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="new-contract-form" onsubmit="submitNewContract(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Empresa / Cliente</label>
+                    <input type="text" id="modal-client" required placeholder="Ex: Construtora SA" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Evento / Projeto</label>
+                    <input type="text" id="modal-event" required placeholder="Ex: Stand Feira de Negócios" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Data Início</label>
+                        <input type="date" id="modal-start" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Data Fim</label>
+                        <input type="date" id="modal-end" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Equipamento Principal</label>
+                    <select id="modal-equipment" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Quantidade</label>
+                    <input type="number" id="modal-qty" min="1" value="10" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="pt-4 flex items-center justify-end space-x-3">
+                    <button type="button" onclick="closeNewContractModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-medium hover:bg-slate-800 transition">Cancelar</button>
+                    <button type="submit" id="contract-submit-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl text-xs font-medium transition shadow-lg shadow-indigo-600/20">Gerar Contrato</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL: NOVO MATERIAL
+         ========================================================= -->
+    <div id="equipment-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600/20 text-indigo-400 p-2 rounded-xl border border-indigo-500/30"><i data-lucide="box" class="w-5 h-5"></i></div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-white">Adicionar Novo Material</h3>
+                        <p class="text-xs text-slate-400">Registrar no inventário</p>
+                    </div>
+                </div>
+                <button onclick="closeNewEquipmentModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="new-equipment-form" onsubmit="submitNewEquipment(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome do Material</label>
+                    <input type="text" id="eq-modal-name" required placeholder="Ex: Sofá Lounge Corporativo" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Categoria</label>
+                    <select id="eq-modal-category" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        <option>Mobiliário</option><option>Audiovisual</option><option>Iluminação</option><option>Estruturas / Divisórias</option><option>Decoração</option><option>Outros</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Estoque Total</label>
+                        <input type="number" id="eq-modal-stock" min="1" value="25" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Preço / Dia (R$)</label>
+                        <input type="number" step="0.01" id="eq-modal-price" min="1" value="35.00" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="pt-4 flex items-center justify-end space-x-3">
+                    <button type="button" onclick="closeNewEquipmentModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-medium hover:bg-slate-800 transition">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl text-xs font-medium transition shadow-lg shadow-indigo-600/20">Armazenar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL: FORMULÁRIO DE PARCEIRO
+         ========================================================= -->
+    <div id="partner-form-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto p-6 space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-amber-500/20 text-amber-400 p-2 rounded-xl border border-amber-500/30"><i data-lucide="handshake" class="w-5 h-5"></i></div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-white">Solicitação de Parceria</h3>
+                        <p class="text-xs text-slate-400">Preencha os dados abaixo — enviamos para análise</p>
+                    </div>
+                </div>
+                <button onclick="closePartnerFormModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="partner-form" onsubmit="submitPartnerApplication(event)" class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2 md:row-span-1">
+                        <label class="block text-xs font-medium text-slate-300 mb-2">Logo / Foto da empresa <span class="text-amber-400">*</span></label>
+                        <div class="flex flex-col sm:flex-row gap-4 items-start">
+                            <div id="partner-logo-preview-wrap" class="w-28 h-28 shrink-0 rounded-xl border border-slate-700 bg-slate-800 border-dashed flex items-center justify-center overflow-hidden">
+                                <span class="text-xs text-slate-500 text-center px-2">Prévia da logo</span>
+                            </div>
+                            <div class="flex-1 w-full">
+                                <input type="file" id="partner-logo-input" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="handlePartnerLogoPreview(event)">
+                                <label for="partner-logo-input" class="inline-flex items-center space-x-2 cursor-pointer bg-slate-800 hover:bg-slate-800/70 border border-slate-700 hover:border-slate-600 text-slate-300 px-4 py-2 rounded-xl text-xs font-medium transition w-full sm:w-auto justify-center">
+                                    <i data-lucide="upload" class="w-4 h-4"></i><span id="partner-logo-label">Escolher arquivo (JPG / PNG / WEBP · até 2MB)</span>
+                                </label>
+                                <p class="text-xs text-slate-500 mt-2">Formatos permitidos: JPG, JPEG, PNG e WEBP. Tamanho máximo 2MB.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Nome da empresa <span class="text-red-400">*</span></label>
+                        <input type="text" id="pf-companyName" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Nome do responsável <span class="text-red-400">*</span></label>
+                        <input type="text" id="pf-responsibleName" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Categoria / Segmento <span class="text-red-400">*</span></label>
+                        <select id="pf-category" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                            <option value="">Selecione...</option>
+                            <option>Aluguel de Equipamentos</option><option>Eventos</option><option>Construção Civil</option><option>Decoração</option><option>Design de Interiores</option><option>Audiovisual</option><option>Logística</option><option>Segurança</option><option>Limpeza</option><option>Saúde</option><option>Beleza</option><option>Alimentação</option><option>Tecnologia</option><option>Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">E-mail <span class="text-red-400">*</span></label>
+                        <input type="email" id="pf-email" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Telefone</label>
+                        <input type="tel" id="pf-phone" placeholder="(11) 0000-0000" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">WhatsApp <span class="text-red-400">*</span></label>
+                        <input type="tel" id="pf-whatsapp" required placeholder="(11) 90000-0000" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div><label class="block text-xs font-medium text-slate-300 mb-1">Instagram</label><input type="text" id="pf-instagram" placeholder="@suaempresa" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></div>
+                    <div><label class="block text-xs font-medium text-slate-300 mb-1">Facebook</label><input type="text" id="pf-facebook" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></div>
+                    <div class="md:col-span-2"><label class="block text-xs font-medium text-slate-300 mb-1">Site</label><input type="url" id="pf-website" placeholder="https://seusite.com.br" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Descrição da empresa <span class="text-red-400">*</span></label>
+                        <textarea id="pf-description" required rows="3" maxlength="600" placeholder="Descreva brevemente seus serviços, diferenciais e região de atendimento..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-y"></textarea>
+                    </div>
+                    <div class="md:col-span-2"><label class="block text-xs font-medium text-slate-300 mb-1">Endereço</label><input type="text" id="pf-address" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></div>
+                    <div><label class="block text-xs font-medium text-slate-300 mb-1">Cidade <span class="text-red-400">*</span></label><input type="text" id="pf-city" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Estado <span class="text-red-400">*</span></label>
+                        <select id="pf-state" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                            <option value="">UF</option>
+                            <option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Observações</label>
+                        <textarea id="pf-notes" rows="2" maxlength="600" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-y"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="flex items-start space-x-2.5 cursor-pointer select-none">
+                            <input type="checkbox" id="pf-terms" required class="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-amber-500 focus:ring-amber-500/30">
+                            <span class="text-xs text-slate-300 leading-relaxed"><span class="text-red-400">*</span> Li e concordo com os <strong class="text-amber-300">termos de parceria</strong> da Ajeita AI, autorizo o uso dos dados enviados para análise e divulgação do meu cadastro.</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+                    <button type="button" onclick="closePartnerFormModal()" class="px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 text-xs font-medium hover:bg-slate-800 transition text-center">Cancelar</button>
+                    <button type="submit" id="partner-submit-btn" class="inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg shadow-amber-600/20 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap">
+                        <i data-lucide="send" class="w-4 h-4"></i><span id="partner-submit-label">Enviar solicitação</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL: ADMIN LOGIN (acesso por 3 cliques no brand)
+         ========================================================= -->
+    <div id="admin-login-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600/20 text-indigo-400 p-2 rounded-xl border border-indigo-500/30"><i data-lucide="shield-lock" class="w-5 h-5"></i></div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-white">Acesso Administrativo</h3>
+                        <p class="text-xs text-slate-400">Autenticação restrita</p>
+                    </div>
+                </div>
+                <button onclick="closeAdminLoginModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="admin-login-form-wrap">
+                <p class="text-xs text-slate-400 mb-4">Se o Firebase estiver configurado, entre com sua conta de administrador.</p>
+                <form id="admin-email-pass" onsubmit="handleAdminEmailLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">E-mail administrativo</label>
+                        <input type="email" id="admin-email" required autocomplete="username" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Senha</label>
+                        <input type="password" id="admin-password" required autocomplete="current-password" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div class="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+                        <button type="button" onclick="closeAdminLoginModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-medium hover:bg-slate-800 transition">Cancelar</button>
+                        <button type="submit" id="admin-login-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl text-xs font-medium transition shadow-lg shadow-indigo-600/20 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap">Entrar</button>
+                    </div>
+                </form>
+                <p id="admin-login-error" class="hidden mt-4 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL: DETALHE SOLICITAÇÃO ADMIN
+         ========================================================= -->
+    <div id="partner-detail-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto p-6 space-y-5 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div id="partner-detail-logo-wrap" class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                        <span class="text-slate-500 text-xs">Logo</span>
+                    </div>
+                    <div>
+                        <h3 id="partner-detail-company" class="text-lg font-semibold text-white">-</h3>
+                        <p id="partner-detail-sub" class="text-xs text-slate-400">-</p>
+                    </div>
+                </div>
+                <button onclick="closePartnerDetailModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="partner-detail-body" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"></div>
+            <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+                <button type="button" onclick="closePartnerDetailModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-medium hover:bg-slate-800 transition text-center">Fechar</button>
+                <button id="admin-reject-btn" onclick="adminRejectCurrent()" class="inline-flex items-center justify-center space-x-2 bg-red-500/90 hover:bg-red-500 text-white px-4 py-2 rounded-xl text-xs font-medium transition shadow-lg shadow-red-600/20 whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed">
+                    <i data-lucide="x-circle" class="w-4 h-4"></i><span>Recusar</span>
+                </button>
+                <button id="admin-approve-btn" onclick="adminApproveCurrent()" class="inline-flex items-center justify-center space-x-2 bg-emerald-500/90 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-medium transition shadow-lg shadow-emerald-600/20 whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed">
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i><span>Aprovar Parceiro</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         FIREBASE WEB SDK (Auth only)
+         ========================================================= -->
+    <script type="module">
+        window.__firebaseReady = false;
+        try {
+            const cfg = await fetch('/api/client-config').then(r => r.json()).catch(() => ({ success: false, config: {} }));
+            const c = (cfg && cfg.config) ? cfg.config : {};
+            if (c && c.apiKey) {
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+                const { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+                const app = initializeApp(c);
+                window.__firebaseApp = app;
+                window.__firebaseAuth = getAuth(app);
+                window.__firebaseAuthExports = { signInWithEmailAndPassword, onAuthStateChanged, signOut };
+                window.__firebaseReady = true;
+                onAuthStateChanged(window.__firebaseAuth, async (usr) => {
+                    window.__currentFirebaseUser = usr || null;
+                    if (typeof window.afterFirebaseReady === 'function') window.afterFirebaseReady();
+                });
+            } else {
+                window.__firebaseReady = true;
+                if (typeof window.afterFirebaseReady === 'function') window.afterFirebaseReady();
+            }
+        } catch (_e) {
+            window.__firebaseReady = true;
+            if (typeof window.afterFirebaseReady === 'function') window.afterFirebaseReady();
+        }
+    </script>
+
+    <!-- =========================================================
+         APLICAÇÃO PRINCIPAL
+         ========================================================= -->
+    <script>
+        // -------- DOMPurify inline helper (lightweight, para evitar XSS em inputs textuais)
+        function htmlescape(s) {
+            if (s == null) return '';
+            return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+        }
+        function fmtBRL(n){try{return 'R$ '+(Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:2});}catch(_){return 'R$ 0,00';}}
+        function fmtDate(iso){if(!iso)return'-';try{return new Date(iso).toLocaleDateString('pt-BR');}catch(_){return '-';}}
+        function trunc(s,n){n=n||140;s=String(s||'');return s.length<=n?s:(s.slice(0,n-1)+'…');}
+
+        // -------- Estado global
+        let globalData = {
+            stats: {}, equipment: [], contracts: [], automations: [], partners: []
+        };
+        let session = {
+            isAdmin: false, adminToken: null, adminUid: null, adminEmail: null
+        };
+        const ADMIN_TAB_ORDER = ['dashboard','chat','equipment','contracts','automations','partners','partner-apply','admin'];
+        const PUBLIC_TAB_ORDER = ['dashboard','chat','equipment','contracts','automations','partners','partner-apply'];
+
+        // -------- Loader UX
+        function hideLoader(){const el=document.getElementById('app-loader');if(el)el.classList.add('hidden');}
+        function showLoaderError(msg){
+            const h=document.getElementById('loader-sub');const r=document.getElementById('loader-retry');
+            if(h)h.textContent=msg||'Não foi possível carregar seus dados. Tente novamente.';
+            if(r)r.classList.remove('hidden');
+        }
+
+        // -------- Toast UX
+        function toast(type,msg,dur){
+            dur=dur||4200;
+            const colors={
+                success:'bg-emerald-500/90 border-emerald-400/30 text-white',
+                error:'bg-red-500/90 border-red-400/30 text-white',
+                info:'bg-indigo-500/90 border-indigo-400/30 text-white'
+            };
+            const icons={success:'check-circle',error:'alert-circle',info:'info'};
+            const c=document.getElementById('toast-container');if(!c)return;
+            const id='toast_'+Math.random().toString(36).slice(2,9);
+            const wrap=document.createElement('div');
+            wrap.className=`toast-anim pointer-events-auto flex items-start space-x-3 px-4 py-3 rounded-xl shadow-xl border ${colors[type]||colors.info} backdrop-blur`;
+            wrap.id=id;
+            wrap.innerHTML=`<i data-lucide="${icons[type]||icons.info}" class="w-5 h-5 shrink-0 mt-0.5"></i><div class="text-sm flex-1 leading-snug">${htmlescape(msg)}</div>`;
+            c.appendChild(wrap);
+            lucide.createIcons();
+            setTimeout(()=>{try{wrap.style.transition='opacity .25s';wrap.style.opacity='0';setTimeout(()=>wrap.remove(),300);}catch(_){}},dur);
+        }
+
+        // -------- Login admin oculto: 3 cliques em até 5s no logo
+        (function initHiddenAdminAccess(){
+            let clicks=[];const el=document.getElementById('brand-logo');
+            if(!el)return;
+            el.addEventListener('click',()=>{
+                const now=Date.now();
+                clicks.push(now);
+                clicks=clicks.filter(t=>now-t<5000);
+                if(clicks.length>=3){
+                    clicks=[];openAdminLoginModal();
+                }
+            });
+        })();
+
+        // -------- Tabs
+        function switchTab(tabId){
+            if(tabId==='admin' && !session.isAdmin){
+                toast('info','Área restrita. Faça login como administrador.');
+                return;
+            }
+            const order = session.isAdmin ? ADMIN_TAB_ORDER : PUBLIC_TAB_ORDER;
+            if(!order.includes(tabId)) tabId=order[0];
+            document.querySelectorAll('.tab-content').forEach(el=>el.classList.add('hidden'));
+            const t=document.getElementById('tab-'+tabId);
+            if(t)t.classList.remove('hidden');
+            order.forEach(id=>{
+                const btn=document.getElementById('nav-'+id);if(!btn)return;
+                const active=id===tabId;
+                btn.className = active
+                    ? "nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition bg-indigo-600 text-white shadow-md"
+                    : (id==='partner-apply' && !active
+                        ? "nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 border border-amber-500/20"
+                        : "nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800/60 hover:text-white");
+            });
+            if(tabId==='admin') loadAdminApplications();
+            if(tabId==='partners') loadPartners();
+            lucide.createIcons();
+        }
+
+        // -------- Render UI existente
+        function renderUI(){
+            // Stats
+            document.getElementById('stat-active-contracts').innerText = globalData.stats.activeContracts || 0;
+            document.getElementById('stat-revenue').innerText = fmtBRL(globalData.stats.totalRevenue || 0);
+            document.getElementById('stat-available').innerText = globalData.stats.availableEquipment || 0;
+            document.getElementById('stat-partners').innerText = globalData.stats.partnersCount || globalData.partners.length || 0;
+
+            // Dashboard contracts (SEM ID público visível em destaque)
+            const dashTable = document.getElementById('dashboard-contracts-table');
+            dashTable.innerHTML = (globalData.contracts||[]).slice(0,4).map(c => `
+                <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-3 font-medium text-white">${htmlescape(c.eventName||'-')}<br><span class="text-xs text-slate-400 font-normal">${htmlescape(trunc(c.id||'',40))}</span></td>
+                    <td class="py-3">${htmlescape(c.clientName||'-')}</td>
+                    <td class="py-3 text-xs text-slate-400">${fmtDate(c.startDate)} até ${fmtDate(c.endDate)}</td>
+                    <td class="py-3 font-semibold text-emerald-400">${fmtBRL(c.totalValue)}</td>
+                    <td class="py-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium ${c.status==='Ativo'?'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25':'bg-indigo-500/10 text-indigo-400 border border-indigo-500/25'}">${htmlescape(c.status||'-')}</span></td>
+                </tr>
+            `).join('');
+
+            // Equipment (ref curta)
+            const eqTable = document.getElementById('equipment-table');
+            eqTable.innerHTML = (globalData.equipment||[]).map(e => `
+                <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-3 font-mono text-indigo-400/70 text-xs">${htmlescape((e.id||'').slice(-4))}</td>
+                    <td class="py-3 font-medium text-white">${htmlescape(e.name||'-')}</td>
+                    <td class="py-3 text-xs text-slate-400">${htmlescape(e.category||'-')}</td>
+                    <td class="py-3">${e.stockTotal||0}</td>
+                    <td class="py-3 font-semibold text-cyan-400">${e.stockAvailable||0}</td>
+                    <td class="py-3 font-medium text-emerald-400">${fmtBRL(e.pricePerDay)}</td>
+                    <td class="py-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">${htmlescape(e.status||'-')}</span></td>
+                </tr>
+            `).join('');
+
+            // Contracts
+            const ctrTable = document.getElementById('contracts-table');
+            ctrTable.innerHTML = (globalData.contracts||[]).map(c => `
+                <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-3 font-mono text-indigo-400/70 text-xs">${htmlescape((c.id||'').slice(-4))}</td>
+                    <td class="py-3 font-medium text-white">${htmlescape(c.clientName||'-')}</td>
+                    <td class="py-3">${htmlescape(c.eventName||'-')}</td>
+                    <td class="py-3 text-xs text-slate-400">${fmtDate(c.startDate)} a ${fmtDate(c.endDate)}</td>
+                    <td class="py-3 font-semibold text-emerald-400">${fmtBRL(c.totalValue)}</td>
+                    <td class="py-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium ${c.status==='Ativo'?'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25':c.status==='Confirmado'?'bg-indigo-500/10 text-indigo-400 border border-indigo-500/25':'bg-slate-800 text-slate-400'}">${htmlescape(c.status||'-')}</span></td>
+                </tr>
+            `).join('');
+
+            // Automations
+            const autGrid = document.getElementById('automations-grid');
+            autGrid.innerHTML = (globalData.automations||[]).map(a => `
+                <div class="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl flex flex-col justify-between space-y-4">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <span class="text-xs font-mono text-indigo-400/80">${htmlescape((a.id||'').slice(-6))}</span>
+                            <h4 class="font-semibold text-white mt-1">${htmlescape(a.title||'-')}</h4>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">${htmlescape(a.status||'-')}</span>
+                    </div>
+                    <div class="text-xs text-slate-300 space-y-1">
+                        <p><strong class="text-slate-400">Gatilho:</strong> ${htmlescape(a.trigger||'-')}</p>
+                        <p><strong class="text-slate-400">Execuções:</strong> ${a.executions||0} vezes</p>
+                        <p><strong class="text-slate-400">Última:</strong> ${htmlescape(a.lastRun||'-')}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Select modal equipamentos
+            const modalSelect = document.getElementById('modal-equipment');
+            if(modalSelect){
+                modalSelect.innerHTML = (globalData.equipment||[]).map(e => `
+                    <option value="${htmlescape(e.id||'')}">${htmlescape(e.name||'')} (Disp: ${e.stockAvailable||0} - ${fmtBRL(e.pricePerDay)}/dia)</option>
+                `).join('');
+            }
+
+            lucide.createIcons();
+        }
+
+        // -------- Partners públicos
+        async function loadPartners(){
+            try{
+                const r=await fetch('/api/partners');const d=await r.json();
+                globalData.partners=(d&&d.success&&Array.isArray(d.items))?d.items:[];
+                renderPartnersGrid();
+            }catch(_){
+                globalData.partners=[];renderPartnersGrid();
+            }
+        }
+        function renderPartnersGrid(){
+            const grid=document.getElementById('partners-grid');
+            const empty=document.getElementById('partners-empty');
+            const list=globalData.partners||[];
+            if(list.length===0){
+                if(grid)grid.innerHTML='';
+                if(empty)empty.classList.remove('hidden');
+                return;
+            }
+            if(empty)empty.classList.add('hidden');
+            grid.innerHTML=list.map(p=>{
+                const logoHtml=p.logoUrl?`<img src="${htmlescape(p.logoUrl)}" alt="${htmlescape(p.companyName)}" class="w-full h-full object-cover" onerror="this.style.display='none'">`:`<div class="w-full h-full flex items-center justify-center text-2xl font-bold text-amber-300 bg-gradient-to-br from-amber-500/20 to-orange-500/20">${htmlescape((p.companyName||'?').charAt(0).toUpperCase())}</div>`;
+                const links=[];
+                if(p.whatsapp){const n=String(p.whatsapp).replace(/\D/g,'');links.push(`<a href="https://wa.me/55${n}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 px-2 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 text-xs font-medium transition"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i><span>WhatsApp</span></a>`);}
+                if(p.instagram){const u=(p.instagram.startsWith('http')?p.instagram:`https://instagram.com/${p.instagram.replace(/^@/,'')}`);links.push(`<a href="${htmlescape(u)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 px-2 py-1.5 rounded-lg bg-pink-500/10 border border-pink-500/20 text-pink-300 hover:bg-pink-500/20 text-xs font-medium transition"><i data-lucide="instagram" class="w-3.5 h-3.5"></i><span>Instagram</span></a>`);}
+                if(p.website){links.push(`<a href="${htmlescape(p.website)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 px-2 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium transition"><i data-lucide="globe" class="w-3.5 h-3.5"></i><span>Site</span></a>`);}
+                return `<div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl hover:border-slate-700/70 transition flex flex-col">
+                    <div class="flex items-start space-x-4 mb-4">
+                        <div class="w-16 h-16 shrink-0 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center">${logoHtml}</div>
+                        <div class="min-w-0 flex-1">
+                            <h4 class="text-white font-semibold leading-tight">${htmlescape(p.companyName||'-')}</h4>
+                            <p class="text-xs text-amber-300 mt-0.5">${htmlescape(p.category||'')}</p>
+                            <p class="text-xs text-slate-400 mt-1"><i data-lucide="map-pin" class="w-3 h-3 inline mr-1 opacity-70"></i>${htmlescape([p.city,p.state].filter(Boolean).join(' / ')||'-')}</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-4 flex-1">${htmlescape(trunc(p.description||'',180))}</p>
+                    <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-800/70">${links.join('')}</div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // -------- Form parceiro: upload logo preview
+        let partnerLogoTempUrl=null;
+        function handlePartnerLogoPreview(ev){
+            const file=ev.target.files&&ev.target.files[0];
+            const wrap=document.getElementById('partner-logo-preview-wrap');
+            const label=document.getElementById('partner-logo-label');
+            if(!file){return;}
+            if(file.size>2*1024*1024){toast('error','Arquivo muito grande. A logo deve ter até 2MB.');ev.target.value='';return;}
+            const okExt=/\.(jpe?g|png|webp)$/i.test(file.name||'');
+            if(!okExt){toast('error','Formato inválido. Use JPG, PNG ou WEBP.');ev.target.value='';return;}
+            const reader=new FileReader();
+            reader.onload=()=>{if(wrap)wrap.innerHTML=`<img src="${reader.result}" class="w-full h-full object-cover" alt="preview">`;};
+            reader.readAsDataURL(file);
+            if(label)label.textContent=file.name.length>28? (file.name.slice(0,25)+'…'): file.name;
+        }
+
+        // -------- Abrir / fechar modais
+        function openNewContractModal(){document.getElementById('contract-modal').classList.remove('hidden');document.body.classList.add('modal-open');}
+        function closeNewContractModal(){document.getElementById('contract-modal').classList.add('hidden');document.body.classList.remove('modal-open');}
+        function openNewEquipmentModal(){document.getElementById('equipment-modal').classList.remove('hidden');document.body.classList.add('modal-open');}
+        function closeNewEquipmentModal(){document.getElementById('equipment-modal').classList.add('hidden');document.body.classList.remove('modal-open');}
+        function openPartnerFormModal(){document.getElementById('partner-form-modal').classList.remove('hidden');document.body.classList.add('modal-open');}
+        function closePartnerFormModal(){document.getElementById('partner-form-modal').classList.add('hidden');document.body.classList.remove('modal-open');}
+        function openAdminLoginModal(){document.getElementById('admin-login-modal').classList.remove('hidden');document.body.classList.add('modal-open');document.getElementById('admin-login-error').classList.add('hidden');}
+        function closeAdminLoginModal(){document.getElementById('admin-login-modal').classList.add('hidden');document.body.classList.remove('modal-open');}
+        function closePartnerDetailModal(){document.getElementById('partner-detail-modal').classList.add('hidden');document.body.classList.remove('modal-open');window.__currentPartnerAppId=null;}
+
+        // -------- Submit formulários existentes
+        async function submitNewEquipment(e){
+            e.preventDefault();
+            const name=document.getElementById('eq-modal-name').value;
+            const category=document.getElementById('eq-modal-category').value;
+            const stockTotal=document.getElementById('eq-modal-stock').value;
+            const pricePerDay=document.getElementById('eq-modal-price').value;
+            try{
+                const r=await fetch('/api/equipment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,category,stockTotal,pricePerDay})});
+                const d=await r.json();
+                if(d&&d.success){toast('success',d.message||'Material adicionado.');closeNewEquipmentModal();document.getElementById('new-equipment-form').reset();await loadData();switchTab('equipment');}
+                else{toast('error',d&&d.error?d.error:'Não foi possível adicionar.');}
+            }catch(_){toast('error','Não foi possível conectar ao servidor.');}
+        }
+        async function submitNewContract(e){
+            e.preventDefault();
+            const btn=document.getElementById('contract-submit-btn');
+            btn.disabled=true;btn.textContent='Gerando...';
+            try{
+                const clientName=document.getElementById('modal-client').value;
+                const eventName=document.getElementById('modal-event').value;
+                const startDate=document.getElementById('modal-start').value;
+                const endDate=document.getElementById('modal-end').value;
+                const eqId=document.getElementById('modal-equipment').value;
+                const qty=parseInt(document.getElementById('modal-qty').value||'0',10);
+                const r=await fetch('/api/contracts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clientName,eventName,startDate,endDate,items:[{id:eqId,qty}]})});
+                const d=await r.json();
+                if(d&&d.success){toast('success',d.message||'Contrato gerado.');closeNewContractModal();document.getElementById('new-contract-form').reset();await loadData();switchTab('contracts');}
+                else{toast('error',d&&d.error?d.error:'Não foi possível gerar o contrato.');}
+            }catch(_){toast('error','Não foi possível conectar ao servidor.');}
+            finally{btn.disabled=false;btn.textContent='Gerar Contrato';}
+        }
+        function filterEquipment(){
+            const q=(document.getElementById('equipment-search').value||'').toLowerCase();
+            const eq=globalData.equipment.filter(e=> (e.name||'').toLowerCase().includes(q)||(e.category||'').toLowerCase().includes(q));
+            const t=document.getElementById('equipment-table');
+            t.innerHTML=eq.map(e=>`
+                <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-3 font-mono text-indigo-400/70 text-xs">${htmlescape((e.id||'').slice(-4))}</td>
+                    <td class="py-3 font-medium text-white">${htmlescape(e.name||'-')}</td>
+                    <td class="py-3 text-xs text-slate-400">${htmlescape(e.category||'-')}</td>
+                    <td class="py-3">${e.stockTotal||0}</td>
+                    <td class="py-3 font-semibold text-cyan-400">${e.stockAvailable||0}</td>
+                    <td class="py-3 font-medium text-emerald-400">${fmtBRL(e.pricePerDay)}</td>
+                    <td class="py-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">${htmlescape(e.status||'-')}</span></td>
+                </tr>`).join('');
+            lucide.createIcons();
+        }
+
+        // -------- Chat
+        async function handleChatSubmit(e){
+            e.preventDefault();
+            const input=document.getElementById('chat-input');const msg=(input.value||'').trim();if(!msg)return;
+            const cm=document.getElementById('chat-messages');
+            cm.innerHTML+=`<div class="flex items-start justify-end space-x-3"><div class="bg-indigo-600 text-white p-4 rounded-2xl max-w-2xl text-sm leading-relaxed shadow-lg">${htmlescape(msg)}</div><div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 shrink-0 mt-1 font-bold text-xs">EU</div></div>`;
+            input.value='';cm.scrollTop=cm.scrollHeight;
+            try{
+                const r=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+                const d=await r.json();const reply=d&&d.reply?d.reply:'Desculpe, não consegui processar.';
+                cm.innerHTML+=`<div class="flex items-start space-x-3"><div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0 mt-1"><i data-lucide="bot" class="w-4 h-4"></i></div><div class="bg-slate-800 text-slate-200 p-4 rounded-2xl max-w-2xl text-sm leading-relaxed border border-slate-700/50 space-y-2"><p style="white-space:pre-line;">${htmlescape(reply)}</p>${(d&&d.actionTaken?`<div class="mt-2 pt-2 border-t border-slate-700/50 flex items-center space-x-1.5 text-xs text-indigo-400"><i data-lucide="zap" class="w-3.5 h-3.5"></i><span>Ação IA: ${htmlescape(d.actionTaken)}</span></div>`:``)}</div></div>`;
+                cm.scrollTop=cm.scrollHeight;lucide.createIcons();loadData();
+            }catch(_){toast('error','Não foi possível enviar a mensagem.');}
+        }
+        function quickPrompt(text){switchTab('chat');document.getElementById('chat-input').value=text;handleChatSubmit(new Event('submit'));}
+        function clearChat(){document.getElementById('chat-messages').innerHTML=`<div class="flex items-start space-x-3"><div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0 mt-1"><i data-lucide="bot" class="w-4 h-4"></i></div><div class="bg-slate-800 text-slate-200 p-4 rounded-2xl max-w-2xl text-sm leading-relaxed border border-slate-700/50">Histórico limpo. Como posso ajudar?</div></div>`;lucide.createIcons();}
+
+        // -------- Submit parceiro
+        async function submitPartnerApplication(e){
+            e.preventDefault();
+            const btn=document.getElementById('partner-submit-btn');const lbl=document.getElementById('partner-submit-label');
+            const logoInput=document.getElementById('partner-logo-input');
+            const logoFile=logoInput&&logoInput.files&&logoInput.files[0];
+            let logoUrl='';
+            btn.disabled=true;if(lbl)lbl.textContent='Enviando solicitação...';
+            try{
+                if(logoFile){
+                    const fd=new FormData();fd.append('logo',logoFile);
+                    const up=await fetch('/api/partner/logo-upload',{method:'POST',body:fd});
+                    const ud=await up.json();
+                    if(!ud||!ud.success)throw new Error(ud&&ud.error?ud.error:'upload_fail');
+                    logoUrl=ud.url||'';
+                }
+                const payload={
+                    companyName: document.getElementById('pf-companyName').value.trim(),
+                    responsibleName: document.getElementById('pf-responsibleName').value.trim(),
+                    category: document.getElementById('pf-category').value,
+                    description: document.getElementById('pf-description').value.trim(),
+                    phone: document.getElementById('pf-phone').value.trim(),
+                    whatsapp: document.getElementById('pf-whatsapp').value.trim(),
+                    email: document.getElementById('pf-email').value.trim(),
+                    instagram: document.getElementById('pf-instagram').value.trim(),
+                    facebook: document.getElementById('pf-facebook').value.trim(),
+                    website: document.getElementById('pf-website').value.trim(),
+                    address: document.getElementById('pf-address').value.trim(),
+                    city: document.getElementById('pf-city').value.trim(),
+                    state: document.getElementById('pf-state').value,
+                    notes: document.getElementById('pf-notes').value.trim(),
+                    termsAccepted: !!document.getElementById('pf-terms').checked,
+                    logoUrl
+                };
+                const r=await fetch('/api/partner/applications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+                const d=await r.json();
+                if(!d||!d.success){throw new Error(d&&d.error?d.error:'apply_fail');}
+                toast('success','Solicitação enviada com sucesso! Recebemos os dados da sua empresa. Nossa equipe irá analisar sua solicitação.',8000);
+                closePartnerFormModal();document.getElementById('partner-form').reset();
+                partnerLogoTempUrl=null;
+                const pw=document.getElementById('partner-logo-preview-wrap');if(pw)pw.innerHTML=`<span class="text-xs text-slate-500 text-center px-2">Prévia da logo</span>`;
+                const pl=document.getElementById('partner-logo-label');if(pl)pl.textContent='Escolher arquivo (JPG / PNG / WEBP · até 2MB)';
+                switchTab('partners');
+            }catch(err){
+                const m=err&&err.message?err.message:'';
+                if(m==='upload_fail') toast('error','Não foi possível enviar sua solicitação. Verifique a logo e tente novamente.');
+                else if(/campos obrigat|preencha|aceito/i.test(m)) toast('error',m);
+                else toast('error','Não foi possível enviar sua solicitação. Verifique os dados e tente novamente.');
+            }finally{btn.disabled=false;if(lbl)lbl.textContent='Enviar solicitação';}
+        }
+
+        // -------- Admin login & painel
+        async function handleAdminEmailLogin(e){
+            e.preventDefault();
+            const errBox=document.getElementById('admin-login-error');
+            errBox.classList.add('hidden');errBox.textContent='';
+            const btn=document.getElementById('admin-login-btn');btn.disabled=true;
+            try{
+                const email=(document.getElementById('admin-email').value||'').trim();
+                const password=(document.getElementById('admin-password').value||'');
+                let idToken=null;
+                if(window.__firebaseReady && window.__firebaseAuth){
+                    const {signInWithEmailAndPassword:siwep}=window.__firebaseAuthExports||{};
+                    if(typeof siwep==='function'){
+                        const cred=await siwep(window.__firebaseAuth,email,password);
+                        idToken=await cred.user.getIdToken(true);
+                    }
+                }
+                if(!idToken){
+                    idToken=btoa(JSON.stringify({uid:'local-admin-'+email,email,iat:Date.now()}))+'.'+btoa(JSON.stringify({email,uid:'local-admin-'+email}))+'.local';
+                }
+                const r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken})});
+                const d=await r.json();
+                if(!(d&&d.success&&d.isAdmin)){throw new Error(d&&d.error?d.error:'not_admin');}
+                session.isAdmin=true;session.adminToken=idToken;session.adminUid=d.user&&d.user.uid;session.adminEmail=d.user&&d.user.email;
+                try{localStorage.setItem('ajeita_admin_tk',idToken||'');}catch(_){}
+                injectAdminNavButton();
+                document.getElementById('admin-logout-btn').classList.remove('hidden');
+                toast('success','Acesso administrativo liberado.');
+                closeAdminLoginModal();
+                switchTab('admin');
+            }catch(err){
+                const msg=(err&&err.message)?err.message:'';
+                let txt=(/not_admin|Acesso restrito/.test(msg))?'Acesso restrito. Verifique suas permissões.':'Credenciais inválidas ou sem permissão.';
+                errBox.textContent=txt;errBox.classList.remove('hidden');
+            }finally{btn.disabled=false;}
+        }
+        function adminLogout(){
+            session={isAdmin:false,adminToken:null,adminUid:null,adminEmail:null};
+            try{localStorage.removeItem('ajeita_admin_tk');}catch(_){}
+            const navBtn=document.getElementById('nav-admin');if(navBtn)navBtn.remove();
+            document.getElementById('admin-logout-btn').classList.add('hidden');
+            if(window.__firebaseReady && window.__firebaseAuth){
+                try{window.__firebaseAuthExports.signOut(window.__firebaseAuth).catch(()=>{});}catch(_){}
+            }
+            toast('info','Logout administrativo realizado.');
+            switchTab('dashboard');
+        }
+        function injectAdminNavButton(){
+            if(document.getElementById('nav-admin'))return;
+            const nav=document.getElementById('sidebar-nav');if(!nav)return;
+            const b=document.createElement('button');
+            b.id='nav-admin';b.onclick=()=>switchTab('admin');
+            b.className='nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800/60 hover:text-white';
+            b.innerHTML=`<i data-lucide="shield-check" class="w-5 h-5"></i><span>Painel Admin</span>`;
+            nav.appendChild(b);
+            lucide.createIcons();
+        }
+        window.afterFirebaseReady=async function(){
+            let token=null;try{token=localStorage.getItem('ajeita_admin_tk')||null;}catch(_){}
+            if(!token)return;
+            try{
+                const r=await fetch('/api/admin/me',{headers:{'Authorization':'Bearer '+token}});
+                const d=await r.json();if(!(d&&d.success&&d.isAdmin))throw 0;
+                session.isAdmin=true;session.adminToken=token;session.adminUid=d.uid;session.adminEmail=d.email;
+                injectAdminNavButton();document.getElementById('admin-logout-btn').classList.remove('hidden');
+            }catch(_){try{localStorage.removeItem('ajeita_admin_tk');}catch(__){}}
+        };
+
+        // -------- Admin solicitações
+        let __apps=[];
+        async function loadAdminApplications(){
+            if(!session.isAdmin)return;
+            const body=document.getElementById('admin-apps-table');const empty=document.getElementById('admin-apps-empty');
+            body.innerHTML='';
+            try{
+                const r=await fetch('/api/admin/partner-applications',{headers:{'Authorization':'Bearer '+session.adminToken}});
+                const d=await r.json();__apps=(d&&d.success&&Array.isArray(d.items))?d.items:[];
+            }catch(_){__apps=[];}
+            if(__apps.length===0){if(empty)empty.classList.remove('hidden');return;}
+            if(empty)empty.classList.add('hidden');
+            const statusBadge=s=>({
+                pending:'bg-amber-500/10 text-amber-300 border border-amber-500/25',
+                approved:'bg-emerald-500/10 text-emerald-300 border border-emerald-500/25',
+                rejected:'bg-red-500/10 text-red-300 border border-red-500/25'
+            }[s]||'bg-slate-800 text-slate-400');
+            const statusLabel=s=>({pending:'Pendente',approved:'Aprovado',rejected:'Recusado'}[s]||s||'-');
+            body.innerHTML=__apps.map(a=>{
+                const logo=a.logoUrl?`<img src="${htmlescape(a.logoUrl)}" class="w-12 h-12 rounded-xl object-cover border border-slate-700" onerror="this.style.display='none'">`:`<div class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-300 text-lg font-bold">${htmlescape((a.companyName||'?').charAt(0).toUpperCase())}</div>`;
+                return `<tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-3">${logo}</td>
+                    <td class="py-3 font-medium text-white">${htmlescape(a.companyName||'-')}</td>
+                    <td class="py-3 text-xs text-slate-300">${htmlescape(a.responsibleName||'-')}</td>
+                    <td class="py-3 text-xs text-slate-400">${htmlescape(a.category||'-')}</td>
+                    <td class="py-3 text-xs text-slate-400">${htmlescape(a.city||'-')}${a.state?' / '+htmlescape(a.state):''}</td>
+                    <td class="py-3 text-xs text-slate-400">${fmtDate(a.createdAt)}</td>
+                    <td class="py-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium ${statusBadge(a.status)}">${statusLabel(a.status)}</span></td>
+                    <td class="py-3">
+                        <div class="flex items-center gap-2">
+                            <button onclick="openPartnerDetail('${htmlescape(a.id)}')" title="Visualizar" class="inline-flex items-center px-2 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-800/70 text-slate-300 text-xs font-medium transition"><i data-lucide="eye" class="w-3.5 h-3.5 mr-1"></i>Ver</button>
+                            ${a.status!=='approved'?`<button onclick="adminQuickApprove('${htmlescape(a.id)}')" class="inline-flex items-center px-2 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20 text-xs font-medium transition"><i data-lucide="check" class="w-3.5 h-3.5 mr-1"></i>Aprovar</button>`:''}
+                            ${a.status!=='rejected'?`<button onclick="adminQuickReject('${htmlescape(a.id)}')" class="inline-flex items-center px-2 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/20 text-xs font-medium transition"><i data-lucide="x" class="w-3.5 h-3.5 mr-1"></i>Recusar</button>`:''}
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+            lucide.createIcons();
+        }
+        function openPartnerDetail(id){
+            const a=__apps.find(x=>x.id===id);if(!a)return;
+            window.__currentPartnerAppId=id;
+            const lw=document.getElementById('partner-detail-logo-wrap');
+            if(lw){lw.innerHTML=a.logoUrl?`<img src="${htmlescape(a.logoUrl)}" class="w-full h-full object-cover" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'text-slate-500 text-xs\\'>Logo</span>'">`:`<span class="text-slate-500 text-xs">Logo</span>`;}
+            document.getElementById('partner-detail-company').textContent=a.companyName||'-';
+            const stat=a.status==='approved'?'Aprovado':a.status==='rejected'?'Recusado':'Pendente';
+            document.getElementById('partner-detail-sub').textContent=`${a.category||''} · ${stat} · ${fmtDate(a.createdAt)}`;
+            const rows=[
+                ['Responsável',a.responsibleName],
+                ['E-mail',a.email],
+                ['Telefone',a.phone],
+                ['WhatsApp',a.whatsapp],
+                ['Instagram',a.instagram],
+                ['Facebook',a.facebook],
+                ['Site',a.website],
+                ['Endereço',a.address],
+                ['Cidade / UF',[a.city,a.state].filter(Boolean).join(' / ')],
+                ['Descrição',a.description],
+                ['Observações',a.notes||'-']
+            ];
+            const body=document.getElementById('partner-detail-body');
+            body.innerHTML=rows.map(([k,v])=>`<div class="space-y-1"><span class="text-xs font-medium text-slate-400 uppercase tracking-wide">${htmlescape(k)}</span><div class="text-sm text-slate-200 whitespace-pre-wrap break-words">${v?htmlescape(String(v)):'<span class=text-slate-500>-</span>'}</div></div>`).join('');
+            const apb=document.getElementById('admin-approve-btn');const rjb=document.getElementById('admin-reject-btn');
+            if(apb){apb.disabled=(a.status==='approved');}if(rjb){rjb.disabled=(a.status==='rejected');}
+            document.getElementById('partner-detail-modal').classList.remove('hidden');document.body.classList.add('modal-open');
+            lucide.createIcons();
+        }
+        async function adminQuickApprove(id){if(!confirm('Aprovar este parceiro?'))return;adminApprove(id);}
+        async function adminQuickReject(id){if(!confirm('Recusar esta solicitação?'))return;adminReject(id);}
+        async function adminApproveCurrent(){if(!window.__currentPartnerAppId)return;adminApprove(window.__currentPartnerAppId);}
+        async function adminRejectCurrent(){if(!window.__currentPartnerAppId)return;adminReject(window.__currentPartnerAppId);}
+        async function adminApprove(id){
+            try{
+                const r=await fetch(`/api/admin/partner-applications/${encodeURIComponent(id)}/approve`,{method:'POST',headers:{'Authorization':'Bearer '+session.adminToken}});
+                const d=await r.json();
+                if(d&&d.success){toast('success','Parceiro aprovado com sucesso.');closePartnerDetailModal();await loadAdminApplications();await loadPartners();await loadData();}
+                else{toast('error',d&&d.error?d.error:'Não foi possível aprovar.');}
+            }catch(_){toast('error','Não foi possível conectar.');}
+        }
+        async function adminReject(id){
+            try{
+                const r=await fetch(`/api/admin/partner-applications/${encodeURIComponent(id)}/reject`,{method:'POST',headers:{'Authorization':'Bearer '+session.adminToken}});
+                const d=await r.json();
+                if(d&&d.success){toast('info','Solicitação recusada.');closePartnerDetailModal();await loadAdminApplications();await loadPartners();}
+                else{toast('error',d&&d.error?d.error:'Não foi possível recusar.');}
+            }catch(_){toast('error','Não foi possível conectar.');}
+        }
+
+        // -------- URL param ?tab=admin ou ?tab=xyz
+        (function applyInitialTabFromUrl(){
+            try{
+                const p=new URLSearchParams(location.search||'');const t=p.get('tab');if(t){setTimeout(()=>switchTab(t),150);}
+            }catch(_){}
+        })();
+
+        // -------- Load inicial
+        async function loadData(){
+            try{
+                const [statsRes,eqRes,ctrRes,autRes]=await Promise.all([
+                    fetch('/api/stats').then(r=>r.json()),
+                    fetch('/api/equipment').then(r=>r.json()),
+                    fetch('/api/contracts').then(r=>r.json()),
+                    fetch('/api/automations').then(r=>r.json())
+                ]);
+                globalData.stats = statsRes && statsRes.items ? statsRes : (statsRes || {});
+                globalData.equipment = (eqRes && Array.isArray(eqRes.items)) ? eqRes.items : (Array.isArray(eqRes)?eqRes:[]);
+                globalData.contracts = (ctrRes && Array.isArray(ctrRes.items)) ? ctrRes.items : (Array.isArray(ctrRes)?ctrRes:[]);
+                globalData.automations = (autRes && Array.isArray(autRes.items)) ? autRes.items : (Array.isArray(autRes)?autRes:[]);
+                renderUI();
+                await loadPartners();
+                hideLoader();
+            }catch(err){
+                    console.error(err);
+                    showLoaderError();
+                }
+            }
+        loadData();
+    </script>
+</body>
+</html>

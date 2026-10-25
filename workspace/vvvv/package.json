@@ -1,0 +1,17 @@
+{
+  "name": "sistema-web-teste",
+  "version": "1.0.0",
+  "description": "Sistema web com pagina inicial, botao de teste e testes automatizados",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest --detectOpenHandles --forceExit"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
+  }
+}

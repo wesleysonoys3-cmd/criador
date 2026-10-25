@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "rc24.1",
+  "id": "agent_4e93cb7bbac0",
+  "name": "Atendente",
+  "slug": "atendente",
+  "version": "0.1.0",
+  "company": {
+    "name": "Testes N2 Bar do Zé REST",
+    "slug": "testes-n2-bar-do-ze-rest",
+    "segmento": "Alimentação",
+    "size": "pequena",
+    "notes": ""
+  },
+  "persona": "",
+  "problemStatement": "Receber pedidos via WhatsApp e enviar para cozinha.",
+  "assumptions": [],
+  "requirements": {
+    "functional": [
+      "Anotar pedido",
+      "Calcular total",
+      "Enviar para cozinha"
+    ],
+    "nonFunctional": [
+      "<3s resposta",
+      "Não logar cartão de crédito"
+    ],
+    "businessRules": [
+      "Só aceita Pix",
+      "Não entrega zona norte"
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "whatsapp_evolux-1",
+      "type": "whatsapp_evolux",
+      "provider": "Evolux",
+      "status": "pending",
+      "envVarsRequired": [
+        "WHATSAPP_EVOLUX_API_KEY",
+        "WHATSAPP_EVOLUX_INSTANCE_ID"
+      ],
+      "description": "Receber/responder mensagens WhatsApp via Evolux API."
+    },
+    {
+      "id": "smtp_email-2",
+      "type": "smtp_email",
+      "provider": "SMTP genérico (Gmail/Outlook/SendGrid/SES)",
+      "status": "pending",
+      "envVarsRequired": [
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "SMTP_USER",
+        "SMTP_PASS"
+      ],
+      "description": "Envio de e-mail de confirmação de consulta."
+    },
+    {
+      "id": "custom_webhook-3",
+      "type": "custom_webhook",
+      "provider": "Webhook custom (HTTP POST)",
+      "status": "pending",
+      "envVarsRequired": [
+        "WEBHOOK_URL"
+      ],
+      "description": "Disparar eventos (nova consulta/lead) para webhook externo."
+    }
+  ],
+  "tools_declared": [
+    "whatsapp_enviar_mensagem",
+    "email_notificar_cozinha",
+    "webhook_enviar_pedido"
+  ],
+  "securityRules": [
+    "Nunca expor chaves de API (API_KEY, _PASS, TOKEN) no frontend, localStorage ou logs.",
+    "Nunca servir dotfiles ou .env via static; Paths de arquivos devem validar base dir (path traversal)."
+  ],
+  "deliverable": {
+    "kind": "node_express_app"
+  },
+  "createdAt": 1789862267239,
+  "updatedAt": 1789862267239,
+  "author": "orchestrator_rc24"
+}

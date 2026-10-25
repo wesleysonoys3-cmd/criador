@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Currículo Profissional | TRAE</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #cv-preview, #cv-preview * {
+                visibility: visible;
+            }
+            #cv-preview {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                box-shadow: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-600 text-white p-2 rounded-lg font-bold text-xl shadow-md">
+                    <i class="fa-solid fa-file-lines"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-gray-900">Gerador de Currículo</h1>
+                    <p class="text-xs text-gray-500">Crie seu currículo profissional em minutos</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="preencherExemplo()" class="px-4 py-2 text-sm font-medium text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg transition">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Preencher Exemplo
+                </button>
+                <button onclick="window.print()" class="px-4 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-sm transition">
+                    <i class="fa-solid fa-download mr-1"></i> Baixar PDF / Imprimir
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Formulário (Esquerda) -->
+        <div class="lg:col-span-5 space-y-6 no-print">
+            
+            <!-- Seção: Informações Pessoais -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="text-md font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fa-solid fa-user text-brand-600 mr-2"></i> Informações Pessoais
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Nome Completo</label>
+                        <input type="text" id="nome" oninput="atualizarCV()" placeholder="Ex: Ana Silva" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Cargo / Profissão Desejada</label>
+                        <input type="text" id="cargo" oninput="atualizarCV()" placeholder="Ex: Desenvolvedora Frontend Sênior" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">E-mail</label>
+                            <input type="email" id="email" oninput="atualizarCV()" placeholder="ana@email.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Telefone</label>
+                            <input type="text" id="telefone" oninput="atualizarCV()" placeholder="(11) 98765-4321" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Localização</label>
+                            <input type="text" id="localizacao" oninput="atualizarCV()" placeholder="São Paulo, SP" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">LinkedIn / GitHub</label>
+                            <input type="text" id="linkedin" oninput="atualizarCV()" placeholder="linkedin.com/in/anasilva" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Resumo Profissional</label>
+                        <textarea id="resumo" rows="3" oninput="atualizarCV()" placeholder="Breve resumo sobre sua carreira e principais competências..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Experiência Profissional -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-md font-semibold text-gray-900 flex items-center">
+                        <i class="fa-solid fa-briefcase text-brand-600 mr-2"></i> Experiência Profissional
+                    </h2>
+                    <button onclick="adicionarExperiencia()" class="text-xs bg-brand-50 text-brand-600 hover:bg-brand-100 px-3 py-1.5 rounded-lg font-medium transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Adicionar
+                    </button>
+                </div>
+                <div id="experiencias-container" class="space-y-4">
+                    <!-- Dinâmico -->
+                </div>
+            </div>
+
+            <!-- Seção: Educação -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-md font-semibold text-gray-900 flex items-center">
+                        <i class="fa-solid fa-graduation-cap text-brand-600 mr-2"></i> Formação Acadêmica
+                    </h2>
+                    <button onclick="adicionarEducacao()" class="text-xs bg-brand-50 text-brand-600 hover:bg-brand-100 px-3 py-1.5 rounded-lg font-medium transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Adicionar
+                    </button>
+                </div>
+                <div id="educacao-container" class="space-y-4">
+                    <!-- Dinâmico -->
+                </div>
+            </div>
+
+            <!-- Seção: Habilidades -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="text-md font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fa-solid fa-lightbulb text-brand-600 mr-2"></i> Habilidades (separadas por vírgula)
+                </h2>
+                <div>
+                    <input type="text" id="habilidades" oninput="atualizarCV()" placeholder="JavaScript, React, Tailwind CSS, Git, Node.js" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Preview do Currículo (Direita) -->
+        <div class="lg:col-span-7">
+            <div class="sticky top-20">
+                <div class="bg-white shadow-xl rounded-xl border border-gray-200 p-8 min-h-[842px] max-w-[210mm] mx-auto transition-all" id="cv-preview">
+                    
+                    <!-- Cabeçalho do CV -->
+                    <div class="border-b border-gray-200 pb-6 mb-6">
+                        <h2 id="prev-nome" class="text-2xl font-bold text-gray-900 uppercase tracking-wide">Nome Completo</h2>
+                        <p id="prev-cargo" class="text-lg font-medium text-brand-600 mt-1">Cargo / Profissão</p>
+                        <div class="flex flex-wrap gap-y-1 gap-x-4 text-xs text-gray-600 mt-3">
+                            <span id="prev-email"><i class="fa-solid fa-envelope mr-1 text-brand-500"></i> email@exemplo.com</span>
+                            <span id="prev-telefone"><i class="fa-solid fa-phone mr-1 text-brand-500"></i> (00) 00000-0000</span>
+                            <span id="prev-localizacao"><i class="fa-solid fa-location-dot mr-1 text-brand-500"></i> Cidade, UF</span>
+                            <span id="prev-linkedin"><i class="fa-brands fa-linkedin mr-1 text-brand-500"></i> linkedin.com/in/perfil</span>
+                        </div>
+                    </div>
+
+                    <!-- Resumo -->
+                    <div id="prev-resumo-section" class="mb-6">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 border-b border-gray-100 pb-1">Resumo Profissional</h3>
+                        <p id="prev-resumo" class="text-sm text-gray-700 leading-relaxed"></p>
+                    </div>
+
+                    <!-- Experiência -->
+                    <div id="prev-experiencia-section" class="mb-6">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 border-b border-gray-100 pb-1">Experiência Profissional</h3>
+                        <div id="prev-experiencias" class="space-y-4">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Educação -->
+                    <div id="prev-educacao-section" class="mb-6">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 border-b border-gray-100 pb-1">Formação Acadêmica</h3>
+                        <div id="prev-educacoes" class="space-y-3">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Habilidades -->
+                    <div id="prev-habilidades-section">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 border-b border-gray-100 pb-1">Habilidades</h3>
+                        <div id="prev-habilidades" class="flex flex-wrap gap-1.5">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-4 mt-auto no-print">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-gray-500">
+            Gerador de Currículo Profissional &copy; 2026 — Desenvolvido com TRAE IA
+        </div>
+    </footer>
+
+    <!-- Script de lógica -->
+    <script>
+        let experiencias = [];
+        let educacoes = [];
+
+        function adicionarExperiencia(dados = {}) {
+            const exp = {
+                id: Date.now() + Math.random(),
+                empresa: dados.empresa || '',
+                cargo: dados.cargo || '',
+                periodo: dados.periodo || '',
+                descricao: dados.descricao || ''
+            };
+            experiencias.push(exp);
+            renderizarFormExperiencias();
+            atualizarCV();
+        }
+
+        function removerExperiencia(id) {
+            experiencias = experiencias.filter(e => e.id !== id);
+            renderizarFormExperiencias();
+            atualizarCV();
+        }
+
+        function renderizarFormExperiencias() {
+            const container = document.getElementById('experiencias-container');
+            container.innerHTML = '';
+            if (experiencias.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400 italic">Nenhuma experiência adicionada.</p>';
+                return;
+            }
+            experiencias.forEach((exp, index) => {
+                const div = document.createElement('div');
+                div.className = 'p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3 relative';
+                div.innerHTML = `
+                    <button onclick="removerExperiencia(${exp.id})" class="absolute top-3 right-3 text-red-500 hover:text-red-700 text-xs font-medium"><i class="fa-solid fa-trash"></i></button>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Empresa</label>
+                            <input type="text" value="${exp.empresa}" oninput="atualizarExp(${exp.id}, 'empresa', this.value)" placeholder="Nome da Empresa" class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Cargo</label>
+                            <input type="text" value="${exp.cargo}" oninput="atualizarExp(${exp.id}, 'cargo', this.value)" placeholder="Seu Cargo" class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Período</label>
+                        <input type="text" value="${exp.periodo}" oninput="atualizarExp(${exp.id}, 'periodo', this.value)" placeholder="Jan 2022 - Presente" class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Atividades Principais</label>
+                        <textarea rows="2" oninput="atualizarExp(${exp.id}, 'descricao', this.value)" placeholder="Principais realizações e tecnologias..." class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">${exp.descricao}</textarea>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function atualizarExp(id, campo, valor) {
+            const exp = experiencias.find(e => e.id === id);
+            if (exp) {
+                exp[campo] = valor;
+                atualizarCV();
+            }
+        }
+
+        function adicionarEducacao(dados = {}) {
+            const edu = {
+                id: Date.now() + Math.random(),
+                instituicao: dados.instituicao || '',
+                curso: dados.curso || '',
+                periodo: dados.periodo || ''
+            };
+            educacoes.push(edu);
+            renderizarFormEducacao();
+            atualizarCV();
+        }
+
+        function removerEducacao(id) {
+            educacoes = educacoes.filter(e => e.id !== id);
+            renderizarFormEducacao();
+            atualizarCV();
+        }
+
+        function renderizarFormEducacao() {
+            const container = document.getElementById('educacao-container');
+            container.innerHTML = '';
+            if (educacoes.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400 italic">Nenhuma formação adicionada.</p>';
+                return;
+            }
+            educacoes.forEach((edu) => {
+                const div = document.createElement('div');
+                div.className = 'p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3 relative';
+                div.innerHTML = `
+                    <button onclick="removerEducacao(${edu.id})" class="absolute top-3 right-3 text-red-500 hover:text-red-700 text-xs font-medium"><i class="fa-solid fa-trash"></i></button>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Instituição</label>
+                            <input type="text" value="${edu.instituicao}" oninput="atualizarEdu(${edu.id}, 'instituicao', this.value)" placeholder="Universidade X" class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Curso / Grau</label>
+                            <input type="text" value="${edu.curso}" oninput="atualizarEdu(${edu.id}, 'curso', this.value)" placeholder="Bacharelado em Ciência da Computação" class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Período</label>
+                        <input type="text" value="${edu.periodo}" oninput="atualizarEdu(${edu.id}, 'periodo', this.value)" placeholder="2018 - 2022" class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function atualizarEdu(id, campo, valor) {
+            const edu = educacoes.find(e => e.id === id);
+            if (edu) {
+                edu[campo] = valor;
+                atualizarCV();
+            }
+        }
+
+        function atualizarCV() {
+            // Informações Pessoais
+            const nome = document.getElementById('nome').value || 'Nome Completo';
+            const cargo = document.getElementById('cargo').value || 'Cargo / Profissão';
+            const email = document.getElementById('email').value || 'email@exemplo.com';
+            const telefone = document.getElementById('telefone').value || '(00) 00000-0000';
+            const localizacao = document.getElementById('localizacao').value || 'Cidade, UF';
+            const linkedin = document.getElementById('linkedin').value || 'linkedin.com/in/perfil';
+            const resumo = document.getElementById('resumo').value;
+
+            document.getElementById('prev-nome').innerText = nome;
+            document.getElementById('prev-cargo').innerText = cargo;
+            document.getElementById('prev-email').innerHTML = `<i class="fa-solid fa-envelope mr-1 text-brand-500"></i> ${email}`;
+            document.getElementById('prev-telefone').innerHTML = `<i class="fa-solid fa-phone mr-1 text-brand-500"></i> ${telefone}`;
+            document.getElementById('prev-localizacao').innerHTML = `<i class="fa-solid fa-location-dot mr-1 text-brand-500"></i> ${localizacao}`;
+            document.getElementById('prev-linkedin').innerHTML = `<i class="fa-brands fa-linkedin mr-1 text-brand-500"></i> ${linkedin}`;
+
+            const resumoSec = document.getElementById('prev-resumo-section');
+            if (resumo.trim() === '') {
+                resumoSec.classList.add('hidden');
+            } else {
+                resumoSec.classList.remove('hidden');
+                document.getElementById('prev-resumo').innerText = resumo;
+            }
+
+            // Experiências
+            const expContainer = document.getElementById('prev-experiencias');
+            const expSec = document.getElementById('prev-experiencia-section');
+            expContainer.innerHTML = '';
+            if (experiencias.length === 0) {
+                expSec.classList.add('hidden');
+            } else {
+                expSec.classList.remove('hidden');
+                experiencias.forEach(exp => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <div class="flex justify-between items-baseline">
+                            <h4 class="text-sm font-bold text-gray-900">${exp.cargo || 'Cargo'}</h4>
+                            <span class="text-xs text-gray-500 font-medium">${exp.periodo || 'Período'}</span>
+                        </div>
+                        <p class="text-xs font-semibold text-brand-600 mb-1">${exp.empresa || 'Empresa'}</p>
+                        <p class="text-xs text-gray-700 whitespace-pre-line leading-relaxed">${exp.descricao || ''}</p>
+                    `;
+                    expContainer.appendChild(div);
+                });
+            }
+
+            // Educação
+            const eduContainer = document.getElementById('prev-educacoes');
+            const eduSec = document.getElementById('prev-educacao-section');
+            eduContainer.innerHTML = '';
+            if (educacoes.length === 0) {
+                eduSec.classList.add('hidden');
+            } else {
+                eduSec.classList.remove('hidden');
+                educacoes.forEach(edu => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <div class="flex justify-between items-baseline">
+                            <h4 class="text-sm font-bold text-gray-900">${edu.curso || 'Curso'}</h4>
+                            <span class="text-xs text-gray-500 font-medium">${edu.periodo || 'Período'}</span>
+                        </div>
+                        <p class="text-xs text-gray-600">${edu.instituicao || 'Instituição'}</p>
+                    `;
+                    eduContainer.appendChild(div);
+                });
+            }
+
+            // Habilidades
+            const habInput = document.getElementById('habilidades').value;
+            const habContainer = document.getElementById('prev-habilidades');
+            const habSec = document.getElementById('prev-habilidades-section');
+            habContainer.innerHTML = '';
+            if (!habInput.trim()) {
+                habSec.classList.add('hidden');
+            } else {
+                habSec.classList.remove('hidden');
+                const habs = habInput.split(',').map(h => h.trim()).filter(h => h.length > 0);
+                habs.forEach(h => {
+                    const span = document.createElement('span');
+                    span.className = 'bg-gray-100 text-gray-800 text-xs px-2.5 py-1 rounded font-medium';
+                    span.innerText = h;
+                    habContainer.appendChild(span);
+                });
+            }
+        }
+
+        function preencherExemplo() {
+            document.getElementById('nome').value = 'Mariana Oliveira';
+            document.getElementById('cargo').value = 'Engenheira de Software Full Stack';
+            document.getElementById('email').value = 'mariana.dev@exemplo.com';
+            document.getElementById('telefone').value = '(11) 99888-7766';
+            document.getElementById('localizacao').value = 'São Paulo, SP';
+            document.getElementById('linkedin').value = 'linkedin.com/in/mariana-oliveira';
+            document.getElementById('resumo').value = 'Engenheira de Software com mais de 5 anos de experiência no desenvolvimento de aplicações web escaláveis utilizando React, Node.js e arquiteturas de nuvem. Apaixonada por código limpo e experiência do usuário.';
+            document.getElementById('habilidades').value = 'JavaScript, TypeScript, React, Node.js, Express, Tailwind CSS, Docker, PostgreSQL, Git, Metodologias Ágeis';
+
+            experiencias = [];
+            educacoes = [];
+
+            adicionarExperiencia({
+                empresa: 'Tech Solutions Ltda',
+                cargo: 'Desenvolvedora Sênior',
+                periodo: '2022 - Presente',
+                descricao: '• Liderança técnica no desenvolvimento de microsserviços em Node.js e frontend em React.\n• Redução de 30% no tempo de carregamento da aplicação principal.\n• Mentoria de desenvolvedores juniores e code reviews diários.'
+            });
+
+            adicionarExperiencia({
+                empresa: 'Inovação Digital S.A.',
+                cargo: 'Desenvolvedora Web Pleno',
+                periodo: '2019 - 2022',
+                descricao: '• Desenvolvimento de interfaces responsivas e integração com APIs RESTful.\n• Participação ativa em cerimônias Scrum e planejamento de sprints.'
+            });
+
+            adicionarEducacao({
+                instituicao: 'Universidade de São Paulo (USP)',
+                curso: 'Bacharelado em Ciência da Computação',
+                periodo: '2015 - 2018'
+            });
+
+            renderizarFormExperiencias();
+            renderizarFormEducacao();
+            atualizarCV();
+        }
+
+        // Inicializar com exemplo ao carregar
+        window.onload = () => {
+            preencherExemplo();
+        };
+    </script>
+</body>
+</html>

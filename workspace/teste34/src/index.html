@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Enigma dos Três Deuses - Simulador Interativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-800 py-6 px-4 shadow-xl">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <span class="text-amber-400 text-xs font-semibold uppercase tracking-widest">Desafio Lógico Clássico</span>
+                <h1 class="text-3xl font-cinzel font-bold text-amber-200 mt-1">O Enigma dos Três Deuses</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="reiniciarJogo()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-semibold px-4 py-2 rounded-lg text-sm transition shadow-lg">
+                    🔄 Reiniciar Desafio
+                </button>
+                <button onclick="abrirModalRegras()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 px-4 py-2 rounded-lg text-sm transition border border-amber-500/30">
+                    📜 Regras & Dicas
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto w-full p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 my-6">
+
+        <!-- Coluna Esquerda/Central: Painel dos Deuses e Ações -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <!-- Card de Introdução -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 text-slate-800/20 font-cinzel text-9xl select-none pointer-events-none">⚖️</div>
+                <h2 class="text-xl font-cinzel font-semibold text-amber-300 mb-2">O Desafio</h2>
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    Três deuses — <strong class="text-amber-200">A</strong>, <strong class="text-amber-200">B</strong> e <strong class="text-amber-200">C</strong> — são, em alguma ordem: <span class="text-emerald-400">Verdade</span>, <span class="text-rose-400">Mentira</span> e <span class="text-purple-400">Acaso</span>.
+                    Você tem direito a fazer exatamente <strong class="text-amber-200">3 perguntas de "sim" ou "não"</strong> para descobrir quem é quem.
+                </p>
+                <div class="mt-4 flex flex-wrap gap-4 text-xs">
+                    <span class="bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 px-3 py-1 rounded-full">Verdade: Sempre fala a verdade</span>
+                    <span class="bg-rose-950/80 border border-rose-500/30 text-rose-300 px-3 py-1 rounded-full">Mentira: Sempre mente</span>
+                    <span class="bg-purple-950/80 border border-purple-500/30 text-purple-300 px-3 py-1 rounded-full">Acaso: Responde aleatoriamente</span>
+                </div>
+            </div>
+
+            <!-- Painel dos Deuses -->
+            <div class="grid grid-cols-3 gap-4">
+                <!-- Deus A -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 text-center shadow-lg hover:border-amber-500/40 transition">
+                    <div class="w-12 h-12 mx-auto bg-amber-500/10 rounded-full flex items-center justify-center text-amber-400 font-cinzel text-xl font-bold mb-3 border border-amber-500/30">A</div>
+                    <h3 class="font-cinzel font-bold text-lg text-slate-200">Deus A</h3>
+                    <p id="identidade-A" class="text-xs text-slate-500 mt-1 italic">Identidade Oculta</p>
+                </div>
+                <!-- Deus B -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 text-center shadow-lg hover:border-amber-500/40 transition">
+                    <div class="w-12 h-12 mx-auto bg-amber-500/10 rounded-full flex items-center justify-center text-amber-400 font-cinzel text-xl font-bold mb-3 border border-amber-500/30">B</div>
+                    <h3 class="font-cinzel font-bold text-lg text-slate-200">Deus B</h3>
+                    <p id="identidade-B" class="text-xs text-slate-500 mt-1 italic">Identidade Oculta</p>
+                </div>
+                <!-- Deus C -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 text-center shadow-lg hover:border-amber-500/40 transition">
+                    <div class="w-12 h-12 mx-auto bg-amber-500/10 rounded-full flex items-center justify-center text-amber-400 font-cinzel text-xl font-bold mb-3 border border-amber-500/30">C</div>
+                    <h3 class="font-cinzel font-bold text-lg text-slate-200">Deus C</h3>
+                    <p id="identidade-C" class="text-xs text-slate-500 mt-1 italic">Identidade Oculta</p>
+                </div>
+            </div>
+
+            <!-- Seção de Interação / Perguntas -->
+            <div id="painel-interacao" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-cinzel font-semibold text-amber-200">Fazer Pergunta</h3>
+                    <span id="contador-perguntas" class="text-xs bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full">Perguntas restantes: 3</span>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">1. Escolha o Deus a perguntar:</label>
+                        <select id="select-deus" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="A">Deus A</option>
+                            <option value="B">Deus B</option>
+                            <option value="C">Deus C</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">2. Escolha a Pergunta (Lógica Condicional / Boolos):</label>
+                        <select id="select-pergunta" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="verdadeiro">"Se eu te perguntar se [Você] é o Acaso, você responderia 'Da' (Sim)?"</option>
+                            <option value="se_verdade">"Se eu te perguntar se [Outro Deus] é o Mentira, você responderia 'Da' (Sim)?"</option>
+                            <option value="personalizada_simples">Pergunta Simples: "Você é a Verdade?"</option>
+                        </select>
+                    </div>
+
+                    <div id="wrapper-subdeus" class="hidden">
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Referir-se a qual outro deus?</label>
+                        <select id="select-subdeus" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="A">Deus A</option>
+                            <option value="B" selected>Deus B</option>
+                            <option value="C">Deus C</option>
+                        </select>
+                    </div>
+
+                    <button onclick="enviarPergunta()" id="btn-perguntar" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 px-4 rounded-xl transition shadow-lg">
+                        Fazer Pergunta
+                    </button>
+                </div>
+            </div>
+
+            <!-- Palpite Final (Adivinhação) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <h3 class="text-lg font-cinzel font-semibold text-amber-200">Adivinhar Identidades</h3>
+                <p class="text-xs text-slate-400">Tem certeza de quem é quem? Defina suas conclusões abaixo:</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Deus A é:</label>
+                        <select id="palpite-A" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="Verdade">Verdade</option>
+                            <option value="Mentira">Mentira</option>
+                            <option value="Acaso">Acaso</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Deus B é:</label>
+                        <select id="palpite-B" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="Verdade">Verdade</option>
+                            <option value="Mentira" selected>Mentira</option>
+                            <option value="Acaso">Acaso</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Deus C é:</label>
+                        <select id="palpite-C" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="Verdade">Verdade</option>
+                            <option value="Mentira">Mentira</option>
+                            <option value="Acaso" selected>Acaso</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="fazerPalpite()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-3 px-4 rounded-xl transition shadow-lg">
+                    🎯 Revelar Veredito Final
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Coluna Direita: Histórico e Diálogo -->
+        <div class="space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl h-full flex flex-col">
+                <h3 class="text-lg font-cinzel font-semibold text-amber-200 mb-4">Registro de Diálogos</h3>
+                <div id="historico-container" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-2">
+                    <p class="text-xs text-slate-500 italic text-center py-8">Nenhuma pergunta feita ainda. Faça sua primeira pergunta aos deuses.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal de Resultado / Fim de Jogo -->
+    <div id="modal-resultado" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-amber-500/50 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl space-y-4">
+            <div id="modal-icone" class="text-5xl">🏆</div>
+            <h3 id="modal-titulo" class="text-2xl font-cinzel font-bold text-amber-200">Vitória!</h3>
+            <p id="modal-mensagem" class="text-sm text-slate-300">Você descobriu corretamente a identidade de todos os deuses!</p>
+            <div id="modal-gabarito" class="bg-slate-950 p-4 rounded-xl text-xs text-slate-400 space-y-1">
+                <!-- Gabarito injetado -->
+            </div>
+            <button onclick="reiniciarJogo()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 px-4 rounded-xl transition">
+                Jogar Novamente
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Regras -->
+    <div id="modal-regras" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <h3 class="text-xl font-cinzel font-bold text-amber-200">📜 Regras do Enigma</h3>
+            <div class="text-xs text-slate-300 space-y-2 leading-relaxed max-h-[60vh] overflow-y-auto pr-2">
+                <p>1. <strong>Verdade</strong> sempre diz a verdade. <strong>Mentira</strong> sempre mente. <strong>Acaso</strong> responde aleatoriamente (verdade ou mentira).</p>
+                <p>2. Você pode fazer no máximo <strong>3 perguntas</strong> de "sim" ou "não" no total.</p>
+                <p>3. As respostas são dadas em na língua dos deuses: <strong class="text-amber-300">Da</strong> (Sim) e <strong class="text-amber-300">Ja</strong> (Não), mas você não sabe qual significa qual (ou se o Acaso respondeu coerentemente).</p>
+                <p>4. <strong>Dica de Ouro (George Boolos):</strong> A chave para resolver o enigma é fazer perguntas condicionais aninhadas (ex: "Se eu te perguntar X, você responderia Da?"), o que permite neutralizar as mentiras do deus da Mentira e contornar a imprevisibilidade parcial do Acaso.</p>
+            </div>
+            <button onclick="fecharModalRegras()" class="w-full bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold py-2.5 rounded-xl transition border border-amber-500/30">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        Simulador do Enigma dos Três Deuses &bull; Desenvolvido por Trae AI / TiAgente
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        const game = new EnigmaGame();
+
+        // UI Listeners
+        const selectPergunta = document.getElementById('select-pergunta');
+        const wrapperSubdeus = document.getElementById('wrapper-subdeus');
+
+        selectPergunta.addEventListener('change', (e) => {
+            if (e.target.value === 'se_verdade') {
+                wrapperSubdeus.classList.remove('hidden');
+            } else {
+                wrapperSubdeus.classList.add('hidden');
+            }
+        });
+
+        function atualizarUI() {
+            document.getElementById('contador-perguntas').innerText = `Perguntas restantes: ${3 - game.perguntasFeitas}`;
+            
+            // Histórico
+            const histContainer = document.getElementById('historico-container');
+            if (game.historico.length === 0) {
+                histContainer.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-8">Nenhuma pergunta feita ainda. Faça sua primeira pergunta aos deuses.</p>`;
+            } else {
+                histContainer.innerHTML = game.historico.map(h => `
+                    <div class="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl text-xs space-y-1.5">
+                        <div class="flex justify-between items-center text-amber-400 font-semibold">
+                            <span>Pergunta #${h.perguntaNum} &rarr; Deus ${h.deus}</span>
+                            <span class="bg-amber-500/10 px-2 py-0.5 rounded text-amber-300 border border-amber-500/20">${h.traducao}</span>
+                        </div>
+                        <p class="text-slate-300 italic">"${h.declaracaoTexto || 'Declaração lógica'}"</p>
+                    </div>
+                `).join('');
+            }
+
+            if (game.perguntasFeitas >= 3) {
+                document.getElementById('btn-perguntar').disabled = true;
+                document.getElementById('btn-perguntar').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('btn-perguntar').disabled = false;
+                document.getElementById('btn-perguntar').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function enviarPergunta() {
+            try {
+                const deus = document.getElementById('select-deus').value;
+                const tipo = selectPergunta.value;
+                const subdeus = document.getElementById('select-subdeus').value;
+
+                // Lógica de avaliação da declaração com base na identidade real do deus
+                const identidadeDeus = game.deuses[deus];
+                let declaracaoLogica = false;
+                let texto = "";
+
+                if (tipo === 'verdadeiro') {
+                    // "Se eu te perguntar se você é o Acaso..."
+                    // Se deus for Acaso, ele diz verdade ou mentira aleatoriamente.
+                    // Para simplificar a simulação interativa baseada no motor:
+                    texto = `Se eu te perguntar se você é o Acaso, você responderia 'Da'?`;
+                    // Avaliação lógica da proposição:
+                    declaracaoLogica = (identidadeDeus === 'Acaso');
+                } else if (tipo === 'se_verdade') {
+                    texto = `Se eu te perguntar se o Deus ${subdeus} é o Mentira, você responderia 'Da'?`;
+                    const identSub = game.deuses[subdeus];
+                    declaracaoLogica = (identSub === 'Mentira');
+                } else {
+                    texto = `Você é a Verdade?`;
+                    declaracaoLogica = (identidadeDeus === 'Verdade');
+                }
+
+                const res = game.fazerPergunta(deus, declaracaoLogica);
+                res.declaracaoTexto = texto;
+                atualizarUI();
+
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        function fazerPalpite() {
+            const pA = document.getElementById('palpite-A').value;
+            const pB = document.getElementById('palpite-B').value;
+            const pC = document.getElementById('palpite-C').value;
+
+            const resultado = game.tentarAdivinhacao({ A: pA, B: pB, C: pC });
+
+            // Revelar identidades reais nos cards
+            document.getElementById('identidade-A').innerText = game.deuses.A;
+            document.getElementById('identidade-B').innerText = game.deuses.B;
+            document.getElementById('identidade-C').innerText = game.deuses.C;
+
+            // Exibir Modal
+            const modal = document.getElementById('modal-resultado');
+            const icone = document.getElementById('modal-icone');
+            const titulo = document.getElementById('modal-titulo');
+            const mensagem = document.getElementById('modal-mensagem');
+            const gabaritoDiv = document.getElementById('modal-gabarito');
+
+            if (resultado.venceu) {
+                icone.innerText = "🏆";
+                titulo.innerText = "Vitória Gloriosa!";
+                mensagem.innerText = "Parabéns! Você deduziu corretamente a identidade dos três deuses!";
+            } else {
+                icone.innerText = "❌";
+                titulo.innerText = "Incorreto!";
+                mensagem.innerText = "Suas deduções não correspondem à realidade dos deuses.";
+            }
+
+            gabaritoDiv.innerHTML = `
+                <div class="font-bold text-amber-300 mb-1">Gabarito Real:</div>
+                <div>Deus A: <strong>${game.deuses.A}</strong></div>
+                <div>Deus B: <strong>${game.deuses.B}</strong></div>
+                <div>Deus C: <strong>${game.deuses.C}</strong></div>
+            `;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function reiniciarJogo() {
+            game.reset();
+            document.getElementById('modal-resultado').classList.remove('flex');
+            document.getElementById('modal-resultado').classList.add('hidden');
+            document.getElementById('identidade-A').innerText = "Identidade Oculta";
+            document.getElementById('identidade-B').innerText = "Identidade Oculta";
+            document.getElementById('identidade-C').innerText = "Identidade Oculta";
+            atualizarUI();
+        }
+
+        function abrirModalRegras() {
+            document.getElementById('modal-regras').classList.remove('hidden');
+            document.getElementById('modal-regras').classList.add('flex');
+        }
+
+        function fecharModalRegras() {
+            document.getElementById('modal-regras').classList.remove('flex');
+            document.getElementById('modal-regras').classList.add('hidden');
+        }
+
+        // Inicializar UI
+        atualizarUI();
+    </script>
+</body>
+</html>

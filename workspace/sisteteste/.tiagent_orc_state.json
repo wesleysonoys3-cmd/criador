@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "rc28.1",
+  "id": "orc_default_1789957261985_0rgsve",
+  "createdAt": 1789957261985,
+  "updatedAt": 1789957319774,
+  "objetivoAtual": "",
+  "requisitos": {
+    "rf": [],
+    "rnfr": [],
+    "businessRules": []
+  },
+  "arquitetura": {
+    "camadas": [],
+    "estruturaPastas": [],
+    "padroes": []
+  },
+  "tecnologias": {
+    "lang": null,
+    "framework": null,
+    "banco": null,
+    "libs": []
+  },
+  "versoesRelevantes": {},
+  "agentesDisponiveis": {
+    "ARCHITECT": {
+      "ok": true
+    },
+    "DEVELOPER": {
+      "ok": true
+    },
+    "QA": {
+      "ok": true
+    },
+    "SECURITY": {
+      "ok": true
+    },
+    "TEST": {
+      "ok": true
+    },
+    "INTERNET": {
+      "ok": false
+    }
+  },
+  "ferramentasDisponiveis": [
+    "read_file",
+    "write_file",
+    "delete_file",
+    "run_command",
+    "list_dir",
+    "state_get",
+    "state_patch",
+    "task_list",
+    "task_update",
+    "web_request_ask_authorization",
+    "web_search_authorized",
+    "web_fetch_authorized",
+    "run_tests",
+    "rollback_to_checkpoint",
+    "security_audit_and_autofix"
+  ],
+  "tarefas": [],
+  "tarefasConcluidas": 0,
+  "tarefasPendentes": 0,
+  "tarefaEmExecucaoId": null,
+  "dependencias": [],
+  "arquivosRelevantes": {},
+  "arquivosModificados": [],
+  "decisoesTecnicas": [],
+  "pesquisasRealizadasFontes": [],
+  "errosEncontrados": [],
+  "tentativasRealizadas": [],
+  "correcoesRealizadas": [],
+  "testesExecutadosResultados": [],
+  "problemasConhecidos": [],
+  "limitacoes": [],
+  "proximaAcao": "ANALISAR_PROJETO",
+  "faseGeral": "ANALYSIS",
+  "needsPersistence": false,
+  "internetAuthorization": null,
+  "checkpoints": [],
+  "toolCallsSinceLastSave": 0,
+  "statusExecucao": "idle",
+  "decisionTrace": [],
+  "decisionEngine": {
+    "engineVersion": "rc28.decision.v1",
+    "mode": "heuristic",
+    "hypotheses": [],
+    "strategiesTried": [],
+    "ineffectiveStrategies": [],
+    "alternativesHistory": [],
+    "progressMetrics": {
+      "totalCycles": 0,
+      "cyclesWithProgress": 0,
+      "lastProgressAtMs": 0,
+      "noProgressStreak": 0,
+      "objectiveProgressPct": 0
+    },
+    "lastDecision": null,
+    "lastMeasuredResult": null,
+    "adaptiveConstraints": {
+      "maxCycles": null,
+      "maxStrategies": null,
+      "confidenceThreshold": 0.7
+    }
+  },
+  "internetAuthorizationPending": {
+    "scopeId": "inet_muamdf8c_woo2x",
+    "reason": "Consultar dados de mercado em tempo real e cotações públicas da corretora Quantfury.",
+    "urls": [],
+    "estimatedScope": "",
+    "requestedAtMs": 1789957319774,
+    "status": "requested"
+  }
+}

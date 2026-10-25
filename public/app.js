@@ -150,6 +150,32 @@ const els = {
   btcBacktestPanel: document.getElementById('btc-backtest-panel'),
   btcHistoryPanel: document.getElementById('btc-history-panel'),
 
+  // Q Quantfury MCP (aba nova central · READ_ONLY)
+  qtfPanel: document.getElementById('qtf-panel'),
+  qtfBody: document.getElementById('qtf-body'),
+  qtfDashboard: document.getElementById('qtf-dashboard'),
+  qtfSpinner: document.getElementById('qtf-spinner'),
+  qtfSpinnerText: document.getElementById('qtf-spinner-text'),
+  qtfEmptyState: document.getElementById('qtf-empty-state'),
+  qtfStatusChip: document.getElementById('qtf-status-chip'),
+  qtfStatusDot: document.getElementById('qtf-status-dot'),
+  qtfStatusLabel: document.getElementById('qtf-status-label'),
+  qtfConnectBtn: document.getElementById('qtf-connect-btn'),
+  qtfConnectLabel: document.getElementById('qtf-connect-label'),
+  qtfRefreshBtn: document.getElementById('qtf-refresh-btn'),
+  qtfAnalyzeBtn: document.getElementById('qtf-analyze-btn'),
+  qtfMonitorBtn: document.getElementById('qtf-monitor-btn'),
+  qtfMonitorLabel: document.getElementById('qtf-monitor-label'),
+  qtfAuthPanel: document.getElementById('qtf-auth-panel'),
+  qtfAuthMsg: document.getElementById('qtf-auth-msg'),
+  qtfAuthCodeWrap: document.getElementById('qtf-auth-code-wrap'),
+  qtfAuthCode: document.getElementById('qtf-auth-code'),
+  qtfAuthCodeCopy: document.getElementById('qtf-auth-code-copy'),
+  qtfAuthExpire: document.getElementById('qtf-auth-expire'),
+  qtfAuthClients: document.getElementById('qtf-auth-clients'),
+  qtfAuthUrl: document.getElementById('qtf-auth-url'),
+  qtfAuthRecheck: document.getElementById('qtf-auth-recheck'),
+
   // Preview service bar (acima das abas do editor central)
   previewServiceSelect: $('#preview-service-select'),
   previewBack: $('#preview-back'),
@@ -1816,10 +1842,13 @@ function switchEditorPanel(name) {
     els.app?.classList.add('right-open');
     try { els.agentInput?.focus(); } catch {}
   }
-  const allowed = ['code','preview','console','terminal','ia-config','btc'];
+  const allowed = ['code','preview','console','terminal','ia-config','btc','quantfury'];
   if (allowed.includes(activeKey) || n.startsWith('code:')) {
     if (els.editorPanels) els.editorPanels.dataset.active = activeKey;
     if (activeKey === 'btc') _btcLoadStatusIfMissing();
+    if (activeKey === 'quantfury') {
+      if (typeof window.__editorTabHandler === 'function') try { window.__editorTabHandler('quantfury'); } catch(_) {}
+    }
   }
   // Sync aba visual ativa
   $$('.editor-tab', els.editorTabs || document).forEach(t => {
@@ -1832,6 +1861,7 @@ function switchEditorPanel(name) {
     else if (n === 'terminal') isActive = tt === 'terminal';
     else if (n === 'ia-config') isActive = tt === 'ia-config';
     else if (n === 'btc') isActive = tt === 'btc';
+    else if (n === 'quantfury') isActive = tt === 'quantfury';
     else                       isActive = tt === activeKey;
     t.classList.toggle('active', !!isActive);
   });
@@ -2723,6 +2753,50 @@ async function doSubmit(opts = {}) {
     els.traeMessageInput.style.height = 'auto';
   }
 
+  // ============================================================================
+  // Q QUANTFURY CHAT INTERCEPTOR (client-side local · READ_ONLY)
+  //   Se a mensagem do usuário for uma pergunta sobre conta/posições/P&L/risco
+  //   da Quantfury, responde localmente via endpoint /api/quantfury/chat, SEM
+  //   passar pelo agente RC28.
+  // ============================================================================
+  if (text) {
+    const _qtfQuick = /(quantfury|minha\s*conta|saldo|patrim[oô]nio|posi[çc][õo]es?|posi[çc][aã]o\s+em|p\s*[&e]\s*l|ganho|perda|lucro|preju[íi]zo|risco|exposi[çc][aã]o|analisa\s+minha|an[aá]lise\s+da\s+posi[çc][aã]o|como\s+est[aá]\s+minha|qual\s+o\s+meu)/i;
+    if (_qtfQuick.test(text)) {
+      els.stepInfo.classList.remove('hidden');
+      els.stepInfo.textContent = 'Consultando Quantfury…';
+      startThinking();
+      addUserMessage({ id: 'u_qtf_' + Date.now(), text: text });
+      try {
+        const r = await fetch('/api/quantfury/chat', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text }),
+        }).then(r => r.json());
+        if (r && r.ok && r.handled && typeof r.reply === 'string' && r.reply.length) {
+          const msg = r.reply + (r.needsConnect || r.needsReconnect ? `\n\n👉 _Clique na aba **Q Quantfury** no painel superior para gerenciar a conexão._` : '');
+          addAIMessage({ id: 'ai_qtf_' + Date.now(), text: msg, role: 'assistant' }, false);
+        } else if (r && r.reply && typeof r.reply === 'string' && r.reply.length) {
+          addAIMessage({ id: 'ai_qtf_' + Date.now(), text: r.reply, role: 'assistant' }, false);
+        } else {
+          // cai no fluxo normal
+          stopThinking(); state.busy = false; els.sendBtn.disabled = false; els.stepInfo.classList.add('hidden');
+          finalizeCurrentAIMessage(); setAgentState('idle', { reason: 'qtf_fallback' });
+          // remove a msg de usuário adicionada acima para não duplicar quando reenviarmos
+          // continua normalmente abaixo — estado busy=false faz com que o fluxo abaixo rode normalmente.
+          const prevId = 'u_qtf_';
+          document.querySelectorAll('[id^="' + prevId + '"]').forEach(el => { /* mantém a msg visível — evita duplicidade abaixo */ });
+        }
+        if (r && r.ok) {
+          stopThinking(); state.busy = false; els.sendBtn.disabled = false; els.stepInfo.classList.add('hidden');
+          finalizeCurrentAIMessage(); setAgentState('idle', { reason: 'qtf_handled' }); scrollBottom();
+          if (typeof state.project === 'undefined' || !state.project) {}
+          return;
+        }
+      } catch (_qtfErr) {
+        console.warn('[QTF chat] interceptor erro, fallback:', _qtfErr);
+      }
+    }
+  }
+
   els.stepInfo.classList.remove('hidden');
   els.stepInfo.textContent = 'Enviando…';
   startThinking();
@@ -3480,7 +3554,7 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
     else if (!t.dataset.codeFile) t.classList.remove('active');
   });
   // Listeners das 4 abas fixas (Chat removido do centro — foi pro painel direito TiAi)
-  const specials = ['preview','console','terminal','code','ia-config','btc'];
+  const specials = ['preview','console','terminal','code','ia-config','btc','quantfury'];
   specials.forEach(key => {
     const tab = els.editorTabs?.querySelector(`[data-editor-tab="${key}"]`);
     if (tab && !tab.__attSp) {
@@ -3495,7 +3569,7 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
 /* switchTab LEGADA (rotas antigas chamam switchTab('preview')) — redireciona para switchEditorPanel moderno */
 const _origSwitchTab = switchTab;
 switchTab = function(name) {
-  if (['preview','console','terminal','chat','code','ia-config','btc'].includes(String(name))) {
+  if (['preview','console','terminal','chat','code','ia-config','btc','quantfury'].includes(String(name))) {
     switchEditorPanel(String(name));
   } else if (_origSwitchTab) {
     return _origSwitchTab(name);
@@ -5028,6 +5102,405 @@ function initRC19Mobile() {
       }
       console.debug('[BTC UI] módulo carregado. refs: btcPanel=', Boolean(els.btcPanel), ', btcDashboard=', Boolean(els.btcDashboard), ', btcManualBtn=', Boolean(els.btcManualBtn));
     } catch (btcInitErr) { console.warn('[BTC UI] init WARN', btcInitErr); }
+  })();
+
+  /* =================================================================
+   * Q QUANTFURY MCP · Módulo UI (READ_ONLY · nenhuma operação de ordem)
+   * ================================================================= */
+  (function () {
+    try {
+      if (!els.qtfPanel) { console.debug('[QTF UI] sem refs, pulando.'); return; }
+      const stateQtf = {
+        loaded: false,
+        status: null,
+        cached: null,
+        analyze: null,
+        alerts: [],
+      };
+
+      function _fmtMoney(v) {
+        if (v == null || !Number.isFinite(Number(v))) return '—';
+        const n = Number(v), s = n < 0 ? '-' : '', a = Math.abs(n);
+        if (a >= 1e9) return s + '$' + (a / 1e9).toFixed(2) + 'B';
+        if (a >= 1e6) return s + '$' + (a / 1e6).toFixed(2) + 'M';
+        if (a >= 1e3) return s + '$' + (a / 1e3).toFixed(2) + 'K';
+        return s + '$' + a.toFixed(2);
+      }
+      function _fmtDate(ts) {
+        try { if (!ts) return '—'; return new Date(ts).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }); }
+        catch { return String(ts); }
+      }
+      function _clsRiskColor(tag) {
+        switch ((tag || '').toLowerCase()) {
+          case 'baixo': return 'text-emerald-300 bg-emerald-500/10 border-emerald-400/30';
+          case 'moderado': return 'text-amber-300 bg-amber-500/10 border-amber-400/30';
+          case 'alto': return 'text-orange-300 bg-orange-500/10 border-orange-400/30';
+          case 'muito alto': return 'text-rose-300 bg-rose-500/10 border-rose-400/30';
+          default: return 'text-slate-300 bg-white/5 border-white/10';
+        }
+      }
+      function _clsPnlColor(n) {
+        if (n == null || !Number.isFinite(Number(n))) return 'text-slate-400';
+        return Number(n) >= 0 ? 'text-emerald-300' : 'text-rose-300';
+      }
+
+      function _busy(on, text) {
+        if (!els.qtfSpinner) return;
+        if (on) {
+          els.qtfSpinner.classList.remove('hidden');
+          if (text && els.qtfSpinnerText) els.qtfSpinnerText.textContent = text;
+          els.qtfDashboard?.classList.add('hidden');
+          els.qtfEmptyState?.classList.add('hidden');
+          els.qtfAuthPanel?.classList.add('hidden');
+        } else {
+          els.qtfSpinner.classList.add('hidden');
+        }
+      }
+
+      function _updateChip(st) {
+        if (!els.qtfStatusChip || !els.qtfStatusDot || !els.qtfStatusLabel) return;
+        const s = st?.state || 'disconnected';
+        const connected = Boolean(st?.connected);
+        const requiresAuth = Boolean(st?.requiresAuth);
+        let dot = '⚪', label = st?.message || 'Não conectado', cls = 'text-slate-400 bg-white/5 border-slate-500/20';
+        if (connected) { dot = '🟢'; label = 'Conectado'; cls = 'text-emerald-300 bg-emerald-500/10 border-emerald-400/30'; }
+        else if (requiresAuth) { dot = '🟡'; label = st?.message || 'Autorização pendente'; cls = 'text-amber-300 bg-amber-500/10 border-amber-400/30'; }
+        else if (s === 'expired') { dot = '🔴'; label = st?.message || 'Sessão expirada'; cls = 'text-rose-300 bg-rose-500/10 border-rose-400/30'; }
+        else if (s === 'error') { dot = '⭕'; label = st?.message || 'Erro'; cls = 'text-rose-300 bg-rose-500/10 border-rose-400/30'; }
+        els.qtfStatusDot.textContent = dot;
+        els.qtfStatusLabel.textContent = label;
+        els.qtfStatusChip.className = `inline-flex items-center gap-1 rounded-md px-2 py-0.5 border font-bold text-[10.5px] ${cls}`;
+      }
+
+      function _updateButtons(st) {
+        const connected = Boolean(st?.connected);
+        const busy = !!(els.qtfSpinner && !els.qtfSpinner.classList.contains('hidden'));
+        if (els.qtfConnectBtn) {
+          els.qtfConnectBtn.disabled = busy;
+          const label = connected ? 'Desconectar' : 'Conectar Quantfury';
+          if (els.qtfConnectLabel) els.qtfConnectLabel.textContent = label;
+        }
+        if (els.qtfRefreshBtn) els.qtfRefreshBtn.disabled = !connected || busy;
+        if (els.qtfAnalyzeBtn) els.qtfAnalyzeBtn.disabled = !connected || busy;
+        if (els.qtfMonitorBtn) els.qtfMonitorBtn.disabled = !connected;
+      }
+
+      function _showAuth(flow) {
+        if (!els.qtfAuthPanel) return;
+        els.qtfAuthPanel.classList.remove('hidden');
+        els.qtfDashboard?.classList.add('hidden');
+        els.qtfEmptyState?.classList.add('hidden');
+        if (els.qtfAuthMsg) els.qtfAuthMsg.textContent = (flow?.instructions || flow?.url)
+          ? (flow?.instructions || `Autorize o TiAgente para acessar sua conta Quantfury. Abra a URL abaixo no navegador e conclua a autorização.`)
+          : 'Autorize o TiAgente para acessar sua conta Quantfury.';
+        // userCode (device-flow)
+        if (els.qtfAuthCodeWrap) {
+          if (flow?.userCode && els.qtfAuthCode) {
+            els.qtfAuthCode.textContent = flow.userCode;
+            els.qtfAuthCodeWrap.classList.remove('hidden');
+          } else {
+            els.qtfAuthCodeWrap.classList.add('hidden');
+          }
+        }
+        if (els.qtfAuthExpire) {
+          if (typeof flow?.expiresIn === 'number' && flow.expiresIn > 0) {
+            const mm = Math.floor(flow.expiresIn / 60);
+            const ss = flow.expiresIn % 60;
+            els.qtfAuthExpire.textContent = `⏱  Válido por ${mm ? mm + 'm ' : ''}${ss}s · expira em ${new Date(Date.now() + flow.expiresIn * 1000).toLocaleTimeString()}`;
+            els.qtfAuthExpire.classList.remove('hidden');
+          } else {
+            els.qtfAuthExpire.classList.add('hidden');
+          }
+        }
+        if (els.qtfAuthClients) els.qtfAuthClients.classList.remove('hidden');
+        if (els.qtfAuthUrl) {
+          if (flow?.url) { els.qtfAuthUrl.href = flow.url; els.qtfAuthUrl.classList.remove('hidden'); els.qtfAuthUrl.classList.add('inline-flex'); }
+          else { els.qtfAuthUrl.classList.add('hidden'); els.qtfAuthUrl.classList.remove('inline-flex'); }
+        }
+      }
+      function _hideAuth() { els.qtfAuthPanel?.classList.add('hidden'); }
+
+      async function loadStatus({ silent = false } = {}) {
+        try {
+          const r = await fetch('/api/quantfury/status').then(r => r.json());
+          if (r && r.ok) {
+            stateQtf.status = r.state || null;
+            stateQtf.cached = r.cached || null;
+            _updateChip(r.state);
+            _updateButtons(r.state);
+            if (r.state?.requiresAuth && r.state?.authFlow) _showAuth(r.state.authFlow);
+            else if (r.state?.connected && stateQtf.analyze) renderDashboard();
+            else if (!r.state?.connected && !silent) { els.qtfEmptyState?.classList.remove('hidden'); els.qtfDashboard?.classList.add('hidden'); }
+          }
+        } catch (e) { if (!silent) toast('Erro status Quantfury: ' + (e?.message || e), 'err'); }
+      }
+
+      async function connectClick() {
+        const connected = Boolean(stateQtf.status?.connected);
+        try {
+          _busy(true, connected ? 'Desconectando…' : 'Conectando ao Quantfury…');
+          const method = connected ? 'disconnect' : 'connect';
+          const r = await fetch(`/api/quantfury/${method}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force: true }),
+          }).then(r => r.json());
+          if (r && r.ok) {
+            stateQtf.status = r.result || null;
+            _updateChip(r.result);
+            _updateButtons(r.result);
+            if (r.result?.requiresAuth && r.result?.authFlow) { _busy(false); _showAuth(r.result.authFlow); toast('Autorização necessária. Abra a URL fornecida.', 'warn'); return; }
+            if (r.result?.connected) {
+              await refreshClick({ _nested: true });
+              toast('Quantfury conectado com sucesso.', 'ok');
+            } else {
+              stateQtf.analyze = null; stateQtf.cached = null;
+              els.qtfDashboard?.classList.add('hidden'); els.qtfEmptyState?.classList.remove('hidden');
+              toast('Desconectado da Quantfury.', 'ok');
+            }
+          } else {
+            throw new Error(r?.friendly || r?.error || 'Falha na operação.');
+          }
+        } catch (e) {
+          toast(String(e?.friendly || e?.message || e), 'err');
+          stateQtf.status && _updateChip(stateQtf.status);
+        } finally { _busy(false); stateQtf.status && _updateButtons(stateQtf.status); }
+      }
+
+      async function refreshClick({ force = true, _nested = false } = {}) {
+        try {
+          if (!_nested) _busy(true, 'Atualizando dados da Quantfury…');
+          const r = await fetch('/api/quantfury/refresh', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force: !!force }),
+          }).then(r => r.json());
+          if (r && r.ok) {
+            stateQtf.status = r.state || null;
+            stateQtf.cached = r.cached || null;
+            _updateChip(r.state); _updateButtons(r.state);
+            if (r.state?.requiresAuth && r.state?.authFlow) { if (!_nested) _busy(false); _showAuth(r.state.authFlow); return; }
+            await analyzeClick({ _nested: true });
+            if (!_nested) toast('Dados Quantfury atualizados.', 'ok');
+          } else {
+            throw new Error(r?.error || 'Falha ao atualizar.');
+          }
+        } catch (e) {
+          if (!_nested) toast(String(e?.message || e), 'err');
+        } finally { if (!_nested) { _busy(false); stateQtf.status && _updateButtons(stateQtf.status); } }
+      }
+
+      async function analyzeClick({ _nested = false } = {}) {
+        try {
+          if (!_nested) _busy(true, 'Analisando posições Quantfury…');
+          const r = await fetch('/api/quantfury/analyze', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}),
+          }).then(r => r.json());
+          if (r && r.ok) {
+            stateQtf.analyze = { positions: r.positions || [], analyses: r.analyses || [], account: r.account || null, generatedAt: r.generatedAt };
+            if (r.message && !r.positions?.length) {
+              stateQtf.analyze._note = r.message;
+            }
+            renderDashboard();
+            if (!_nested) toast('Análise Quantfury pronta.', 'ok');
+          } else {
+            throw new Error(r?.error || 'Falha na análise.');
+          }
+        } catch (e) {
+          if (!_nested) toast(String(e?.message || e), 'err');
+        } finally { if (!_nested) { _busy(false); stateQtf.status && _updateButtons(stateQtf.status); } }
+      }
+
+      async function monitorToggle() {
+        try {
+          const mon = stateQtf.status && stateQtf.status.monitor && stateQtf.status.monitor.active ? stateQtf.status.monitor : (await fetch('/api/quantfury/status').then(r=>r.json()).catch(()=>({}))).monitor;
+          const active = Boolean(mon?.active);
+          const endpoint = active ? 'stop' : 'start';
+          const r = await fetch(`/api/quantfury/monitor/${endpoint}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}),
+          }).then(r => r.json());
+          if (r && r.ok) {
+            if (els.qtfMonitorBtn && els.qtfMonitorLabel) {
+              const nowActive = endpoint === 'start' ? !!r.ok && !!r.status?.active : false;
+              els.qtfMonitorBtn.className = nowActive
+                ? 'text-emerald-300 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-400/30 hover:bg-emerald-500/20 transition flex items-center gap-1 text-[10.5px] font-bold disabled:opacity-50 disabled:cursor-not-allowed'
+                : 'text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition flex items-center gap-1 text-[10.5px] font-bold disabled:opacity-50 disabled:cursor-not-allowed';
+              els.qtfMonitorLabel.textContent = nowActive ? 'Parar monitor' : 'Monitorar';
+            }
+            toast(nowActive ? 'Monitoramento Quantfury ativado. Intervalo: 30s.' : 'Monitoramento Quantfury desativado.', nowActive ? 'ok' : 'warn');
+          }
+        } catch (e) { toast(String(e?.message || e), 'err'); }
+      }
+
+      function renderDashboard() {
+        if (!els.qtfDashboard) return;
+        _hideAuth(); els.qtfEmptyState?.classList.add('hidden'); els.qtfDashboard.classList.remove('hidden');
+        const st = stateQtf.status || null;
+        const cached = stateQtf.cached || null;
+        const ana = stateQtf.analyze || { positions: [], analyses: [], account: null, generatedAt: null };
+        const positions = ana.positions || [];
+        const analyses = ana.analyses || [];
+        const accountNode = (cached?.account && typeof cached.account === 'object') ? cached.account : (ana.account || null);
+        const accEquity = accountNode?.equity ?? accountNode?.balance ?? accountNode?.overview?.equity ?? null;
+        const accBalance = accountNode?.balance ?? accountNode?.overview?.balance ?? null;
+        const accMargin = accountNode?.usedMargin ?? accountNode?.overview?.usedMargin ?? null;
+        const accPnl = accountNode?.pnl ?? null;
+
+        let rowsHtml = '';
+        if (!positions.length) {
+          rowsHtml = `<div class="text-[11px] text-slate-500 text-center py-6">${ana._note || 'Não foi possível obter posições neste momento.'}</div>`;
+        } else {
+          rowsHtml = `<div class="overflow-x-auto"><table class="w-full text-[11px]"><thead><tr class="text-slate-500 uppercase tracking-wider text-[9.5px]">
+            <th class="text-left py-1.5 pr-3">Ativo</th><th class="text-left py-1.5 pr-3">Direção</th>
+            <th class="text-right py-1.5 pr-3">Entrada</th><th class="text-right py-1.5 pr-3">Atual</th>
+            <th class="text-right py-1.5 pr-3">P&L</th><th class="text-right py-1.5 pr-3">Exposição</th>
+          </tr></thead><tbody>`;
+          for (let i = 0; i < positions.length; i++) {
+            const p = positions[i] || {};
+            const a = analyses[i] || null;
+            const expos = (p.size != null && p.currentPrice != null && Number.isFinite(Number(p.size)) && Number.isFinite(Number(p.currentPrice)))
+              ? _fmtMoney(Number(p.size) * Number(p.currentPrice)) : '—';
+            const dirCls = (p.direction || '').toUpperCase() === 'LONG' ? 'text-emerald-300 bg-emerald-500/10 border-emerald-400/20'
+              : (p.direction || '').toUpperCase() === 'SHORT' ? 'text-rose-300 bg-rose-500/10 border-rose-400/20'
+              : 'text-slate-300 bg-white/5 border-white/10';
+            rowsHtml += `<tr class="border-t border-white/5">
+              <td class="py-2 pr-3 text-white font-semibold">${escapeHtml(String(p.asset || '—'))}</td>
+              <td class="py-2 pr-3"><span class="inline-flex px-1.5 py-0.5 rounded border text-[9.5px] font-bold ${dirCls}">${escapeHtml(p.direction || '—')}</span></td>
+              <td class="py-2 pr-3 text-right font-mono text-slate-300">${_fmtMoney(p.entryPrice)}</td>
+              <td class="py-2 pr-3 text-right font-mono text-slate-200">${_fmtMoney(p.currentPrice)}</td>
+              <td class="py-2 pr-3 text-right font-mono font-bold ${_clsPnlColor(p.pnl)}">${_fmtMoney(p.pnl)}</td>
+              <td class="py-2 pr-3 text-right font-mono text-slate-300">${expos}</td>
+            </tr>`;
+            if (a) {
+              const f = a.factors || {};
+              const risk = a.structuredObservation?.riskLevel || a.factors?.risk || '—';
+              const score = Number(a.structuredObservation?.riskScore || 0);
+              rowsHtml += `<tr class="border-t border-white/[0.03] bg-white/[0.015]"><td colspan="6" class="py-2.5 px-1">
+                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-[10.5px]">
+                  <div class="rounded border border-white/5 bg-white/[0.02] px-2 py-1.5"><div class="text-slate-500 text-[9px] uppercase tracking-wider">Tendência</div><div class="text-slate-200 font-semibold">${escapeHtml(String(f.trend || '—'))}</div></div>
+                  <div class="rounded border border-white/5 bg-white/[0.02] px-2 py-1.5"><div class="text-slate-500 text-[9px] uppercase tracking-wider">Momentum</div><div class="text-slate-200 font-semibold">${escapeHtml(String(f.momentum || '—'))}</div></div>
+                  <div class="rounded border border-white/5 bg-white/[0.02] px-2 py-1.5"><div class="text-slate-500 text-[9px] uppercase tracking-wider">Volatilidade</div><div class="text-slate-200 font-semibold">${escapeHtml(String(f.volatility || '—'))}</div></div>
+                  <div class="rounded border border-white/5 bg-white/[0.02] px-2 py-1.5"><div class="text-slate-500 text-[9px] uppercase tracking-wider">Sup./Resist.</div><div class="text-slate-200 font-semibold">${escapeHtml(String(f.supportResistance || '—'))}</div></div>
+                  <div class="rounded border border-white/5 bg-white/[0.02] px-2 py-1.5"><div class="text-slate-500 text-[9px] uppercase tracking-wider">Dist. entrada</div><div class="text-slate-200 font-semibold">${escapeHtml(String(f.distanciaEntrada || '—'))}</div></div>
+                  <div class="rounded px-2 py-1.5 border font-bold text-right inline-flex items-center justify-between gap-2 ${_clsRiskColor(risk)}"><div class="text-[9px] uppercase tracking-wider opacity-70">Risco</div><div>${escapeHtml(String(risk || '—'))}${score ? ' · ' + score + '/100' : ''}</div></div>
+                </div>
+                ${a.analysis ? `<div class="mt-2 rounded border border-slate-500/20 bg-black/20 p-2.5 text-[10.5px] text-slate-300 leading-relaxed whitespace-pre-wrap">${escapeHtml(String(a.analysis || ''))}</div>` : ''}
+                ${a.alert ? `<div class="mt-2 rounded border border-rose-400/20 bg-rose-500/5 p-2.5 text-[10.5px] text-rose-200 font-semibold space-y-1"><div class="text-[9.5px] uppercase tracking-wider text-rose-300/80">⚠️ Alerta</div>${(a.alert.messages || []).map(m => `<div>• ${escapeHtml(m)}</div>`).join('')}</div>` : ''}
+              </td></tr>`;
+            }
+          }
+          rowsHtml += `</tbody></table></div>`;
+        }
+
+        els.qtfDashboard.innerHTML = `
+          <div class="rounded-xl border border-surface-border bg-surface-card/60 p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="text-[11.5px] font-bold text-white uppercase tracking-wider">Resumo da Conta</div>
+              <div class="text-[10px] text-slate-500">Atualizado em: ${_fmtDate(ana.generatedAt || cached?.refreshedAt || st?.lastRefreshAt)}</div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div class="rounded-lg border border-white/5 bg-white/[0.02] p-3"><div class="text-[9.5px] uppercase tracking-wider text-slate-500 mb-1">Patrimônio</div><div class="text-[14px] font-bold text-white">${_fmtMoney(accEquity)}</div></div>
+              <div class="rounded-lg border border-white/5 bg-white/[0.02] p-3"><div class="text-[9.5px] uppercase tracking-wider text-slate-500 mb-1">Saldo</div><div class="text-[14px] font-bold text-slate-200">${_fmtMoney(accBalance)}</div></div>
+              <div class="rounded-lg border border-white/5 bg-white/[0.02] p-3"><div class="text-[9.5px] uppercase tracking-wider text-slate-500 mb-1">Margem usada</div><div class="text-[14px] font-bold text-slate-200">${_fmtMoney(accMargin)}</div></div>
+              <div class="rounded-lg border border-white/5 bg-white/[0.02] p-3"><div class="text-[9.5px] uppercase tracking-wider text-slate-500 mb-1">P&L total</div><div class="text-[14px] font-bold ${_clsPnlColor(accPnl)}">${_fmtMoney(accPnl)}</div></div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-surface-border bg-surface-card/60 p-4 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-[11.5px] font-bold text-white uppercase tracking-wider">Posições (${positions.length})</div>
+              <div class="text-[10px] text-slate-500">READ_ONLY · Sem operações de ordem</div>
+            </div>
+            ${rowsHtml}
+          </div>
+
+          <div class="rounded-xl border border-slate-500/20 bg-white/[0.015] p-3.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10.5px] text-slate-500">
+            <div>Ferramentas: <span class="text-slate-300 font-semibold">${Number(st?.tools?.total || 0)} detectadas · ${Number(st?.tools?.readOnlyEnabled?.length || 0)} habilitadas (READ_ONLY)</span></div>
+            <div>Escritas detectadas/bloqueadas: <span class="text-rose-300 font-semibold">${Number(st?.tools?.writeDetectedBlocked?.length || 0)}</span></div>
+            ${st?.readOnly === false ? '<div class="text-rose-400 font-bold">⚠️ READ_ONLY DESLIGADO</div>' : ''}
+          </div>
+        `;
+      }
+
+      /* ---------- Listeners ---------- */
+      if (els.qtfConnectBtn && !els.qtfConnectBtn.__qtfAtt) {
+        els.qtfConnectBtn.addEventListener('click', connectClick); els.qtfConnectBtn.__qtfAtt = true;
+      }
+      if (els.qtfRefreshBtn && !els.qtfRefreshBtn.__qtfAtt) {
+        els.qtfRefreshBtn.addEventListener('click', () => refreshClick({ force: true })); els.qtfRefreshBtn.__qtfAtt = true;
+      }
+      if (els.qtfAnalyzeBtn && !els.qtfAnalyzeBtn.__qtfAtt) {
+        els.qtfAnalyzeBtn.addEventListener('click', () => analyzeClick({})); els.qtfAnalyzeBtn.__qtfAtt = true;
+      }
+      if (els.qtfMonitorBtn && !els.qtfMonitorBtn.__qtfAtt) {
+        els.qtfMonitorBtn.addEventListener('click', monitorToggle); els.qtfMonitorBtn.__qtfAtt = true;
+      }
+      if (els.qtfAuthRecheck && !els.qtfAuthRecheck.__qtfAtt) {
+        els.qtfAuthRecheck.addEventListener('click', () => {
+          _busy(true, 'Verificando autorização…');
+          setTimeout(() => connectClick(), 250);
+        }); els.qtfAuthRecheck.__qtfAtt = true;
+      }
+      if (els.qtfAuthCodeCopy && !els.qtfAuthCodeCopy.__qtfAtt) {
+        els.qtfAuthCodeCopy.addEventListener('click', async () => {
+          try {
+            const code = els.qtfAuthCode?.textContent?.trim() || '';
+            if (!code) return;
+            if (navigator?.clipboard?.writeText) {
+              await navigator.clipboard.writeText(code);
+            } else {
+              const ta = document.createElement('textarea');
+              ta.value = code; document.body.appendChild(ta); ta.select();
+              document.execCommand('copy'); document.body.removeChild(ta);
+            }
+            const orig = els.qtfAuthCodeCopy.innerHTML;
+            els.qtfAuthCodeCopy.innerHTML = `<svg width="9.5" height="9.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg> Copiado`;
+            els.qtfAuthCodeCopy.classList.add('bg-emerald-500/15', 'text-emerald-300', 'border-emerald-400/30');
+            setTimeout(() => { els.qtfAuthCodeCopy.innerHTML = orig; els.qtfAuthCodeCopy.classList.remove('bg-emerald-500/15', 'text-emerald-300', 'border-emerald-400/30'); }, 1600);
+          } catch (_) {}
+        }); els.qtfAuthCodeCopy.__qtfAtt = true;
+      }
+
+      /* ---------- WebSocket: alertas Quantfury em tempo real ---------- */
+      if (window.__qtfAlertBound !== true) {
+        const origHandler = window.__wsMsgHandler || null;
+        window.__wsMsgHandler = function (evt) {
+          try {
+            const obj = typeof evt === 'string' ? JSON.parse(evt) : (evt && evt.data ? JSON.parse(evt.data) : null);
+            if (obj && obj.type === 'quantfury:alert' && obj.alert) {
+              const msgs = Array.isArray(obj.alert.messages) ? obj.alert.messages : [];
+              msgs.forEach(m => toast(`[Quantfury] ${m}`, (obj.alert.level === 'critical' || obj.alert.level === 'warning') ? 'warn' : 'ok'));
+              stateQtf.alerts = [obj.alert, ...(stateQtf.alerts || [])].slice(0, 50);
+            }
+          } catch (_) {}
+          if (typeof origHandler === 'function') try { origHandler(evt); } catch (_) {}
+        };
+        if (state.ws && state.ws.addEventListener) {
+          state.ws.addEventListener('message', window.__wsMsgHandler);
+        }
+        window.__qtfAlertBound = true;
+      }
+
+      /* ---------- Ao abrir a aba, carrega status (lazy) ---------- */
+      if (!window.__qtfTabBound) {
+        const orig = window.__editorTabHandler || null;
+        window.__editorTabHandler = function (tabName) {
+          if (tabName === 'quantfury' && !stateQtf.loaded) {
+            stateQtf.loaded = true;
+            loadStatus({ silent: true });
+          }
+          if (typeof orig === 'function') try { orig(tabName); } catch (_) {}
+        };
+        /* hook no switchTab existente */
+        const origSwitch = window.switchTab || null;
+        if (typeof origSwitch === 'function') {
+          window.switchTab = function (name) {
+            if (typeof window.__editorTabHandler === 'function') window.__editorTabHandler(name);
+            return origSwitch.apply(this, arguments);
+          };
+        }
+        window.__qtfTabBound = true;
+      }
+
+      loadStatus({ silent: true });
+      console.debug('[QTF UI] módulo carregado. refs: panel=', Boolean(els.qtfPanel), ', connectBtn=', Boolean(els.qtfConnectBtn));
+    } catch (qtfInitErr) { console.warn('[QTF UI] init WARN', qtfInitErr); }
   })();
 
 })();

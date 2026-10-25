@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InovaTech — Soluções Inteligentes para seu Negócio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans selection:bg-brand-500 selection:text-white">
+
+    <!-- Header / Navbar -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-2 group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-bolt text-lg"></i>
+                </div>
+                <span class="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">InovaTech</span>
+            </a>
+
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="#recursos" class="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors">Recursos</a>
+                <a href="#beneficios" class="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors">Benefícios</a>
+                <a href="#depoimentos" class="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors">Depoimentos</a>
+                <a href="#precos" class="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors">Planos</a>
+            </nav>
+
+            <!-- CTA Desktop -->
+            <div class="hidden md:flex items-center gap-4">
+                <a href="#contato" class="text-sm font-semibold text-slate-700 hover:text-brand-600 px-4 py-2 transition-colors">Entrar</a>
+                <a href="#precos" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-brand-600/25 hover:shadow-brand-600/40 transition-all transform hover:-translate-y-0.5">Começar Grátis</a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button id="menu-btn" aria-label="Abrir menu" class="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden absolute top-20 left-0 right-0 bg-white border-b border-slate-100 shadow-xl px-6 py-6 space-y-4 animate-fadeIn">
+            <a href="#recursos" class="mobile-link block text-base font-medium text-slate-700 hover:text-brand-600 py-2">Recursos</a>
+            <a href="#beneficios" class="mobile-link block text-base font-medium text-slate-700 hover:text-brand-600 py-2">Benefícios</a>
+            <a href="#depoimentos" class="mobile-link block text-base font-medium text-slate-700 hover:text-brand-600 py-2">Depoimentos</a>
+            <a href="#precos" class="mobile-link block text-base font-medium text-slate-700 hover:text-brand-600 py-2">Planos</a>
+            <div class="pt-4 border-t border-slate-100 flex flex-col gap-3">
+                <a href="#contato" class="mobile-link text-center w-full py-2.5 font-semibold text-slate-700 border border-slate-200 rounded-xl">Entrar</a>
+                <a href="#precos" class="mobile-link text-center w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl shadow-md">Começar Grátis</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden bg-gradient-to-b from-brand-50/50 via-white to-white">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-brand-100/40 blur-3xl -z-10 rounded-full pointer-events-none"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-100 text-brand-700 text-xs font-semibold tracking-wide uppercase mb-6 shadow-sm">
+                <i class="fa-solid fa-sparkles"></i> Nova Versão 2.0 Disponível
+            </div>
+            <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 tracking-tight max-w-4xl mx-auto leading-[1.15]">
+                Acelere o seu crescimento com <span class="bg-gradient-to-r from-brand-600 to-emerald-500 bg-clip-text text-transparent">Inteligência</span>
+            </h1>
+            <p class="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                Automatize processos, escale suas vendas e tome decisões assertivas em tempo real com nossa plataforma integrada de ponta a ponta.
+            </p>
+            <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="#precos" class="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white font-semibold px-8 py-4 rounded-2xl shadow-xl shadow-brand-600/30 hover:shadow-brand-600/50 transition-all transform hover:-translate-y-0.5 text-center">
+                    Iniciar Teste Gratuito <i class="fa-solid fa-arrow-right ml-2"></i>
+                </a>
+                <a href="#recursos" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-slate-700 font-semibold px-8 py-4 rounded-2xl border border-slate-200 shadow-sm transition-all text-center">
+                    Ver Demonstração
+                </a>
+            </div>
+
+            <!-- Social Proof / Logos -->
+            <div class="mt-16 pt-10 border-t border-slate-100">
+                <p class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Empresas que confiam na InovaTech</p>
+                <div class="mt-6 flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-70 grayscale hover:grayscale-0 transition-all">
+                    <span class="text-xl font-bold tracking-tight text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-cube text-brand-600"></i> AcmiCorp</span>
+                    <span class="text-xl font-bold tracking-tight text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-globe text-brand-600"></i> GlobalTech</span>
+                    <span class="text-xl font-bold tracking-tight text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-shield text-brand-600"></i> SecureNet</span>
+                    <span class="text-xl font-bold tracking-tight text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-rocket text-brand-600"></i> FastPulse</span>
+                </div>
+            </div>
+
+            <!-- Hero Image / Dashboard Preview -->
+            <div class="mt-16 relative max-w-5xl mx-auto rounded-3xl p-3 bg-gradient-to-b from-slate-200 to-slate-300 shadow-2xl">
+                <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-inner aspect-[16/9] flex items-center justify-center relative">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-brand-900/40 via-slate-900/80 to-slate-900 flex flex-col items-center justify-center text-white p-6">
+                        <div class="w-16 h-16 rounded-2xl bg-brand-600/30 border border-brand-500/40 flex items-center justify-center text-brand-400 text-3xl mb-4 animate-bounce">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold">Painel de Controle em Tempo Real</h3>
+                        <p class="text-slate-400 text-sm mt-2 max-w-md">Métricas unificadas, relatórios automáticos e controle total na palma da sua mão.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recursos Section -->
+    <section id="recursos" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-brand-600 mb-2">Recursos Poderosos</h2>
+                <p class="text-3xl sm:text-4xl font-extrabold text-slate-900">Tudo o que você precisa para escalar</p>
+                <p class="mt-4 text-slate-600 text-lg">Ferramentas avançadas desenvolvidas para eliminar gargalos e maximizar resultados.</p>
+            </div>
+
+            <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <div class="bg-slate-50 hover:bg-brand-50/30 border border-slate-100 hover:border-brand-200 rounded-3xl p-8 transition-all group">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-sm">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Automação Inteligente</h3>
+                    <p class="text-slate-600 leading-relaxed">Elimine tarefas repetitivas com fluxos de trabalho automatizados baseados em IA.</p>
+                </div>
+                <!-- Card 2 -->
+                <div class="bg-slate-50 hover:bg-brand-50/30 border border-slate-100 hover:border-brand-200 rounded-3xl p-8 transition-all group">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-sm">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Análise Preditiva</h3>
+                    <p class="text-slate-600 leading-relaxed">Antecipe tendências de mercado com algoritmos avançados de previsão de receita.</p>
+                </div>
+                <!-- Card 3 -->
+                <div class="bg-slate-50 hover:bg-brand-50/30 border border-slate-100 hover:border-brand-200 rounded-3xl p-8 transition-all group">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-sm">
+                        <i class="fa-solid fa-headset"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Suporte Dedicado 24/7</h3>
+                    <p class="text-slate-600 leading-relaxed">Nossa equipe de especialistas está sempre pronta para ajudar o seu negócio a prosperar.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefícios Section -->
+    <section id="beneficios" class="py-24 bg-slate-50 border-y border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-brand-600 mb-2">Por que nos escolher</h2>
+                    <p class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-6">Resultados comprovados desde o primeiro dia</p>
+                    <p class="text-slate-600 text-lg mb-8 leading-relaxed">
+                        Nossa plataforma combina facilidade de uso com poder empresarial, permitindo que empresas de todos os portes alcancem o próximo nível.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center shrink-0 mt-1">
+                                <i class="fa-solid fa-check text-xs"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Configuração em minutos</h4>
+                                <p class="text-slate-600 text-sm">Sem necessidade de códigos complexos ou instalações demoradas.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center shrink-0 mt-1">
+                                <i class="fa-solid fa-check text-xs"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Segurança de nível bancário</h4>
+                                <p class="text-slate-600 text-sm">Seus dados e de seus clientes protegidos com criptografia de ponta a ponta.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center shrink-0 mt-1">
+                                <i class="fa-solid fa-check text-xs"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Escalabilidade infinita</h4>
+                                <p class="text-slate-600 text-sm">Cresça sem se preocupar com gargalos na infraestrutura.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-tr from-brand-600 to-emerald-400 p-8 sm:p-12 rounded-3xl text-white shadow-2xl relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="relative z-10">
+                        <div class="text-4xl sm:text-6xl font-black mb-2">+150%</div>
+                        <p class="text-brand-100 font-medium text-lg mb-8">Aumento médio na produtividade das equipes no primeiro mês.</p>
+                        <div class="border-t border-white/20 pt-8 grid grid-cols-2 gap-6">
+                            <div>
+                                <div class="text-2xl sm:text-3xl font-bold">99.9%</div>
+                                <div class="text-xs text-brand-100 uppercase tracking-wider mt-1">Uptime Garantido</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl sm:text-3xl font-bold">4.9/5</div>
+                                <div class="text-xs text-brand-100 uppercase tracking-wider mt-1">Avaliação dos Clientes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Depoimentos Section -->
+    <section id="depoimentos" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-brand-600 mb-2">Depoimentos</h2>
+                <p class="text-3xl sm:text-4xl font-extrabold text-slate-900">O que nossos clientes dizem</p>
+                <p class="mt-4 text-slate-600 text-lg">Histórias reais de quem transformou seus negócios com a InovaTech.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Testimonial 1 -->
+                <div class="bg-slate-50 border border-slate-100 rounded-3xl p-8 flex flex-col justify-between shadow-sm">
+                    <div>
+                        <div class="flex text-amber-400 gap-1 mb-4 text-sm">
+                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="text-slate-700 italic leading-relaxed">"A InovaTech mudou completamente a forma como gerenciamos nossos projetos. A produtividade da equipe disparou!"</p>
+                    </div>
+                    <div class="flex items-center gap-4 mt-8 pt-6 border-t border-slate-200/60">
+                        <div class="w-12 h-12 rounded-full bg-brand-500 text-white font-bold flex items-center justify-center">MC</div>
+                        <div>
+                            <h4 class="font-bold text-slate-900">Mariana Costa</h4>
+                            <p class="text-xs text-slate-500">CEO na StartFlow</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="bg-slate-50 border border-slate-100 rounded-3xl p-8 flex flex-col justify-between shadow-sm">
+                    <div>
+                        <div class="flex text-amber-400 gap-1 mb-4 text-sm">
+                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="text-slate-700 italic leading-relaxed">"Simplesmente incrível! A automação de processos nos poupou mais de 20 horas semanais de trabalho manual."</p>
+                    </div>
+                    <div class="flex items-center gap-4 mt-8 pt-6 border-t border-slate-200/60">
+                        <div class="w-12 h-12 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center">RS</div>
+                        <div>
+                            <h4 class="font-bold text-slate-900">Rafael Souza</h4>
+                            <p class="text-xs text-slate-500">Diretor Comercial na Nexus</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="bg-slate-50 border border-slate-100 rounded-3xl p-8 flex flex-col justify-between shadow-sm">
+                    <div>
+                        <div class="flex text-amber-400 gap-1 mb-4 text-sm">
+                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="text-slate-700 italic leading-relaxed">"O suporte é impecável e a plataforma é extremamente intuitiva. Recomendo para todas as empresas em crescimento."</p>
+                    </div>
+                    <div class="flex items-center gap-4 mt-8 pt-6 border-t border-slate-200/60">
+                        <div class="w-12 h-12 rounded-full bg-slate-700 text-white font-bold flex items-center justify-center">AL</div>
+                        <div>
+                            <h4 class="font-bold text-slate-900">Ana Lima</h4>
+                            <p class="text-xs text-slate-500">Fundadora da DesignHub</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing / Preços Section -->
+    <section id="precos" class="py-24 bg-slate-50 border-t border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-brand-600 mb-2">Planos e Preços</h2>
+                <p class="text-3xl sm:text-4xl font-extrabold text-slate-900">Escolha o plano ideal para você</p>
+                <p class="mt-4 text-slate-600 text-lg">Sem taxas escondidas. Cancele quando quiser.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-6xl mx-auto">
+                <!-- Basic Plan -->
+                <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Iniciante</h3>
+                    <p class="text-slate-500 text-sm mb-6">Ideal para freelancers e autônomos.</p>
+                    <div class="flex items-baseline gap-1 mb-6">
+                        <span class="text-4xl font-extrabold text-slate-900">R$ 49</span>
+                        <span class="text-slate-500 text-sm">/ mês</span>
+                    </div>
+                    <ul class="space-y-3 mb-8 text-sm text-slate-600">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-500"></i> Até 3 usuários</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-500"></i> Relatórios básicos</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-500"></i> Suporte por email</li>
+                    </ul>
+                    <a href="#contato" class="block w-full py-3 px-4 rounded-xl border border-slate-300 hover:border-brand-600 text-center font-semibold text-slate-700 hover:text-brand-600 transition-colors">Assinar Iniciante</a>
+                </div>
+
+                <!-- Pro Plan (Featured) -->
+                <div class="bg-slate-900 text-white border-2 border-brand-500 rounded-3xl p-8 shadow-2xl relative transform md:-translate-y-4">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-brand-500 text-white text-xs font-bold uppercase tracking-wider py-1 px-4 rounded-full shadow-md">
+                        Mais Popular
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Profissional</h3>
+                    <p class="text-slate-400 text-sm mb-6">Perfeito para empresas em expansão.</p>
+                    <div class="flex items-baseline gap-1 mb-6">
+                        <span class="text-4xl font-extrabold">R$ 129</span>
+                        <span class="text-slate-400 text-sm">/ mês</span>
+                    </div>
+                    <ul class="space-y-3 mb-8 text-sm text-slate-300">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-400"></i> Usuários ilimitados</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-400"></i> Automação avançada com IA</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-400"></i> Relatórios em tempo real</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-400"></i> Suporte prioritário 24/7</li>
+                    </ul>
+                    <a href="#contato" class="block w-full py-3.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-center font-semibold text-white shadow-lg shadow-brand-600/30 transition-all">Assinar Profissional</a>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Empresarial</h3>
+                    <p class="text-slate-500 text-sm mb-6">Para grandes corporações e redes.</p>
+                    <div class="flex items-baseline gap-1 mb-6">
+                        <span class="text-4xl font-extrabold text-slate-900">R$ 349</span>
+                        <span class="text-slate-500 text-sm">/ mês</span>
+                    </div>
+                    <ul class="space-y-3 mb-8 text-sm text-slate-600">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-500"></i> Tudo do Profissional</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-500"></i> Gerente de conta dedicado</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-500"></i> SLA garantido de 99.99%</li>
+                    </ul>
+                    <a href="#contato" class="block w-full py-3 px-4 rounded-xl border border-slate-300 hover:border-brand-600 text-center font-semibold text-slate-700 hover:text-brand-600 transition-colors">Falar com Consultor</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contato" class="bg-slate-900 text-slate-400 py-16 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div class="space-y-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <span class="text-lg font-bold text-white">InovaTech</span>
+                </div>
+                <p class="text-sm">Transformando a gestão empresarial com inovação e inteligência artificial.</p>
+                <div class="flex gap-4 text-lg">
+                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-linkedin"></i></a>
+                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-github"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Produto</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#recursos" class="hover:text-white transition-colors">Recursos</a></li>
+                    <li><a href="#beneficios" class="hover:text-white transition-colors">Benefícios</a></li>
+                    <li><a href="#precos" class="hover:text-white transition-colors">Preços</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Empresa</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="hover:text-white transition-colors">Sobre nós</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Carreiras</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Contato</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Newsletter</h4>
+                <p class="text-sm mb-4">Receba dicas e novidades diretamente no seu email.</p>
+                <form onsubmit="event.preventDefault(); alert('Inscrição realizada com sucesso!');" class="flex gap-2">
+                    <input type="email" placeholder="Seu email" required class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 w-full">
+                    <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-slate-800 text-center text-xs">
+            &copy; 2025 InovaTech Soluções. Todos os direitos reservados.
+        </div>
+    </footer>
+
+    <!-- JavaScript para menu mobile -->
+    <script>
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

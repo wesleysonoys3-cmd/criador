@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TATIÊ — Ateliê & Cestas | Presentes Feitos para Encantar</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Cormorant Garamond', 'serif'],
+                        sans: ['Montserrat', 'sans-serif'],
+                        mono: ['Courier New', 'monospace']
+                    },
+                    colors: {
+                        tatie: {
+                            bg: '#fbf5f3',
+                            card: '#ffffff',
+                            primary: '#521d28', // Vinho / Marsala da marca
+                            gold: '#c5a059',    // Rosê Gold / Dourado
+                            goldLight: '#e6c587',
+                            rose: '#f4e6e3',
+                            text: '#3d282b',
+                            muted: '#7a6467'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gold-border {
+            border: 1px solid rgba(197, 160, 89, 0.4);
+        }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #521d28 0%, #c5a059 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-bg {
+            background-color: #fbf5f3;
+            background-image: radial-gradient(#c5a059 0.75px, transparent 0.75px), radial-gradient(#521d28 0.75px, #fbf5f3 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            background-opacity: 0.05;
+        }
+        @keyframes pulse-gold {
+            0%, 100% { box-shadow: 0 0 15px rgba(197, 160, 89, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(197, 160, 89, 0.6); }
+        }
+        .gold-glow {
+            animation: pulse-gold 3s infinite;
+        }
+
+        /* Animações de Elementos Passando na Tela (Chuva de Pétalas/Corações) */
+        .floating-element {
+            position: fixed;
+            top: -10vh;
+            z-index: 40;
+            user-select: none;
+            pointer-events: none;
+            animation-name: fallAndSway;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        @keyframes fallAndSway {
+            0% {
+                transform: translateY(-10vh) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(110vh) translateX(40px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-tatie-bg text-tatie-text font-sans antialiased selection:bg-tatie-gold selection:text-white relative">
+
+    <!-- Container de Elementos Animados Passando na Tela -->
+    <div id="animation-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+
+    <!-- Top Announcement Bar -->
+    <div class="bg-tatie-primary text-tatie-rose text-xs py-2 px-4 text-center tracking-widest font-serif relative z-50">
+        ✨ ATELIÊ & CESTAS • PRESENTES FEITOS PARA ENCANTAR ✨
+    </div>
+
+    <!-- Header / Navbar -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-tatie-rose shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-24 flex items-center justify-between">
+            <!-- Logo Brand -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+                <div class="w-12 h-12 rounded-full border-2 border-tatie-gold flex items-center justify-center bg-tatie-rose/50 text-tatie-primary font-serif font-bold text-2xl shadow-inner">
+                    T
+                </div>
+                <div>
+                    <span class="font-serif text-2xl sm:text-3xl font-bold tracking-widest text-tatie-primary uppercase">Tatiê</span>
+                    <p class="text-[10px] uppercase tracking-widest text-tatie-gold font-semibold">Ateliê & Cestas</p>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide">
+                <a href="#catalogo" class="text-tatie-text hover:text-tatie-gold transition">Catálogo de Cestas</a>
+                <a href="#massagem" class="text-tatie-gold font-bold hover:text-tatie-primary transition flex items-center"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>Massagem de Sorte</a>
+                <a href="#monte" class="text-tatie-text hover:text-tatie-gold transition flex items-center"><i class="fa-solid fa-gift mr-1 text-tatie-gold"></i>Monte seu Presente</a>
+                <a href="#sobre" class="text-tatie-text hover:text-tatie-gold transition">O Ateliê</a>
+            </nav>
+
+            <!-- WhatsApp & Quick Order Actions -->
+            <div class="flex items-center space-x-3">
+                <button onclick="openQuickModal()" class="hidden sm:flex bg-tatie-rose hover:bg-tatie-rose/80 text-tatie-primary border border-tatie-gold px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition items-center space-x-2">
+                    <i class="fa-solid fa-calculator text-tatie-gold"></i>
+                    <span>Orçamento Rápido</span>
+                </button>
+                <a href="https://wa.me/5511999999999?text=Olá!%20Conheci%20o%20site%20da%20Tatiê%20e%20gostaria%20de%20encomendar%20uma%20cesta!" target="_blank" class="bg-tatie-primary hover:bg-tatie-text text-white px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase shadow-md transition flex items-center space-x-2">
+                    <i class="fa-brands fa-whatsapp text-base text-emerald-400"></i>
+                    <span class="hidden sm:inline">WhatsApp</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-bg py-16 sm:py-24 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center max-w-3xl space-y-6">
+            <div class="inline-flex items-center space-x-2 bg-tatie-rose border border-tatie-gold/40 px-4 py-1.5 rounded-full text-tatie-primary text-xs tracking-widest font-semibold uppercase shadow-sm">
+                <i class="fa-solid fa-heart text-tatie-gold text-xs"></i>
+                <span>Presentes Feitos Para Encantar</span>
+            </div>
+            <h2 class="font-serif text-4xl sm:text-6xl font-bold tracking-wide text-tatie-primary leading-tight">
+                Emocione quem você ama com o carinho da <span class="gold-gradient-text italic">Tatiê</span>
+            </h2>
+            <p class="text-tatie-muted text-base sm:text-lg font-light leading-relaxed">
+                Cestas artesanais exclusivas, arranjos florais delicados e mimos personalizados para aniversários, datas comemorativas e momentos inesquecíveis.
+            </p>
+            <div class="pt-4 flex flex-wrap justify-center gap-4">
+                <a href="#catalogo" class="bg-tatie-primary hover:bg-tatie-text text-white px-8 py-3.5 rounded-full text-xs font-bold tracking-widest uppercase shadow-lg transition">
+                    Ver Cestas & Presentes
+                </a>
+                <a href="#massagem" class="bg-white hover:bg-tatie-rose text-tatie-primary border border-tatie-gold px-8 py-3.5 rounded-full text-xs font-bold tracking-widest uppercase shadow transition flex items-center space-x-2">
+                    <i class="fa-solid fa-spa text-tatie-gold"></i>
+                    <span>Massagem de Números da Sorte</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
+
+        <!-- MASSAGEM DE NÚMEROS ALEATÓRIOS (TATIÊ MATRIX FX) -->
+        <section id="massagem" class="scroll-mt-28">
+            <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-xl gold-border gold-glow">
+                <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-tatie-rose gap-4">
+                    <div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-tatie-rose text-tatie-primary flex items-center justify-center font-bold text-lg border border-tatie-gold">
+                                <i class="fa-solid fa-spa"></i>
+                            </div>
+                            <h3 class="font-serif text-3xl font-bold text-tatie-primary">Massagem de Sorte & Números da Sorte Tatiê</h3>
+                        </div>
+                        <p class="text-xs text-tatie-muted mt-1">Relaxe enquanto a nossa ferramenta exibe uma sequência fluida e harmoniosa de números aleatórios para inspirar suas apostas ou momentos de sorte.</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button id="matrix-toggle-btn" onclick="toggleMatrixMassage()" class="bg-tatie-primary hover:bg-tatie-text text-white font-bold px-6 py-3 rounded-full text-xs tracking-wider uppercase shadow transition flex items-center space-x-2">
+                            <i class="fa-solid fa-play" id="matrix-icon"></i>
+                            <span id="matrix-btn-text">Iniciar Massagem</span>
+                        </button>
+                        <button onclick="clearMatrix()" class="bg-tatie-rose hover:bg-tatie-rose/80 text-tatie-primary px-4 py-3 rounded-full text-xs font-bold transition border border-tatie-gold/50" title="Reiniciar">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Display da Massagem Numérica -->
+                <div class="py-8">
+                    <div class="relative bg-tatie-primary/5 rounded-2xl p-6 sm:p-8 border border-tatie-gold/30 min-h-[280px] flex flex-col justify-center items-center overflow-hidden">
+                        <div id="matrix-display-area" class="font-mono text-tatie-primary text-xl sm:text-3xl tracking-widest text-center font-bold flex flex-wrap justify-center gap-3 sm:gap-4 max-w-4xl transition-all duration-300">
+                            <span class="text-tatie-muted text-sm font-sans italic">Clique em "Iniciar Massagem" para ativar a sequência relaxante de números Tatiê...</span>
+                        </div>
+
+                        <!-- Rodapé do Display -->
+                        <div class="absolute bottom-4 left-6 right-6 flex justify-between items-center text-xs text-tatie-muted border-t border-tatie-gold/20 pt-3">
+                            <span id="matrix-status">Status: Em Espera</span>
+                            <span class="font-serif text-tatie-gold font-bold">✨ Tatiê Ateliê • Sorte & Carinho ✨</span>
+                            <span id="matrix-counter">Gerados: 0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CATÁLOGO DE CESTAS & PRESENTES -->
+        <section id="catalogo" class="scroll-mt-28 space-y-10">
+            <div class="text-center max-w-2xl mx-auto space-y-3">
+                <span class="text-xs uppercase tracking-widest text-tatie-gold font-bold">Exclusividade & Delicadeza</span>
+                <h3 class="font-serif text-4xl font-bold text-tatie-primary">Catálogo de Cestas & Presentes</h3>
+                <p class="text-sm text-tatie-muted">Escolha a cesta perfeita ou solicite personalização exclusiva diretamente pelo WhatsApp.</p>
+            </div>
+
+            <!-- Grid de Produtos -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Cesta 1 -->
+                <div class="bg-white rounded-3xl overflow-hidden shadow-md gold-border hover:shadow-2xl transition duration-300 flex flex-col justify-between transform hover:-translate-y-1">
+                    <div class="relative h-64 bg-tatie-rose flex items-center justify-center p-6 group">
+                        <div class="absolute top-4 right-4 bg-tatie-primary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow">Mais Vendida</div>
+                        <div class="text-center space-y-2 transition-transform duration-500 group-hover:scale-110">
+                            <i class="fa-solid fa-basket-shopping text-6xl text-tatie-gold"></i>
+                            <h4 class="font-serif text-2xl font-bold text-tatie-primary">Cesta Amanhecer Encantado</h4>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <p class="text-xs text-tatie-muted leading-relaxed">
+                            Pães artesanais, frutas selecionadas, suco natural, frios nobres, iogurte, croissant fresquinho e um lindo arranjo de mini rosas.
+                        </p>
+                        <div class="flex items-center justify-between pt-2 border-t border-tatie-rose">
+                            <span class="font-serif text-2xl font-bold text-tatie-primary">R$ 189,90</span>
+                            <a href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20encomendar%20a%20Cesta%20Amanhecer%20Encantado." target="_blank" class="bg-tatie-primary hover:bg-tatie-text text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition">
+                                Encomendar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cesta 2 -->
+                <div class="bg-white rounded-3xl overflow-hidden shadow-md gold-border hover:shadow-2xl transition duration-300 flex flex-col justify-between transform hover:-translate-y-1">
+                    <div class="relative h-64 bg-tatie-rose flex items-center justify-center p-6 group">
+                        <div class="absolute top-4 right-4 bg-tatie-gold text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow">Romântica</div>
+                        <div class="text-center space-y-2 transition-transform duration-500 group-hover:scale-110">
+                            <i class="fa-solid fa-heart text-6xl text-tatie-primary"></i>
+                            <h4 class="font-serif text-2xl font-bold text-tatie-primary">Cesta Amor & Vinho</h4>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <p class="text-xs text-tatie-muted leading-relaxed">
+                            Vinho tinto reservado, tábua de queijos finos, chocolates belgas, morangos frescos, castanhas e taças personalizadas Tatiê.
+                        </p>
+                        <div class="flex items-center justify-between pt-2 border-t border-tatie-rose">
+                            <span class="font-serif text-2xl font-bold text-tatie-primary">R$ 259,90</span>
+                            <a href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20encomendar%20a%20Cesta%20Amor%20%26%20Vinho." target="_blank" class="bg-tatie-primary hover:bg-tatie-text text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition">
+                                Encomendar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cesta 3 -->
+                <div class="bg-white rounded-3xl overflow-hidden shadow-md gold-border hover:shadow-2xl transition duration-300 flex flex-col justify-between transform hover:-translate-y-1">
+                    <div class="relative h-64 bg-tatie-rose flex items-center justify-center p-6 group">
+                        <div class="absolute top-4 right-4 bg-tatie-primary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow">Aniversário</div>
+                        <div class="text-center space-y-2 transition-transform duration-500 group-hover:scale-110">
+                            <i class="fa-solid fa-gift text-6xl text-tatie-gold"></i>
+                            <h4 class="font-serif text-2xl font-bold text-tatie-primary">Box Flores & Chocolates</h4>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <p class="text-xs text-tatie-muted leading-relaxed">
+                            Caixa cartonada elegante em formato de coração com mix de flores nobres do dia, bombons artesanais finos e cartão manuscrito.
+                        </p>
+                        <div class="flex items-center justify-between pt-2 border-t border-tatie-rose">
+                            <span class="font-serif text-2xl font-bold text-tatie-primary">R$ 149,90</span>
+                            <a href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20encomendar%20o%20Box%20Flores%20%26%20Chocolates." target="_blank" class="bg-tatie-primary hover:bg-tatie-text text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition">
+                                Encomendar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO MONTE SEU PRESENTE INTERATIVA -->
+        <section id="monte" class="bg-white rounded-3xl p-8 sm:p-12 shadow-xl gold-border">
+            <div class="text-center max-w-2xl mx-auto space-y-3 mb-10">
+                <span class="text-xs uppercase tracking-widest text-tatie-gold font-bold">Personalize ao seu gosto</span>
+                <h3 class="font-serif text-3xl sm:text-4xl font-bold text-tatie-primary">Monte seu Presente Interativo</h3>
+                <p class="text-sm text-tatie-muted">Selecione os itens desejados e veja o valor total estimado para enviar direto no WhatsApp.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <!-- Opções de Itens -->
+                <div class="lg:col-span-2 space-y-6">
+                    <h4 class="font-serif text-xl font-bold text-tatie-primary border-b border-tatie-rose pb-2">1. Escolha a Base</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label class="cursor-pointer bg-tatie-bg border border-tatie-gold/30 p-4 rounded-2xl flex items-center space-x-3 hover:border-tatie-gold transition">
+                            <input type="radio" name="base" value="Cesta de Vime Clássica|45" checked onchange="calculateCustom()" class="accent-tatie-primary">
+                            <div>
+                                <p class="text-xs font-bold text-tatie-primary">Cesta de Vime Clássica</p>
+                                <p class="text-[11px] text-tatie-muted">R$ 45,00</p>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer bg-tatie-bg border border-tatie-gold/30 p-4 rounded-2xl flex items-center space-x-3 hover:border-tatie-gold transition">
+                            <input type="radio" name="base" value="Box Cartonado Luxo|65" onchange="calculateCustom()" class="accent-tatie-primary">
+                            <div>
+                                <p class="text-xs font-bold text-tatie-primary">Box Cartonado Luxo</p>
+                                <p class="text-[11px] text-tatie-muted">R$ 65,00</p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <h4 class="font-serif text-xl font-bold text-tatie-primary border-b border-tatie-rose pb-2 pt-2">2. Adicione Complementos</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label class="cursor-pointer bg-tatie-bg border border-tatie-gold/30 p-3 rounded-2xl flex items-center space-x-3 hover:border-tatie-gold transition">
+                            <input type="checkbox" name="addon" value="Arranjo de Rosas|55" onchange="calculateCustom()" class="accent-tatie-primary rounded">
+                            <div class="flex-1">
+                                <p class="text-xs font-bold text-tatie-primary">Arranjo de Rosas</p>
+                                <p class="text-[11px] text-tatie-muted">R$ 55,00</p>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer bg-tatie-bg border border-tatie-gold/30 p-3 rounded-2xl flex items-center space-x-3 hover:border-tatie-gold transition">
+                            <input type="checkbox" name="addon" value="Vinho ou Espumante|85" onchange="calculateCustom()" class="accent-tatie-primary rounded">
+                            <div class="flex-1">
+                                <p class="text-xs font-bold text-tatie-primary">Vinho ou Espumante</p>
+                                <p class="text-[11px] text-tatie-muted">R$ 85,00</p>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer bg-tatie-bg border border-tatie-gold/30 p-3 rounded-2xl flex items-center space-x-3 hover:border-tatie-gold transition">
+                            <input type="checkbox" name="addon" value="Chocolates Belgas|40" onchange="calculateCustom()" class="accent-tatie-primary rounded">
+                            <div class="flex-1">
+                                <p class="text-xs font-bold text-tatie-primary">Chocolates Belgas</p>
+                                <p class="text-[11px] text-tatie-muted">R$ 40,00</p>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer bg-tatie-bg border border-tatie-gold/30 p-3 rounded-2xl flex items-center space-x-3 hover:border-tatie-gold transition">
+                            <input type="checkbox" name="addon" value="Pelúcia Fofa|35" onchange="calculateCustom()" class="accent-tatie-primary rounded">
+                            <div class="flex-1">
+                                <p class="text-xs font-bold text-tatie-primary">Pelúcia Fofa</p>
+                                <p class="text-[11px] text-tatie-muted">R$ 35,00</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Resumo do Orçamento -->
+                <div class="bg-tatie-rose rounded-3xl p-6 sm:p-8 border border-tatie-gold/40 space-y-6 flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-serif text-2xl font-bold text-tatie-primary mb-4">Resumo do Presente</h4>
+                        <div id="custom-summary-list" class="space-y-2 text-xs text-tatie-muted mb-4 min-h-[80px]">
+                            <p>• Cesta de Vime Clássica</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-tatie-gold/30 pt-4 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs uppercase font-bold text-tatie-primary">Total Estimado:</span>
+                            <span id="custom-total-price" class="font-serif text-3xl font-bold text-tatie-primary">R$ 45,00</span>
+                        </div>
+                        <button onclick="sendCustomToWhatsApp()" class="w-full bg-tatie-primary hover:bg-tatie-text text-white py-3.5 rounded-full text-xs font-bold uppercase tracking-widest shadow transition flex items-center justify-center space-x-2">
+                            <i class="fa-brands fa-whatsapp text-emerald-400 text-base"></i>
+                            <span>Encomendar Presente Personalizado</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO SOBRE O ATELIÊ -->
+        <section id="sobre" class="bg-white rounded-3xl p-8 sm:p-12 shadow-md gold-border grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div class="space-y-6">
+                <span class="text-xs uppercase tracking-widest text-tatie-gold font-bold">Nossa História</span>
+                <h3 class="font-serif text-3xl sm:text-4xl font-bold text-tatie-primary">Presentes feitos com amor para marcar momentos especiais</h3>
+                <p class="text-sm text-tatie-muted leading-relaxed">
+                    O <strong>Ateliê & Cestas Tatiê</strong> nasceu da paixão por transformar sentimentos em presentes inesquecíveis. Cada arranjo floral, cada laço e cada seleção de guloseimas é preparada artesanalmente com rigoroso padrão de qualidade e carinho.
+                </p>
+                <div class="flex items-center space-x-6 pt-2">
+                    <div class="text-center">
+                        <span class="font-serif text-3xl font-bold text-tatie-primary">+1.500</span>
+                        <p class="text-xs text-tatie-muted uppercase">Sorrisos Entregues</p>
+                    </div>
+                    <div class="h-10 w-[1px] bg-tatie-rose"></div>
+                    <div class="text-center">
+                        <span class="font-serif text-3xl font-bold text-tatie-primary">100%</span>
+                        <p class="text-xs text-tatie-muted uppercase">Artesanal & Exclusivo</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-tatie-rose rounded-2xl p-8 text-center space-y-4 border border-tatie-gold/30">
+                <div class="w-16 h-16 mx-auto rounded-full bg-white flex items-center justify-center text-tatie-gold text-2xl shadow">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <h4 class="font-serif text-2xl font-bold text-tatie-primary">Precisa de Ajuda Rápida?</h4>
+                <p class="text-xs text-tatie-muted">Nossa equipe está online no WhatsApp pronta para auxiliar na escolha da surpresa perfeita para hoje.</p>
+                <a href="https://wa.me/5511999999999?text=Olá!%20Preciso%20de%20ajuda%20para%20escolher%20um%20presente%20na%20Tatiê." target="_blank" class="inline-block bg-tatie-primary text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest shadow transition">
+                    Conversar com Atendente
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal de Orçamento Rápido -->
+    <div id="quick-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl gold-border relative space-y-6">
+            <button onclick="closeQuickModal()" class="absolute top-4 right-4 text-tatie-muted hover:text-tatie-primary text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 mx-auto rounded-full bg-tatie-rose flex items-center justify-center text-tatie-primary text-xl border border-tatie-gold">
+                    <i class="fa-solid fa-calculator"></i>
+                </div>
+                <h4 class="font-serif text-2xl font-bold text-tatie-primary">Orçamento Rápido</h4>
+                <p class="text-xs text-tatie-muted">Informe os detalhes para preenchimento automático do WhatsApp.</p>
+            </div>
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold text-tatie-primary mb-1">Ocasião:</label>
+                    <select id="modal-ocasiao" class="w-full bg-tatie-bg border border-tatie-gold/40 rounded-xl p-3 text-tatie-text focus:outline-none focus:border-tatie-primary">
+                        <option>Aniversário</option>
+                        <option>Romântico / Aniversário de Namoro</option>
+                        <option>Agradecimento / Parabéns</option>
+                        <option>Bom Dia Especial</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-tatie-primary mb-1">Bairro / Região de Entrega (São Paulo):</label>
+                    <input type="text" id="modal-bairro" placeholder="Ex: Jardins, Pinheiros, Moema..." class="w-full bg-tatie-bg border border-tatie-gold/40 rounded-xl p-3 text-tatie-text focus:outline-none focus:border-tatie-primary">
+                </div>
+                <div>
+                    <label class="block font-bold text-tatie-primary mb-1">Data Desejada:</label>
+                    <input type="date" id="modal-data" class="w-full bg-tatie-bg border border-tatie-gold/40 rounded-xl p-3 text-tatie-text focus:outline-none focus:border-tatie-primary">
+                </div>
+            </div>
+            <button onclick="submitQuickModal()" class="w-full bg-tatie-primary hover:bg-tatie-text text-white py-3.5 rounded-full text-xs font-bold uppercase tracking-widest shadow transition flex items-center justify-center space-x-2">
+                <i class="fa-brands fa-whatsapp text-emerald-400 text-base"></i>
+                <span>Enviar Orçamento no WhatsApp</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer id="contato" class="bg-tatie-primary text-tatie-rose py-16 border-t border-tatie-gold/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-10 text-center md:text-left">
+            <div class="space-y-4">
+                <div class="flex items-center justify-center md:justify-start space-x-3">
+                    <div class="w-10 h-10 rounded-full border border-tatie-gold flex items-center justify-center bg-tatie-rose text-tatie-primary font-serif font-bold text-xl">
+                        T
+                    </div>
+                    <span class="font-serif text-2xl font-bold tracking-widest text-white uppercase">Tatiê</span>
+                </div>
+                <p class="text-xs text-tatie-rose/80 font-light">Presentes feitos para encantar. Cestas artesanais e arranjos florais com entrega pontual e afeto em cada detalhe.</p>
+            </div>
+            <div class="space-y-3 text-sm">
+                <h5 class="font-serif text-lg font-bold text-tatie-gold uppercase tracking-wider">Atendimento</h5>
+                <p class="text-xs text-tatie-rose/80"><i class="fa-solid fa-phone mr-2 text-tatie-gold"></i>(11) 99999-9999</p>
+                <p class="text-xs text-tatie-rose/80"><i class="fa-solid fa-envelope mr-2 text-tatie-gold"></i>contato@tatieatelie.com.br</p>
+                <p class="text-xs text-tatie-rose/80"><i class="fa-solid fa-location-dot mr-2 text-tatie-gold"></i>São Paulo - SP</p>
+            </div>
+            <div class="space-y-3">
+                <h5 class="font-serif text-lg font-bold text-tatie-gold uppercase tracking-wider">Redes Sociais</h5>
+                <div class="flex justify-center md:justify-start space-x-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-tatie-rose/10 hover:bg-tatie-rose/20 border border-tatie-gold/40 flex items-center justify-center text-tatie-rose transition"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-tatie-rose/10 hover:bg-tatie-rose/20 border border-tatie-gold/40 flex items-center justify-center text-tatie-rose transition"><i class="fa-brands fa-whatsapp"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-tatie-rose/10 hover:bg-tatie-rose/20 border border-tatie-gold/40 flex items-center justify-center text-tatie-rose transition"><i class="fa-brands fa-facebook-f"></i></a>
+                </div>
+                <p class="text-[10px] text-tatie-rose/60 pt-2">© 2026 Tatiê Ateliê & Cestas. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript de Animação Visual & Funcionalidades Reais -->
+    <script>
+        // 1. ANIMAÇÕES PASSANDO NA TELA (Chuva suave de pétalas, estrelas e corações)
+        const symbols = ['❤', '🌸', '✨', '🌹', '💖', '⭐'];
+        const animationContainer = document.getElementById('animation-container');
+
+        function createFloatingElement() {
+            if (!animationContainer) return;
+            const el = document.createElement('div');
+            el.className = 'floating-element text-tatie-gold opacity-60';
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.fontSize = (Math.random() * 14 + 12) + 'px';
+            
+            const duration = Math.random() * 7 + 6; // Entre 6s e 13s
+            el.style.animationDuration = duration + 's';
+            
+            const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+            el.innerHTML = randomSymbol;
+
+            animationContainer.appendChild(el);
+
+            setTimeout(() => {
+                el.remove();
+            }, duration * 1000);
+        }
+
+        // Criar elementos em intervalos regulares
+        setInterval(createFloatingElement, 900);
+
+        // 2. MASSAGEM MATRIX NUMÉRICA
+        let matrixInterval = null;
+        let isMatrixRunning = false;
+        let matrixCountTotal = 0;
+
+        function toggleMatrixMassage() {
+            const btnText = document.getElementById('matrix-btn-text');
+            const icon = document.getElementById('matrix-icon');
+            const status = document.getElementById('matrix-status');
+
+            if (isMatrixRunning) {
+                clearInterval(matrixInterval);
+                isMatrixRunning = false;
+                btnText.innerText = 'Iniciar Massagem';
+                icon.className = 'fa-solid fa-play';
+                status.innerText = 'Status: Pausado';
+            } else {
+                isMatrixRunning = true;
+                btnText.innerText = 'Pausar Massagem';
+                icon.className = 'fa-solid fa-pause';
+                status.innerText = 'Status: Massagem Ativa (Relaxando...)';
+
+                matrixInterval = setInterval(() => {
+                    renderMatrixBatch();
+                }, 140);
+            }
+        }
+
+        function renderMatrixBatch() {
+            const display = document.getElementById('matrix-display-area');
+            let batchHtml = '';
+            for (let i = 0; i < 15; i++) {
+                let randomNum = Math.floor(Math.random() * 60) + 1;
+                let formatted = String(randomNum).padStart(2, '0');
+                let opacity = (Math.random() * 0.7 + 0.3).toFixed(2);
+                let scale = (Math.random() * 0.3 + 0.85).toFixed(2);
+                batchHtml += `<span class="inline-block px-3 py-1.5 rounded-lg bg-tatie-rose border border-tatie-gold/50 text-tatie-primary font-bold transition-all duration-150 shadow-sm" style="opacity: ${opacity}; transform: scale(${scale});">${formatted}</span>`;
+                matrixCountTotal++;
+            }
+            display.innerHTML = batchHtml;
+            document.getElementById('matrix-counter').innerText = `Gerados: ${matrixCountTotal}`;
+        }
+
+        function clearMatrix() {
+            if (isMatrixRunning) {
+                toggleMatrixMassage();
+            }
+            matrixCountTotal = 0;
+            document.getElementById('matrix-counter').innerText = `Gerados: 0`;
+            document.getElementById('matrix-display-area').innerHTML = `<span class="text-tatie-muted text-sm italic">Massagem reiniciada. Pressione Iniciar para relaxar.</span>`;
+            document.getElementById('matrix-status').innerText = 'Status: Pronto';
+        }
+
+        // 3. MONTE SEU PRESENTE INTERATIVO
+        function calculateCustom() {
+            const baseRadio = document.querySelector('input[name="base"]:checked');
+            const addons = document.querySelectorAll('input[name="addon"]:checked');
+            const summaryList = document.getElementById('custom-summary-list');
+            const totalPriceEl = document.getElementById('custom-total-price');
+
+            let total = 0;
+            let htmlList = '';
+
+            if (baseRadio) {
+                const [baseName, basePrice] = baseRadio.value.split('|');
+                total += parseFloat(basePrice);
+                htmlList += `<p>• ${baseName} (R$ ${parseFloat(basePrice).toFixed(2).replace('.', ',')})</p>`;
+            }
+
+            addons.forEach(addon => {
+                const [addonName, addonPrice] = addon.value.split('|');
+                total += parseFloat(addonPrice);
+                htmlList += `<p>• ${addonName} (R$ ${parseFloat(addonPrice).toFixed(2).replace('.', ',')})</p>`;
+            });
+
+            summaryList.innerHTML = htmlList;
+            totalPriceEl.innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        function sendCustomToWhatsApp() {
+            const baseRadio = document.querySelector('input[name="base"]:checked');
+            const addons = document.querySelectorAll('input[name="addon"]:checked');
+            
+            let itemsText = baseRadio ? baseRadio.value.split('|')[0] : '';
+            let total = baseRadio ? parseFloat(baseRadio.value.split('|')[1]) : 0;
+
+            addons.forEach(addon => {
+                const [name, price] = addon.value.split('|');
+                itemsText += `, ${name}`;
+                total += parseFloat(price);
+            });
+
+            const msg = `Olá! Montei um presente personalizado no site da Tatiê:\n- Itens: ${itemsText}\n- Total Estimado: R$ ${total.toFixed(2).replace('.', ',')}\n\nGostaria de confirmar a encomenda!`;
+            const encoded = encodeURIComponent(msg);
+            window.open(`https://wa.me/5511999999999?text=${encoded}`, '_blank');
+        }
+
+        // 4. MODAL DE ORÇAMENTO RÁPIDO
+        function openQuickModal() {
+            document.getElementById('quick-modal').classList.remove('hidden');
+        }
+        function closeQuickModal() {
+            document.getElementById('quick-modal').classList.add('hidden');
+        }
+        function submitQuickModal() {
+            const ocasiao = document.getElementById('modal-ocasiao').value;
+            const bairro = document.getElementById('modal-bairro').value || 'São Paulo';
+            const data = document.getElementById('modal-data').value || 'A combinar';
+
+            const msg = `Olá! Gostaria de um orçamento rápido na Tatiê:\n- Ocasião: ${ocasiao}\n- Bairro de entrega: ${bairro}\n- Data desejada: ${data}\nPoderia me enviar as opções disponíveis?`;
+            const encoded = encodeURIComponent(msg);
+            window.open(`https://wa.me/5511999999999?text=${encoded}`, '_blank');
+            closeQuickModal();
+        }
+    </script>
+</body>
+</html>

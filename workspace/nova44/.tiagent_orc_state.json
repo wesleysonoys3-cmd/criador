@@ -1,0 +1,320 @@
+{
+  "schemaVersion": "rc28.1",
+  "id": "orc_default_1790034749650_tap5ag",
+  "createdAt": 1790034749650,
+  "updatedAt": 1790034749707,
+  "objetivoAtual": "/Users/tiagosantos/Library/Containers/net.whatsapp.WhatsApp/Data/tmp/documents/0B4D5F19-A5E7-487C-AA9F-D1F22971CDF3/PHOTO-2026-09-21-18-35-37.jpg\n quero criar um avalista de  informações de bitcoin quero que ele analise a moeda real e me mostre com segurança a previsão da moeda aave  que me mostre a maior probabilidade",
+  "requisitos": {
+    "rf": [
+      {
+        "id": "RF_WHATSAPP",
+        "title": "Integração WhatsApp",
+        "description": "Notificações e atendimento via canal WhatsApp.",
+        "source": "heuristica_autonoma"
+      }
+    ],
+    "rnfr": [
+      {
+        "id": "RNF_PERF",
+        "title": "Desempenho",
+        "description": "Resposta < 3s nas telas principais."
+      },
+      {
+        "id": "RNF_SEG",
+        "title": "Segurança",
+        "description": "Validação de inputs, sanitização HTML, sem chaves hardcoded no código."
+      },
+      {
+        "id": "RNF_RESP",
+        "title": "Responsividade",
+        "description": "UI deve funcionar em desktop e mobile."
+      },
+      {
+        "id": "RNF_USAB",
+        "title": "Usabilidade",
+        "description": "Interface em português, feedback claro nas ações."
+      }
+    ],
+    "businessRules": [
+      {
+        "id": "BR_PADRAO",
+        "description": "Seguir as decisões do Estado Central; se dúvida técnica, preferir solução reversível e documentar."
+      }
+    ],
+    "rawKeywords": [
+      "/users/tiagosantos/library/containers/net.whatsapp.whatsapp/data/tmp/documents/0b4d5f19-a5e7-487c-aa9f-d1f22971cdf3/photo-2026-09-21-18-35-37.jpg",
+      "quero",
+      "criar",
+      "avalista",
+      "informações",
+      "bitcoin",
+      "quero",
+      "analise",
+      "moeda",
+      "real",
+      "mostre",
+      "segurança",
+      "previsão",
+      "moeda",
+      "aave",
+      "mostre",
+      "maior",
+      "probabilidade"
+    ],
+    "detection": {
+      "needsPersistence": false,
+      "needsAuth": false,
+      "needsInternet": true,
+      "needsWhatsApp": true,
+      "needsPayment": false
+    }
+  },
+  "arquitetura": {
+    "camadas": [
+      "frontend",
+      "backend API"
+    ],
+    "estruturaPastas": [
+      "/public",
+      "/src"
+    ],
+    "padroes": [
+      "MVC leve",
+      "REST JSON",
+      "validação server-side"
+    ]
+  },
+  "tecnologias": {
+    "lang": "node",
+    "framework": "express",
+    "banco": "nenhum (dados em memória temporária para protótipo / JSON file)",
+    "libs": [
+      "express",
+      "cors",
+      "dotenv"
+    ]
+  },
+  "versoesRelevantes": {},
+  "agentesDisponiveis": {
+    "ARCHITECT": {
+      "ok": true
+    },
+    "DEVELOPER": {
+      "ok": true
+    },
+    "QA": {
+      "ok": true
+    },
+    "SECURITY": {
+      "ok": true
+    },
+    "TEST": {
+      "ok": true
+    },
+    "INTERNET": {
+      "ok": false
+    }
+  },
+  "ferramentasDisponiveis": [
+    "read_file",
+    "write_file",
+    "delete_file",
+    "run_command",
+    "list_dir",
+    "state_get",
+    "state_patch",
+    "task_list",
+    "task_update",
+    "web_request_ask_authorization",
+    "web_search_authorized",
+    "web_fetch_authorized",
+    "run_tests",
+    "rollback_to_checkpoint",
+    "security_audit_and_autofix"
+  ],
+  "tarefas": [
+    {
+      "id": "t_an_01",
+      "title": "Análise inicial do projeto",
+      "description": "Listar arquivos existentes, detectar stack, ler configs.",
+      "dependsOn": [],
+      "agent": "ORCHESTRATOR",
+      "status": "completed"
+    },
+    {
+      "id": "t_ar_02",
+      "title": "Arquitetura e plano",
+      "description": "Chamar IA Arquiteta para definir estrutura de arquivos e seções.",
+      "dependsOn": [
+        "t_an_01"
+      ],
+      "agent": "ARCHITECT",
+      "status": "pending"
+    },
+    {
+      "id": "t_be_03",
+      "title": "Backend: server.js + endpoints REST",
+      "description": "Implementar Express server + rotas CRUD + validações.",
+      "dependsOn": [
+        "t_ar_02"
+      ],
+      "agent": "DEVELOPER",
+      "status": "pending"
+    },
+    {
+      "id": "t_fe_04",
+      "title": "Frontend: index.html + UI",
+      "description": "Tailwind via CDN, telas, formulários, integração com API backend.",
+      "dependsOn": [
+        "t_be_03"
+      ],
+      "agent": "DEVELOPER",
+      "status": "pending"
+    },
+    {
+      "id": "t_wa_05",
+      "title": "Integração WhatsApp (Evolux/WATI)",
+      "description": "Verificar credenciais; chamar WhatsApp Engine; se token faltar marcar AGUARDA_CREDENCIAIS.",
+      "dependsOn": [
+        "t_be_03"
+      ],
+      "agent": "DEVELOPER",
+      "status": "pending"
+    },
+    {
+      "id": "t_te_06",
+      "title": "Executar testes automáticos",
+      "description": "Auto-detectar framework (npm test / node --test / custom). Rodar e coletar resultados.",
+      "dependsOn": [
+        "t_fe_04"
+      ],
+      "agent": "TEST",
+      "status": "pending"
+    },
+    {
+      "id": "t_qa_07",
+      "title": "QA · Score + issues",
+      "description": "Rodar relatório QA; se score < 80 ou críticos, loop de correção.",
+      "dependsOn": [
+        "t_te_06"
+      ],
+      "agent": "QA",
+      "status": "pending"
+    },
+    {
+      "id": "t_se_08",
+      "title": "Security RC26 · Auditoria + autofix",
+      "description": "Rodar bridge Security 3400; aplicar HC whitelist; diff Antes × Depois.",
+      "dependsOn": [
+        "t_qa_07"
+      ],
+      "agent": "SECURITY",
+      "status": "pending"
+    },
+    {
+      "id": "t_va_09",
+      "title": "Validação final + relatório",
+      "description": "Smoke test curl, checar critério de conclusão §19; marcar fase COMPLETED.",
+      "dependsOn": [
+        "t_se_08"
+      ],
+      "agent": "ORCHESTRATOR",
+      "status": "pending"
+    }
+  ],
+  "tarefasConcluidas": 1,
+  "tarefasPendentes": 8,
+  "tarefaEmExecucaoId": null,
+  "dependencias": [],
+  "arquivosRelevantes": {},
+  "arquivosModificados": [],
+  "decisoesTecnicas": [
+    {
+      "id": "DEC_mubwh0i9",
+      "title": "Persistência: não necessária",
+      "rationale": "Objetivo não menciona persistência/dados permanentes",
+      "alternatives": [],
+      "createdAt": 1790034749649
+    }
+  ],
+  "pesquisasRealizadasFontes": [],
+  "errosEncontrados": [],
+  "tentativasRealizadas": [],
+  "correcoesRealizadas": [],
+  "testesExecutadosResultados": [],
+  "problemasConhecidos": [],
+  "limitacoes": [],
+  "proximaAcao": "CHAMAR_AGENTE_ARQUITETA",
+  "faseGeral": "ARCHITECTURE",
+  "needsPersistence": false,
+  "internetAuthorization": null,
+  "checkpoints": [
+    {
+      "id": "cp_1790034749652_001",
+      "seq": 1,
+      "fase": "ANALYSIS",
+      "createdAt": 1790034749652,
+      "arquivoTar": "/Users/tiagosantos/Desktop/criador/workspace/nova44/.rc27_checkpoints/1790034749652_001_ANALYSIS.tar.gz",
+      "tarSizeBytes": 2736,
+      "summary": "análise inicial + requisitos extraídos"
+    },
+    {
+      "id": "cp_1790034749683_002",
+      "seq": 2,
+      "fase": "PLANNING",
+      "createdAt": 1790034749683,
+      "arquivoTar": "/Users/tiagosantos/Desktop/criador/workspace/nova44/.rc27_checkpoints/1790034749683_002_PLANNING.tar.gz",
+      "tarSizeBytes": 3584,
+      "summary": "plano com 9 tarefas; topoSort ok=true"
+    }
+  ],
+  "toolCallsSinceLastSave": 0,
+  "statusExecucao": "running",
+  "decisionTrace": [],
+  "decisionEngine": {
+    "engineVersion": "rc28.decision.v1",
+    "mode": "heuristic",
+    "hypotheses": [],
+    "strategiesTried": [],
+    "ineffectiveStrategies": [],
+    "alternativesHistory": [],
+    "progressMetrics": {
+      "totalCycles": 0,
+      "cyclesWithProgress": 0,
+      "lastProgressAtMs": 0,
+      "noProgressStreak": 0,
+      "objectiveProgressPct": 0
+    },
+    "lastDecision": null,
+    "lastMeasuredResult": null,
+    "adaptiveConstraints": {
+      "maxCycles": null,
+      "maxStrategies": null,
+      "confidenceThreshold": 0.7
+    }
+  },
+  "autonomyRuntime": {
+    "version": 1,
+    "objective": "/Users/tiagosantos/Library/Containers/net.whatsapp.WhatsApp/Data/tmp/documents/0B4D5F19-A5E7-487C-AA9F-D1F22971CDF3/PHOTO-2026-09-21-18-35-37.jpg\n quero criar um avalista de  informações de bitcoin quero que ele analise a moeda real e me mostre com segurança a previsão da moeda aave  que me mostre a maior probabilidade",
+    "objectiveAtMs": 1790034749647,
+    "currentTaskId": null,
+    "completedTaskIds": [],
+    "failedTaskIds": [],
+    "nextAction": "Inicializado. Próximo passo: analisar objetivo e definir tarefas.",
+    "objectiveProgressPct": 0,
+    "taskCompleted": false,
+    "objectiveVerified": false,
+    "lastVerificationReason": null,
+    "stall": {
+      "cyclesNoProgress": 0,
+      "lastProgressAtMs": 1790034749647,
+      "status": "none"
+    },
+    "recoveryAttempts": [],
+    "blockingReason": null,
+    "loops": 0,
+    "concludedAtMs": null
+  },
+  "objetivoUsuarioMensagem": "/Users/tiagosantos/Library/Containers/net.whatsapp.WhatsApp/Data/tmp/documents/0B4D5F19-A5E7-487C-AA9F-D1F22971CDF3/PHOTO-2026-09-21-18-35-37.jpg\n quero criar um avalista de  informações de bitcoin quero que ele analise a moeda real e me mostre com segurança a previsão da moeda aave  que me mostre a maior probabilidade",
+  "objetivoOrigem": "NOVA_SOLICITACAO"
+}

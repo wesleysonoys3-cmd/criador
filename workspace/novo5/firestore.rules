@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================
+    //  Helpers
+    // ============================================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        request.auth.uid in get(/databases/$(database)/documents/config/admin/list).data.adminUids;
+    }
+
+    function selfOrAdmin(ownerUid) {
+      return isAdmin() || (isSignedIn() && request.auth.uid == ownerUid);
+    }
+
+    // ============================================================
+    //  ADMIN CONFIG — NENHUM usuário comum lê ou escreve aqui
+    // ============================================================
+    match /config/admin/list {
+      allow read:  if isAdmin();
+      allow write: if isAdmin();
+    }
+    match /config/{allSubPaths=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // ============================================================
+    //  partnerApplications — Solicitações de parceria
+    //    · Público pode CRIAR (solicitação nova status=pending)
+    //    · Dono pode LER a própria (opcional)
+    //    · ADMIN lê tudo, aprova/recusa (altera status)
+    //    · NINGUÉM (nem admin) pode deletar (histórico)
+    // ============================================================
+    match /partnerApplications/{appId} {
+      allow create: if
+        request.resource.data.status == 'pending' &&
+        request.resource.data.keys().hasAny([
+          'companyName','responsibleName','email','whatsapp','city','state'
+        ]);
+
+      allow read: if
+        isAdmin() ||
+        (isSignedIn() && request.auth.uid == resource.data.submittedByUid) ||
+        (resource.data.email is string && request.auth != null && request.auth.token.email == resource.data.email);
+
+      allow update: if
+        isAdmin() &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status','reviewedAt','reviewedBy']);
+
+      allow delete: if false;
+    }
+
+    // ============================================================
+    //  partners — COLEÇÃO PÚBLICA (apenas aprovados, dados de divulgação)
+    //    · Leitura pública
+    //    · Escrita SÓ por admin (quando aprova no fluxo backend)
+    // ============================================================
+    match /partners/{partnerId} {
+      allow read:   if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    //  REGRAS EXISTENTES PRESERVADAS (coleções legadas)
+    //  — Coleções do projeto Ajeita original —
+    //  Cole abaixo as suas regras atuais de:
+    //   profissionais, clientes, solicitacoes, avaliacoes, pix, recargas
+    //  As linhas abaixo são placeholders. SUBSTITUA pelas suas regras reais.
+    // ============================================================
+    match /profissionais/{id} {
+      allow read:   if true;
+      allow write:  if isAdmin();
+    }
+    match /clientes/{id} {
+      allow read, write: if isSignedIn() && request.auth.uid == id;
+      allow read, write: if isAdmin();
+    }
+    match /solicitacoes/{id} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /avaliacoes/{id} {
+      allow read:   if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /pix/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /recargas/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

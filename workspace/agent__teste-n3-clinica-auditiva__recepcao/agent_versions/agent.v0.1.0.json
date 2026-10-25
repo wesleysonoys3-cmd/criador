@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "rc24.1",
+  "id": "agent_5cf23befbc16",
+  "name": "Recepção",
+  "slug": "recepcao",
+  "version": "0.1.0",
+  "company": {
+    "name": "Teste N3 Clínica Auditiva",
+    "slug": "teste-n3-clinica-auditiva",
+    "segmento": "Saúde / ORL",
+    "size": "media",
+    "notes": ""
+  },
+  "persona": "",
+  "problemStatement": "Recepcionar pacientes via WhatsApp, confirmar horário Google Calendar, salvar CRM, enviar e-mail.",
+  "assumptions": [],
+  "requirements": {
+    "functional": [
+      "Receber paciente whatsapp",
+      "Buscar horários",
+      "Marcar consulta",
+      "Salvar CRM",
+      "Enviar email"
+    ],
+    "nonFunctional": [
+      "<2s",
+      "Não logar CPF em claro"
+    ],
+    "businessRules": [
+      "Seg a Sex 08:00-18:00",
+      "Não marcar domingos",
+      "Paciente novo precisa CPF obrigatório"
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "whatsapp_evolux-1",
+      "type": "whatsapp_evolux",
+      "provider": "Evolux",
+      "status": "pending",
+      "envVarsRequired": [
+        "WHATSAPP_EVOLUX_API_KEY",
+        "WHATSAPP_EVOLUX_INSTANCE_ID"
+      ],
+      "description": "Receber/responder mensagens WhatsApp via Evolux API."
+    },
+    {
+      "id": "google_calendar-2",
+      "type": "google_calendar",
+      "provider": "Google Workspace (Service Account)",
+      "status": "pending",
+      "envVarsRequired": [
+        "GOOGLE_CALENDAR_CLIENT_EMAIL",
+        "GOOGLE_CALENDAR_PRIVATE_KEY_BASE64"
+      ],
+      "description": "Buscar/criar horários na agenda de consultas."
+    },
+    {
+      "id": "smtp_email-3",
+      "type": "smtp_email",
+      "provider": "SMTP genérico (Gmail/Outlook/SendGrid/SES)",
+      "status": "pending",
+      "envVarsRequired": [
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "SMTP_USER",
+        "SMTP_PASS"
+      ],
+      "description": "Envio de e-mail de confirmação de consulta."
+    },
+    {
+      "id": "generic_rest_crm-4",
+      "type": "generic_rest_crm",
+      "provider": "CRM REST genérico (Bearer/Header API Key)",
+      "status": "pending",
+      "envVarsRequired": [
+        "CRM_BASE_URL",
+        "CRM_API_KEY"
+      ],
+      "description": "Cadastrar pacientes/negócios no CRM interno por REST."
+    }
+  ],
+  "tools_declared": [
+    "whatsapp_enviar_mensagem",
+    "agenda_buscar_horarios_disponiveis",
+    "crm_registrar_paciente",
+    "email_confirmar_consulta"
+  ],
+  "securityRules": [
+    "Nunca expor chaves de API (API_KEY, _PASS, TOKEN) no frontend, localStorage ou logs.",
+    "Nunca servir dotfiles ou .env via static; Paths de arquivos devem validar base dir (path traversal)."
+  ],
+  "deliverable": {
+    "kind": "node_express_app"
+  },
+  "createdAt": 1789858152656,
+  "updatedAt": 1789858152656,
+  "author": "orchestrator_rc24"
+}

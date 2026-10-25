@@ -1,0 +1,191 @@
+{
+  "equipment": [
+    {
+      "id": "EQ-101",
+      "name": "Cadeira Ergonômica Executive Pro",
+      "category": "Mobiliário",
+      "stockTotal": 150,
+      "stockAvailable": 88,
+      "pricePerDay": 15,
+      "status": "Disponível"
+    },
+    {
+      "id": "EQ-102",
+      "name": "Mesa de Reunião Modular 8 Lugares",
+      "category": "Mobiliário",
+      "stockTotal": 25,
+      "stockAvailable": 12,
+      "pricePerDay": 65,
+      "status": "Disponível"
+    },
+    {
+      "id": "EQ-103",
+      "name": "Painel LED Corporativo P3 3x2m",
+      "category": "Audiovisual",
+      "stockTotal": 10,
+      "stockAvailable": 4,
+      "pricePerDay": 250,
+      "status": "Disponível"
+    },
+    {
+      "id": "EQ-104",
+      "name": "Sistema de Som Integrado Bose Pro",
+      "category": "Audiovisual",
+      "stockTotal": 20,
+      "stockAvailable": 15,
+      "pricePerDay": 90,
+      "status": "Disponível"
+    },
+    {
+      "id": "EQ-105",
+      "name": "Divisória Acústica Modular ModularWall",
+      "category": "Estruturas",
+      "stockTotal": 80,
+      "stockAvailable": 35,
+      "pricePerDay": 25,
+      "status": "Disponível"
+    },
+    {
+      "id": "EQ-106",
+      "name": "Luminária Pendente Designer Minimal",
+      "category": "Iluminação",
+      "stockTotal": 120,
+      "stockAvailable": 70,
+      "pricePerDay": 12.5,
+      "status": "Disponível"
+    },
+    {
+      "id": "EQ-107",
+      "name": "Balcão de Atendimento Reception VIP",
+      "category": "Mobiliário",
+      "stockTotal": 15,
+      "stockAvailable": 6,
+      "pricePerDay": 110,
+      "status": "Disponível"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "CTR-501",
+      "clientName": "Construtora Horizonte SA",
+      "eventName": "Stand Feira Construção 2025",
+      "startDate": "2025-04-10",
+      "endDate": "2025-04-18",
+      "totalValue": 4320,
+      "status": "Ativo",
+      "items": [
+        {
+          "id": "EQ-101",
+          "qty": 20
+        },
+        {
+          "id": "EQ-103",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "id": "CTR-502",
+      "clientName": "TechCorp Eventos Globais",
+      "eventName": "Convenção Anual de Inovação",
+      "startDate": "2025-04-22",
+      "endDate": "2025-04-25",
+      "totalValue": 7850,
+      "status": "Confirmado",
+      "items": [
+        {
+          "id": "EQ-102",
+          "qty": 5
+        },
+        {
+          "id": "EQ-104",
+          "qty": 2
+        },
+        {
+          "id": "EQ-106",
+          "qty": 30
+        }
+      ]
+    }
+  ],
+  "automations": [
+    {
+      "id": "AUT-01",
+      "title": "Verificação Automática de Estoque",
+      "trigger": "Novo pedido recebido",
+      "status": "Ativo",
+      "executions": 142,
+      "lastRun": "Há 5 minutos"
+    },
+    {
+      "id": "AUT-02",
+      "title": "Lembrete de Recolha de Material",
+      "trigger": "24h antes do fim do contrato",
+      "status": "Ativo",
+      "executions": 89,
+      "lastRun": "Há 1 hora"
+    },
+    {
+      "id": "AUT-03",
+      "title": "Geração e Envio de Proposta PDF",
+      "trigger": "Lead qualificado pelo Chat IA",
+      "status": "Ativo",
+      "executions": 210,
+      "lastRun": "Há 12 minutos"
+    },
+    {
+      "id": "AUT-04",
+      "title": "Alerta de Manutenção Pós-Locação",
+      "trigger": "Equipamento devolvido ao armazém",
+      "status": "Ativo",
+      "executions": 320,
+      "lastRun": "Há 45 minutos"
+    }
+  ],
+  "partnerApplications": [
+    {
+      "id": "PAR-MUD2T8YUE476",
+      "companyName": "Empresa Teste LTDA",
+      "responsibleName": "João Silva",
+      "logoUrl": "",
+      "description": "Empresa de eventos com 10 anos de mercado.",
+      "category": "Eventos",
+      "phone": "",
+      "whatsapp": "11999999999",
+      "email": "contato@empresateste.com.br",
+      "instagram": "",
+      "facebook": "",
+      "website": "",
+      "address": "",
+      "city": "São Paulo",
+      "state": "SP",
+      "notes": "",
+      "status": "approved",
+      "createdAt": "2026-09-22T19:37:44.359Z",
+      "reviewedAt": "2026-09-22T19:38:43.664Z",
+      "reviewedBy": "local-admin-admin@ajeita.ai"
+    }
+  ],
+  "partners": [
+    {
+      "id": "PAR-MUD2T8YUE476",
+      "status": "approved",
+      "approvedAt": "2026-09-22T19:38:43.664Z",
+      "companyName": "Empresa Teste LTDA",
+      "logoUrl": "",
+      "category": "Eventos",
+      "description": "Empresa de eventos com 10 anos de mercado.",
+      "city": "São Paulo",
+      "state": "SP",
+      "phone": "",
+      "whatsapp": "11999999999",
+      "instagram": "",
+      "facebook": "",
+      "website": "",
+      "address": ""
+    }
+  ],
+  "meta": {
+    "adminUids": []
+  }
+}

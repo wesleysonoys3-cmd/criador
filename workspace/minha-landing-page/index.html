@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tatiê - Login & Ateliê de Camisas</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Playfair Display e Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tatie: {
+                            bg: '#fbf5f3',
+                            card: '#ffffff',
+                            primary: '#591f2c', /* Vinho elegante do logo */
+                            primaryDark: '#421620',
+                            gold: '#c5a059',    /* Dourado sofisticado */
+                            goldLight: '#e4caa2',
+                            textDark: '#332929',
+                            textMuted: '#7a6b6b'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['Montserrat', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .bg-pattern {
+            background-color: #fbf5f3;
+            background-image: radial-gradient(#e4caa2 0.75px, transparent 0.75px), radial-gradient(#e4caa2 0.75px, #fbf5f3 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+        }
+        .gold-border {
+            border: 1px solid rgba(197, 160, 89, 0.4);
+        }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #c5a059 0%, #a37d38 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="h-full bg-pattern font-sans text-tatie-textDark antialiased flex flex-col justify-between">
+
+    <!-- Header / Navbar Minimalista -->
+    <header class="w-full py-6 px-8 flex justify-between items-center bg-white/60 backdrop-blur-md border-b border-tatie-gold/20">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full border border-tatie-gold flex items-center justify-center bg-tatie-primary text-white font-serif font-bold text-xl shadow-sm">
+                T
+            </div>
+            <div>
+                <span class="font-serif font-bold text-xl tracking-widest text-tatie-primary">TATIÊ</span>
+                <span class="block text-[10px] tracking-[0.2em] uppercase text-tatie-gold font-semibold">Ateliê & Camisas</span>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4 text-sm">
+            <a href="#" class="text-tatie-textMuted hover:text-tatie-primary transition hidden sm:inline">Nossa História</a>
+            <a href="#" class="text-tatie-textMuted hover:text-tatie-primary transition hidden sm:inline">Coleção</a>
+            <a href="#" class="px-4 py-2 border border-tatie-gold text-tatie-primary font-medium rounded-full hover:bg-tatie-primary hover:text-white transition shadow-sm">
+                <i class="fa-solid fa-bag-shopping mr-2"></i>Ver Loja
+            </a>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal / Área de Login & Cadastro -->
+    <main class="flex-grow flex items-center justify-center px-4 py-12">
+        <div class="max-w-md w-full bg-tatie-card rounded-2xl shadow-2xl overflow-hidden gold-border relative">
+            
+            <!-- Detalhe decorativo superior -->
+            <div class="h-2 bg-gradient-to-r from-tatie-gold via-tatie-primary to-tatie-gold"></div>
+
+            <!-- Header do Card -->
+            <div class="p-8 pb-6 text-center">
+                <div class="inline-flex w-16 h-16 rounded-full bg-[#fbf5f3] border-2 border-tatie-gold items-center justify-center mb-4 shadow-inner">
+                    <span class="font-serif text-3xl font-bold text-tatie-primary">T</span>
+                </div>
+                <h1 id="form-title" class="font-serif text-3xl font-bold text-tatie-primary tracking-wide">Bem-vinda de volta</h1>
+                <p id="form-subtitle" class="text-tatie-textMuted text-sm mt-1">Presentes e camisas feitas para encantar</p>
+
+                <!-- Alternador de Abas (Login / Cadastro) -->
+                <div class="flex bg-tatie-bg p-1 rounded-xl mt-6 border border-tatie-gold/30">
+                    <button id="tab-login" onclick="switchTab('login')" class="flex-1 py-2 text-sm font-semibold rounded-lg bg-white text-tatie-primary shadow-sm transition-all duration-300">
+                        Entrar
+                    </button>
+                    <button id="tab-register" onclick="switchTab('register')" class="flex-1 py-2 text-sm font-medium rounded-lg text-tatie-textMuted hover:text-tatie-primary transition-all duration-300">
+                        Criar Conta
+                    </button>
+                </div>
+            </div>
+
+            <!-- Formulários -->
+            <div class="px-8 pb-8">
+                
+                <!-- ALERTA DE FEEDBACK -->
+                <div id="alert-box" class="hidden mb-4 p-3 rounded-xl text-xs flex items-center space-x-2 transition-all">
+                    <i id="alert-icon" class="fa-solid fa-circle-exclamation text-base"></i>
+                    <span id="alert-message">Mensagem de feedback.</span>
+                </div>
+
+                <!-- FORMULÁRIO DE LOGIN -->
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-tatie-textMuted mb-1">E-mail</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-tatie-gold">
+                                <i class="fa-regular fa-envelope"></i>
+                            </span>
+                            <input type="email" id="login-email" required placeholder="seu.email@exemplo.com"
+                                class="w-full pl-10 pr-4 py-3 bg-tatie-bg border border-tatie-gold/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-tatie-primary focus:border-transparent transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-tatie-textMuted">Senha</label>
+                            <a href="#" onclick="showForgotModal(event)" class="text-xs text-tatie-gold hover:underline font-medium">Esqueceu a senha?</a>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-tatie-gold">
+                                <i class="fa-solid fa-lock"></i>
+                            </span>
+                            <input type="password" id="login-password" required placeholder="••••••••"
+                                class="w-full pl-10 pr-10 py-3 bg-tatie-bg border border-tatie-gold/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-tatie-primary focus:border-transparent transition">
+                            <button type="button" onclick="togglePassword('login-password', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-tatie-textMuted hover:text-tatie-primary">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs pt-1">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="rounded border-tatie-gold text-tatie-primary focus:ring-tatie-primary">
+                            <span class="text-tatie-textMuted">Lembrar de mim</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-tatie-primary hover:bg-tatie-primaryDark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-[0.99] flex items-center justify-center space-x-2 mt-2">
+                        <span>Acessar Conta</span>
+                        <i class="fa-solid fa-arrow-right-long text-xs"></i>
+                    </button>
+                </form>
+
+                <!-- FORMULÁRIO DE CADASTRO -->
+                <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-tatie-textMuted mb-1">Nome Completo</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-tatie-gold">
+                                <i class="fa-regular fa-user"></i>
+                            </span>
+                            <input type="text" id="reg-name" required placeholder="Maria Silva"
+                                class="w-full pl-10 pr-4 py-3 bg-tatie-bg border border-tatie-gold/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-tatie-primary focus:border-transparent transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-tatie-textMuted mb-1">E-mail</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-tatie-gold">
+                                <i class="fa-regular fa-envelope"></i>
+                            </span>
+                            <input type="email" id="reg-email" required placeholder="seu.email@exemplo.com"
+                                class="w-full pl-10 pr-4 py-3 bg-tatie-bg border border-tatie-gold/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-tatie-primary focus:border-transparent transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-tatie-textMuted mb-1">Criar Senha</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-tatie-gold">
+                                <i class="fa-solid fa-lock"></i>
+                            </span>
+                            <input type="password" id="reg-password" required placeholder="Mínimo 6 caracteres"
+                                class="w-full pl-10 pr-10 py-3 bg-tatie-bg border border-tatie-gold/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-tatie-primary focus:border-transparent transition">
+                            <button type="button" onclick="togglePassword('reg-password', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-tatie-textMuted hover:text-tatie-primary">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-tatie-textMuted pt-1">
+                        Ao criar uma conta, você concorda com nossos <a href="#" class="text-tatie-primary underline font-medium">Termos de Uso</a> e <a href="#" class="text-tatie-primary underline font-medium">Política de Privacidade</a>.
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-tatie-primary hover:bg-tatie-primaryDark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-[0.99] flex items-center justify-center space-x-2 mt-2">
+                        <span>Cadastrar & Encantar</span>
+                        <i class="fa-solid fa-heart text-xs text-tatie-gold"></i>
+                    </button>
+                </form>
+
+                <!-- Divisor Social -->
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-tatie-gold/30"></div>
+                    </div>
+                    <div class="relative flex justify-center text-xs uppercase">
+                        <span class="bg-white px-3 text-tatie-textMuted font-medium tracking-wider">Ou continue com</span>
+                    </div>
+                </div>
+
+                <!-- Botões de Login Social -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="socialLogin('Google')" class="flex items-center justify-center py-2.5 px-4 border border-tatie-gold/30 rounded-xl hover:bg-tatie-bg transition text-xs font-semibold text-tatie-textDark shadow-sm">
+                        <i class="fa-brands fa-google text-red-500 mr-2 text-base"></i> Google
+                    </button>
+                    <button onclick="socialLogin('Apple')" class="flex items-center justify-center py-2.5 px-4 border border-tatie-gold/30 rounded-xl hover:bg-tatie-bg transition text-xs font-semibold text-tatie-textDark shadow-sm">
+                        <i class="fa-brands fa-apple text-black mr-2 text-base"></i> Apple
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Rodapé do Card -->
+            <div class="bg-tatie-bg py-4 px-8 text-center border-t border-tatie-gold/20 flex justify-between items-center text-xs text-tatie-textMuted">
+                <span>Ateliê & Cestas Tatiê</span>
+                <span class="flex items-center space-x-1 text-tatie-gold">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Ambiente Seguro</span>
+                </span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-6 text-center text-xs text-tatie-textMuted">
+        <p>&copy; 2026 Tatiê Ateliê & Cestas. Todos os direitos reservados. Presentes feitos para encantar.</p>
+    </footer>
+
+    <!-- MODAL DE RECUPERAÇÃO DE SENHA -->
+    <div id="forgot-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center px-4 z-50">
+        <div class="bg-white max-w-sm w-full rounded-2xl p-6 shadow-2xl gold-border relative animate-fade-in">
+            <button onclick="closeForgotModal()" class="absolute top-4 right-4 text-tatie-textMuted hover:text-tatie-primary">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 rounded-full bg-tatie-bg border border-tatie-gold inline-flex items-center justify-center text-tatie-primary mb-3">
+                    <i class="fa-solid fa-key text-lg"></i>
+                </div>
+                <h3 class="font-serif text-xl font-bold text-tatie-primary">Recuperar Senha</h3>
+                <p class="text-xs text-tatie-textMuted mt-1">Digite seu e-mail cadastrado para receber as instruções.</p>
+            </div>
+            <form onsubmit="handleForgot(event)" class="space-y-4">
+                <div>
+                    <input type="email" id="forgot-email" required placeholder="seu.email@exemplo.com"
+                        class="w-full px-4 py-3 bg-tatie-bg border border-tatie-gold/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-tatie-primary">
+                </div>
+                <button type="submit" class="w-full py-3 bg-tatie-primary hover:bg-tatie-primaryDark text-white font-semibold rounded-xl shadow transition text-sm">
+                    Enviar Instruções
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts de Interação -->
+    <script>
+        function switchTab(tab) {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+            const title = document.getElementById('form-title');
+            const subtitle = document.getElementById('form-subtitle');
+            hideAlert();
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                tabLogin.className = "flex-1 py-2 text-sm font-semibold rounded-lg bg-white text-tatie-primary shadow-sm transition-all duration-300";
+                tabRegister.className = "flex-1 py-2 text-sm font-medium rounded-lg text-tatie-textMuted hover:text-tatie-primary transition-all duration-300";
+                title.innerText = "Bem-vinda de volta";
+                subtitle.innerText = "Presentes e camisas feitas para encantar";
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                tabRegister.className = "flex-1 py-2 text-sm font-semibold rounded-lg bg-white text-tatie-primary shadow-sm transition-all duration-300";
+                tabLogin.className = "flex-1 py-2 text-sm font-medium rounded-lg text-tatie-textMuted hover:text-tatie-primary transition-all duration-300";
+                title.innerText = "Crie sua Conta";
+                subtitle.innerText = "Junte-se ao nosso ateliê exclusivo";
+            }
+        }
+
+        function togglePassword(fieldId, btn) {
+            const input = document.getElementById(fieldId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = "fa-regular fa-eye-slash";
+            } else {
+                input.type = 'password';
+                icon.className = "fa-regular fa-eye";
+            }
+        }
+
+        function showAlert(message, type = 'success') {
+            const alertBox = document.getElementById('alert-box');
+            const alertMsg = document.getElementById('alert-message');
+            const alertIcon = document.getElementById('alert-icon');
+            
+            alertBox.classList.remove('hidden');
+            alertMsg.innerText = message;
+
+            if (type === 'success') {
+                alertBox.className = "mb-4 p-3 rounded-xl text-xs flex items-center space-x-2 bg-emerald-50 border border-emerald-200 text-emerald-800 transition-all";
+                alertIcon.className = "fa-solid fa-circle-check text-emerald-600 text-base";
+            } else {
+                alertBox.className = "mb-4 p-3 rounded-xl text-xs flex items-center space-x-2 bg-rose-50 border border-rose-200 text-rose-800 transition-all";
+                alertIcon.className = "fa-solid fa-circle-exclamation text-rose-600 text-base";
+            }
+        }
+
+        function hideAlert() {
+            document.getElementById('alert-box').classList.add('hidden');
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            showAlert(`Login realizado com sucesso! Bem-vinda de volta, ${email.split('@')[0]}. Redirecionando...`, 'success');
+            setTimeout(() => {
+                alert("Simulação: Redirecionando para o catálogo do ateliê Tatiê.");
+            }, 1500);
+        }
+
+        function handleRegister(event) {
+            event.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            showAlert(`Conta criada com sucesso, ${name}! Um e-mail de confirmação foi enviado.`, 'success');
+            setTimeout(() => {
+                switchTab('login');
+            }, 2000);
+        }
+
+        function socialLogin(provider) {
+            showAlert(`Autenticando com ${provider}...`, 'success');
+            setTimeout(() => {
+                alert(`Login via ${provider} simulado com sucesso!`);
+            }, 1000);
+        }
+
+        function showForgotModal(event) {
+            event.preventDefault();
+            document.getElementById('forgot-modal').classList.remove('hidden');
+            document.getElementById('forgot-modal').classList.add('flex');
+        }
+
+        function closeForgotModal() {
+            document.getElementById('forgot-modal').classList.remove('flex');
+            document.getElementById('forgot-modal').classList.add('hidden');
+        }
+
+        function handleForgot(event) {
+            event.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+            closeForgotModal();
+            showAlert(`Instruções de recuperação enviadas para ${email}.`, 'success');
+        }
+    </script>
+</body>
+</html>
