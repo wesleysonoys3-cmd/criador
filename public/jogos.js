@@ -481,6 +481,15 @@ function report() {
   show($('jg-msg'), 'Relatório da sessão gerado no painel de histórico.', 'ok');
 }
 
+function setBrowserExpanded(expanded) {
+  const panel = document.querySelector('[data-editor-panel="jogos"]');
+  state.expanded = !!expanded;
+  if (!panel) return;
+  panel.classList.toggle('jg-browser-expanded', state.expanded);
+  document.body.classList.toggle('jg-browser-expanded-lock', state.expanded);
+  if ($('jg-expand-btn')) $('jg-expand-btn').textContent = state.expanded ? 'Reduzir' : 'Ampliar';
+}
+
 /* ---------------- Bootstrap ---------------- */
 function wire() {
   $('jg-open-btn')?.addEventListener('click', openBrowser);
@@ -501,20 +510,9 @@ function wire() {
   $('jg-auto-toggle')?.addEventListener('click', toggleAuto);
   $('jg-auto-step')?.addEventListener('click', autoStep);
   $('jg-report-btn')?.addEventListener('click', report);
-  $('jg-expand-btn')?.addEventListener('click', () => {
-    const panel = document.querySelector('[data-editor-panel="jogos"]');
-    const frame = $('jg-browser-frame');
-    state.expanded = !state.expanded;
-    if (panel) {
-      panel.querySelectorAll(':scope > #jg-body > div').forEach(d => { d.classList.toggle('hidden', state.expanded); });
-      if (!state.expanded) panel.querySelectorAll(':scope > #jg-body > div').forEach(d => d.classList.remove('hidden'));
-      $('jg-expand-btn').textContent = state.expanded ? 'Reduzir' : 'Ampliar';
-    }
-    if (frame) frame.classList.toggle('bg-black', false);
-    if (state.expanded) {
-      const wrap = frame?.closest('.rounded-xl');
-      if (wrap) { wrap.classList.remove('hidden'); wrap.classList.add('fixed', 'inset-4', 'z-[60]', 'bg-[#04060f]'); }
-    }
+  $('jg-expand-btn')?.addEventListener('click', () => setBrowserExpanded(!state.expanded));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && state.expanded) setBrowserExpanded(false);
   });
 }
 
@@ -527,6 +525,7 @@ async function boot() {
 }
 
 window.__jogosOnTabOpen = () => { loadStatus().catch(() => {}); };
+window.__jogosOnTabClose = () => { setBrowserExpanded(false); };
 // Abrir a aba pelo painel: expõe função global (app.js já registra a aba em switchEditorPanel)
 window.__jogosOpen = () => { try { (window.switchEditorPanel || (() => {}))('jogos'); } catch {} };
 

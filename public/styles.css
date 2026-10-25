@@ -1129,6 +1129,77 @@ body.panel-resize-active .panel-resizer { pointer-events: auto !important; }
   #workdir-name, #stats-line { padding-left: 14px !important; padding-right: 14px !important; font-size: 13px !important; }
 }
 
+/* ====== Jogos: navegador integrado mais utilizável no mobile ====== */
+#jg-browser-card {
+  min-height: clamp(320px, 52vh, 720px);
+}
+
+#jg-browser-viewport {
+  min-height: clamp(280px, 46vh, 640px);
+}
+
+@media (max-width: 820px) {
+  #jg-browser-grid {
+    gap: 10px !important;
+  }
+
+  #jg-browser-card {
+    min-height: clamp(430px, 64dvh, 760px);
+  }
+
+  #jg-browser-viewport {
+    min-height: clamp(380px, 56dvh, 700px);
+  }
+
+  #jg-browser-card > div:first-child {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  #jg-browser-host {
+    order: 3;
+    width: 100%;
+  }
+}
+
+body.jg-browser-expanded-lock {
+  overflow: hidden !important;
+}
+
+#jogos-panel.jg-browser-expanded #jg-body > :not(#jg-browser-grid) {
+  display: none !important;
+}
+
+#jogos-panel.jg-browser-expanded #jg-analysis-col {
+  display: none !important;
+}
+
+#jogos-panel.jg-browser-expanded #jg-browser-grid {
+  display: block !important;
+}
+
+#jogos-panel.jg-browser-expanded #jg-browser-card {
+  position: fixed !important;
+  inset: 12px !important;
+  z-index: 80 !important;
+  min-height: 0 !important;
+  border-radius: 18px !important;
+  box-shadow: 0 24px 80px rgba(2, 6, 23, 0.72);
+}
+
+#jogos-panel.jg-browser-expanded #jg-browser-viewport {
+  min-height: 0 !important;
+}
+
+@media (max-width: 820px) {
+  #jogos-panel.jg-browser-expanded #jg-browser-card {
+    top: calc(8px + env(safe-area-inset-top)) !important;
+    right: 8px !important;
+    left: 8px !important;
+    bottom: calc(84px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
 /* ====== RC19 📱 MOBILE TABBAR INFERIOR FIXA ====== */
 #mobile-tabbar {
   position: fixed;
@@ -1842,6 +1913,5 @@ body.ti-keyboard-up .trae-chat-form {
   .rc27-step-dot { width: 7.2vw !important; height: 7.2vw !important; min-width: 28px; min-height: 28px; }
   .rc27-step-label { font-size: 8px !important; letter-spacing: 0.02em; }
 }
-
 
 

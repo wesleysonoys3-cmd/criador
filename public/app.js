@@ -1834,6 +1834,7 @@ function renderFileTree(nodes, parentEl = els.fileTree, level = 0, opts = {}) {
 function switchEditorPanel(name) {
   const n = String(name);
   let activeKey = n;
+  const previousActive = els.editorPanels?.dataset.active || '';
   if (n.startsWith('code:')) activeKey = 'code';
   // RC15: Chat removido do centro → se alguém tentar abrir chat, vai direto pro painel direito TiAi (toast + focus)
   if (activeKey === 'chat') {
@@ -1844,6 +1845,9 @@ function switchEditorPanel(name) {
   }
   const allowed = ['code','preview','console','terminal','ia-config','btc','quantfury','jogos'];
   if (allowed.includes(activeKey) || n.startsWith('code:')) {
+    if (previousActive === 'jogos' && activeKey !== 'jogos') {
+      if (typeof window.__jogosOnTabClose === 'function') try { window.__jogosOnTabClose(); } catch(_) {}
+    }
     if (els.editorPanels) els.editorPanels.dataset.active = activeKey;
     if (activeKey === 'btc') _btcLoadStatusIfMissing();
     if (activeKey === 'jogos') {
