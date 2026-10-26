@@ -1843,15 +1843,21 @@ function switchEditorPanel(name) {
     els.app?.classList.add('right-open');
     try { els.agentInput?.focus(); } catch {}
   }
-  const allowed = ['code','preview','console','terminal','ia-config','btc','quantfury','jogos'];
+  const allowed = ['code','preview','console','terminal','ia-config','btc','quantfury','jogos','tigrinho'];
   if (allowed.includes(activeKey) || n.startsWith('code:')) {
     if (previousActive === 'jogos' && activeKey !== 'jogos') {
       if (typeof window.__jogosOnTabClose === 'function') try { window.__jogosOnTabClose(); } catch(_) {}
+    }
+    if (previousActive === 'tigrinho' && activeKey !== 'tigrinho') {
+      if (typeof window.__tigrinhoOnTabClose === 'function') try { window.__tigrinhoOnTabClose(); } catch(_) {}
     }
     if (els.editorPanels) els.editorPanels.dataset.active = activeKey;
     if (activeKey === 'btc') _btcLoadStatusIfMissing();
     if (activeKey === 'jogos') {
       if (typeof window.__jogosOnTabOpen === 'function') try { window.__jogosOnTabOpen(); } catch(_) {}
+    }
+    if (activeKey === 'tigrinho') {
+      if (typeof window.__tigrinhoOnTabOpen === 'function') try { window.__tigrinhoOnTabOpen(); } catch(_) {}
     }
     if (activeKey === 'quantfury') {
       if (typeof window.__editorTabHandler === 'function') try { window.__editorTabHandler('quantfury'); } catch(_) {}
@@ -1870,6 +1876,7 @@ function switchEditorPanel(name) {
     else if (n === 'btc') isActive = tt === 'btc';
     else if (n === 'quantfury') isActive = tt === 'quantfury';
     else if (n === 'jogos')     isActive = tt === 'jogos';
+    else if (n === 'tigrinho')  isActive = tt === 'tigrinho';
     else                       isActive = tt === activeKey;
     t.classList.toggle('active', !!isActive);
   });
@@ -3562,7 +3569,7 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
     else if (!t.dataset.codeFile) t.classList.remove('active');
   });
   // Listeners das 4 abas fixas (Chat removido do centro — foi pro painel direito TiAi)
-  const specials = ['preview','console','terminal','code','ia-config','btc','quantfury','jogos'];
+  const specials = ['preview','console','terminal','code','ia-config','btc','quantfury','jogos','tigrinho'];
   specials.forEach(key => {
     const tab = els.editorTabs?.querySelector(`[data-editor-tab="${key}"]`);
     if (tab && !tab.__attSp) {
@@ -3577,7 +3584,7 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
 /* switchTab LEGADA (rotas antigas chamam switchTab('preview')) — redireciona para switchEditorPanel moderno */
 const _origSwitchTab = switchTab;
 switchTab = function(name) {
-  if (['preview','console','terminal','chat','code','ia-config','btc','quantfury','jogos'].includes(String(name))) {
+  if (['preview','console','terminal','chat','code','ia-config','btc','quantfury','jogos','tigrinho'].includes(String(name))) {
     switchEditorPanel(String(name));
   } else if (_origSwitchTab) {
     return _origSwitchTab(name);

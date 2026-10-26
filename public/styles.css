@@ -1606,6 +1606,7 @@ body.ti-keyboard-up .trae-chat-form {
 #editor-panels[data-active="btc"]      [data-editor-panel="btc"]      { display: flex; }
 #editor-panels[data-active="quantfury"] [data-editor-panel="quantfury"] { display: flex; }
 #editor-panels[data-active="jogos"]    [data-editor-panel="jogos"]    { display: flex; }
+#editor-panels[data-active="tigrinho"] [data-editor-panel="tigrinho"] { display: flex; }
 
 /* ---------- Editor Tabs (VSCode / TiAi style) ---------- */
 .editor-tab {
