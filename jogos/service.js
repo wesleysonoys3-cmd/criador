@@ -62,6 +62,214 @@ function validateUrl(rawUrl) {
   return { ok: true, url: u.href, host: u.hostname.toLowerCase() };
 }
 
+/* ---------------- Identificação automática do jogo ----------------
+ * Só usa evidências REALMENTE presentes na página (título, metadados, links e
+ * prévia de texto autorizada). Sem evidência suficiente o resultado é
+ * "INCONCLUSIVO" e o usuário é solicitado a confirmar — nada é inventado.
+ */
+const KNOWN_PROVIDERS = [
+  ['Pragmatic Play', /\bpragmatic\s*play\b|\bpragmatic\b/i],
+  ['PG Soft', /\bpg\s*soft\b|\bpgsoft\b/i],
+  ['Evolution', /\bevolution\s*gaming\b|\bevolution\b/i],
+  ['NetEnt', /\bnetent\b/i],
+  ['Play\'n GO', /play\s*n\s*go\b/i],
+  ['Hacksaw Gaming', /\bhacksaw\b/i],
+  ['Relax Gaming', /\brelax\s*gaming\b/i],
+  ['Novomatic', /\bnovomatic\b|\bgreentube\b/i],
+  ['Amatic', /\bamatic\b/i],
+  ['Spribe', /\bspribe\b/i],
+  ['Galaxsys', /\bgalaxsys\b/i],
+  ['SmartSoft', /\bsmartsoft\b/i],
+  ['Betsoft', /\bbetsoft\b/i],
+  ['Microgaming', /\bmicrogaming\b/i],
+  ['Playtech', /\bplaytech\b/i],
+];
+
+/* Segmentos que descrevem o cassino/navegação, não o jogo. */
+const GENERIC_SEGMENTS = new Set([
+  'login', 'entrar', 'logar', 'acesso', 'acessar', 'cassino', 'casino', 'home', 'inicio', 'lobby',
+  'jogos', 'games', 'apostas', 'aposta', 'bet', 'sports', 'esportes', 'conta', 'minha conta',
+  'registrar', 'cadastro', 'cadastre se', 'sign in', 'sign up', 'welcome', 'bem vindo', 'page',
+  'site', 'oficial', 'brasil', 'slots', 'slot', 'cassino online', 'casino online', 'jogar', 'play',
+  'deposito', 'saque', 'bonus', 'bônus', 'promocoes', 'promoções',
+]);
+
+/* Marcadores de que a página expõe RESULTADOS (não apenas o jogo). */
+const RESULT_MARKERS = /(multiplicador|multiplier|rodada|round|hist[óo]rico|hist[óo]ry|provably\s*fair|resultado\s*(da|anterior)|last\s*results?)/i;
+
+function normalizeLabel(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9à-ú ]+/gi, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function brandCase(label) {
+  const t = String(label || '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  return t.split(' ').map(w => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w)).join(' ');
+}
+
+/* Rótulos do domínio = identidade do cassino, nunca do jogo. */
+const TLD_LABELS = new Set(['com', 'net', 'org', 'gov', 'edu', 'io', 'app', 'bet', 'game', 'br', 'uk', 'pt', 'de', 'es', 'info', 'biz', 'online', 'site']);
+
+function hostLabels(host) {
+  return String(host || '').toLowerCase().replace(/^www\./, '').split('.')
+    .filter(p => p && !TLD_LABELS.has(p));
+}
+
+function splitTitleSegments(title) {
+  return String(title || '')
+    .split(/\s*(?:\||·|•|›|»|\u2013|\u2014)\s*|\s+-\s+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+/* Referências teóricas DOCUMENTADAS — cada entrada cita a fonte verificável.
+   Sem entrada correspondente, nenhuma probabilidade/RTP é presumido. */
+const DOCUMENTED_REFERENCES = [
+  {
+    match: /roleta\s*europeia|european\s*roulette/i,
+    probabilities: { vermelho: 18 / 37, preto: 18 / 37, verde: 1 / 37 },
+    payouts: { vermelho: 2, preto: 2, verde: 36 },
+    source: 'Regras publicadas da roleta europeia: 37 números (18 vermelhos, 18 pretos, 1 verde), pagamento 1:1 em cor e 35:1 em número.',
+  },
+];
+
+function lookupDocumentedReference(...parts) {
+  const text = parts.filter(Boolean).join(' | ');
+  if (!text.trim()) return null;
+  for (const entry of DOCUMENTED_REFERENCES) {
+    if (entry.match.test(text)) {
+      return { probabilities: { ...entry.probabilities }, payouts: { ...entry.payouts }, source: entry.source };
+    }
+  }
+  return null;
+}
+
+/**
+ * Identifica site + jogo a partir do que foi realmente lido da página.
+ * Retorna sempre status, confiança e evidências usadas (nunca inventa).
+ */
+export function identifyGame(input = {}) {
+  const host = String(input.host || '').toLowerCase();
+  const title = String(input.title || '');
+  const preview = String(input.textPreview || '');
+  const links = Array.isArray(input.links) ? input.links.join(' \n ') : '';
+  const haystack = [title, preview, links].filter(Boolean).join(' \n ');
+  const evidence = [];
+
+  const labels = hostLabels(host);
+  const siteLabel = labels[0] || '';
+  const siteName = brandCase(siteLabel) || null;
+  if (siteName) evidence.push(`Domínio aberto: ${host}`);
+  const siteNormalizedLabels = labels.map(normalizeLabel).filter(Boolean);
+
+  let provider = null;
+  for (const [name, re] of KNOWN_PROVIDERS) {
+    if (re.test(haystack)) { provider = name; break; }
+  }
+  if (provider) evidence.push(`Provedor reconhecido no conteúdo da página: ${provider}`);
+
+  let gameVersion = null;
+  const vm = haystack.match(/\b(?:vers[ãa]o|version|v)\s*(\d+(?:\.\d+){0,3})\b/i);
+  if (vm) { gameVersion = vm[1]; evidence.push(`Versão citada na página: ${gameVersion}`); }
+
+  const segments = splitTitleSegments(title);
+  const isGeneric = (seg) => {
+    const n = normalizeLabel(seg);
+    if (!n) return true;
+    if (GENERIC_SEGMENTS.has(n)) return true;
+    // Qualquer rótulo do domínio pertence ao cassino, não ao jogo.
+    for (const lab of siteNormalizedLabels) {
+      if (n === lab || n.includes(lab) || lab.includes(n)) return true;
+    }
+    return false;
+  };
+
+  let gameName = null;
+  let confidence = 'baixa';
+  const candidate = segments.find(seg => !isGeneric(seg) && normalizeLabel(seg).length >= 2);
+  if (candidate) {
+    gameName = candidate.slice(0, 120);
+    confidence = (segments.length > 1 || provider) ? 'alta' : 'media';
+    evidence.push(`Título da página: "${title.slice(0, 180)}"`);
+  } else if (title) {
+    evidence.push(`Título sem nome de jogo distinto do cassino: "${title.slice(0, 180)}"`);
+  } else {
+    evidence.push('Página sem título legível (conteúdo não acessível).');
+  }
+
+  const resultsAccessible = preview.trim().length > 0 && RESULT_MARKERS.test(preview);
+  const status = gameName ? 'IDENTIFICADO' : 'INCONCLUSIVO';
+
+  let message;
+  if (status === 'INCONCLUSIVO') message = 'Identificação inconclusiva: confirme o nome do jogo para iniciar a análise.';
+  else if (!resultsAccessible) message = 'Jogo identificado, mas os resultados não estão acessíveis.';
+  else message = 'Jogo identificado. Coleta dos resultados acessíveis iniciada.';
+
+  return {
+    ok: true,
+    host,
+    siteName,
+    gameName,
+    gameVersion,
+    provider,
+    confidence,
+    status,
+    resultsAccessible,
+    evidence: evidence.slice(0, 12),
+    documentedReference: lookupDocumentedReference(gameName || '', provider || '', title, preview),
+    message,
+  };
+}
+
+/** Reaproveita sessão existente do mesmo site + jogo + versão (histórico separado). */
+function findReusableSession(host, gameName, gameVersion) {
+  for (const s of state.sessions.values()) {
+    if (s.status === 'encerrada') continue;
+    if (s.siteHost !== host) continue;
+    if (String(s.gameName) !== String(gameName)) continue;
+    if (String(s.gameVersion || '') !== String(gameVersion || '')) continue;
+    return s;
+  }
+  return null;
+}
+
+/**
+ * Cria/reaproveita a sessão do jogo identificado. A coleta só é declarada ATIVA
+ * quando há acesso real aos resultados; caso contrário a sessão fica pausada.
+ */
+function ensureIdentifiedSession(host, siteUrl, identification) {
+  if (!identification || identification.status !== 'IDENTIFICADO' || !identification.gameName) {
+    return { session: null, created: false };
+  }
+  const gameVersion = identification.gameVersion || null;
+  let s = findReusableSession(host, identification.gameName, gameVersion);
+  let created = false;
+  if (!s) {
+    const res = createSession({ siteUrl, gameName: identification.gameName, gameVersion: gameVersion || '', ownership: 'autorizado' });
+    if (!res.ok) return { session: null, created: false, reason: res.reason };
+    s = state.get(res.session.id);
+    created = true;
+  }
+  if (s) {
+    s.identification = {
+      at: nowIso(),
+      status: identification.status,
+      confidence: identification.confidence,
+      siteName: identification.siteName,
+      provider: identification.provider,
+      resultsAccessible: identification.resultsAccessible,
+      evidence: identification.evidence,
+    };
+    if (identification.documentedReference && !s.reference) {
+      s.reference = { ...identification.documentedReference, providedAt: nowIso() };
+    }
+    s.status = identification.resultsAccessible ? 'observando' : 'pausada';
+    s.updatedAt = nowIso();
+    state.save(s).catch(e => _log('save erro:', String(e?.message || e)));
+  }
+  return { session: s ? sessionSummary(s) : null, created };
+}
+
 /* ---------------- Sessões ---------------- */
 export function createSession(input = {}) {
   const { siteUrl = '', gameName = '', gameVersion = '', mode = '', notes = '', reference = null, ownership = 'autorizado' } = input;
@@ -376,6 +584,13 @@ export async function openBrowser(url) {
     return { ok: false, reason: r.error || 'Falha ao abrir a página.', code: r.code || 'OPEN_FAILED', host: v.host };
   }
   const info = _browserAgent.getInfo(r.contextId);
+  const identification = identifyGame({
+    host: v.host,
+    title: r.title || '',
+    textPreview: info.ok ? info.textPreview : '',
+    links: info.ok ? info.links : [],
+  });
+  const identified = ensureIdentifiedSession(v.host, v.url, identification);
   return {
     ok: true,
     host: v.host,
@@ -387,6 +602,9 @@ export async function openBrowser(url) {
     liveReadAvailable: r.backend === 'MCP_INTEGRATED_BROWSER',
     preview: info.ok ? String(info.textPreview || '').slice(0, 4000) : '',
     linksCount: info.ok ? info.linksCount : 0,
+    identification,
+    session: identified.session,
+    sessionCreated: identified.created,
     note: r.backend === 'MCP_INTEGRATED_BROWSER'
       ? 'Página aberta. A leitura de resultados depende da estrutura do site e de as informações estarem acessíveis.'
       : 'Aberto em modo fetch (sem navegador real): título/links/prévia apenas. Leitura contínua de rodadas indisponível — use importação autorizada.',

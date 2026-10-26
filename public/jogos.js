@@ -103,7 +103,8 @@ async function selectSession(id) {
   updateSessionButtons(s);
   renderHistory(r.records || []);
   renderAutoLog((r.autoMode && r.autoMode.log) || []);
-  if (r.reference) await analyze(false);
+  // Atualiza as estatísticas a cada registro confirmado (não depende de referência).
+  if ((r.records || []).length) await analyze(false);
   else renderNoAnalysis();
 }
 
@@ -185,6 +186,37 @@ function isStillBlank(win) {
   try { return !!win && !win.closed && win.location.href === 'about:blank'; } catch { return false; }
 }
 
+/* ---------------- Identificação automática ---------------- */
+function confidenceLabel(c) {
+  return c === 'alta' ? 'alta' : c === 'media' ? 'média' : c === 'baixa' ? 'baixa' : 'não determinada';
+}
+
+function identificationNotice(ident) {
+  if (!ident) return '';
+  const name = ident.gameName
+    ? `<strong class="text-slate-200">${esc(ident.gameName)}</strong>${ident.gameVersion ? ` v${esc(ident.gameVersion)}` : ''}`
+    : '<strong class="text-amber-300">não confirmado</strong>';
+  const bits = [
+    `Jogo: ${name}`,
+    `Confiança: ${esc(confidenceLabel(ident.confidence))}`,
+    ident.provider ? `Provedor: ${esc(ident.provider)}` : '',
+    ident.siteName ? `Site: ${esc(ident.siteName)}` : '',
+  ].filter(Boolean).join(' · ');
+  const tone = ident.status === 'IDENTIFICADO' ? 'text-emerald-300/90' : 'text-amber-300/90';
+  return `<div class="mb-1">${bits}</div><div class="${tone} mb-1">${esc(ident.message || '')}</div>`;
+}
+
+async function applyIdentification(ident) {
+  if (!ident) return;
+  if ($('jg-game-name') && ident.gameName) $('jg-game-name').value = ident.gameName;
+  if ($('jg-game-version') && ident.gameVersion) $('jg-game-version').value = ident.gameVersion;
+  if (ident.status === 'INCONCLUSIVO' && $('jg-game-name')) { try { $('jg-game-name').focus(); } catch {} }
+}
+
+function identMsgKind(ident) {
+  return ident && ident.status === 'INCONCLUSIVO' ? 'info' : 'ok';
+}
+
 async function openBrowser() {
   const url = ($('jg-site-url') || {}).value || '';
   if (!url.trim()) { show($('jg-msg'), 'Informe a URL do site.', 'error'); return; }
@@ -203,17 +235,27 @@ async function openBrowser() {
     if (notice) { notice.classList.remove('hidden'); notice.textContent = 'A leitura ao vivo está indisponível para este endereço. Use a importação autorizada de dados.'; }
     return;
   }
-  state.lastReport = state.lastReport;
   if ($('jg-browser-host')) $('jg-browser-host').textContent = r.host;
   const finalUrl = r.finalUrl || url;
   if ($('jg-browser-external')) { $('jg-browser-external').href = finalUrl; }
+
+  // Identificação automática: preenche o jogo detectado e seleciona a sessão que o
+  // servidor já criou/reaproveitou — o usuário não precisa escolher o jogo de novo.
+  const ident = r.identification || null;
+  await applyIdentification(ident);
+  if (r.session && r.session.id) {
+    state.sessionId = r.session.id;
+    await loadSessions(r.session.id);
+  }
+
   if (externalAuthFlow) {
     hide($('jg-browser-frame'));
     const empty = $('jg-browser-empty'); if (empty) empty.classList.remove('hidden');
     const notice = $('jg-browser-notice');
     if (notice) {
       notice.classList.remove('hidden');
-      notice.innerHTML = `Login aberto em <strong class="text-slate-300">nova aba</strong> para preservar a sessão no iPhone/iPad. Se a aba não abrir, use "Nova aba".`;
+      notice.innerHTML = identificationNotice(ident)
+        + `<div>Login aberto em <strong class="text-slate-300">nova aba</strong> para preservar a sessão no iPhone/iPad. Se a aba não abrir, use "Nova aba".</div>`;
     }
     if (!popup) {
       // Bloqueador de pop-up impediu a aba: cai no link "Nova aba".
@@ -222,10 +264,12 @@ async function openBrowser() {
     }
     show(
       $('jg-msg'),
-      popup
-        ? 'Login enviado para uma aba real do navegador para evitar que a sessão caia dentro do painel.'
-        : 'Se a aba não abriu, toque em "Nova aba" para fazer login fora do painel.',
-      'ok'
+      ident
+        ? esc(ident.message)
+        : (popup
+          ? 'Login enviado para uma aba real do navegador para evitar que a sessão caia dentro do painel.'
+          : 'Se a aba não abriu, toque em "Nova aba" para fazer login fora do painel.'),
+      identMsgKind(ident)
     );
     return;
   }
@@ -235,9 +279,16 @@ async function openBrowser() {
   const notice = $('jg-browser-notice');
   if (notice) {
     notice.classList.remove('hidden');
-    notice.innerHTML = `Título identificado: <strong class="text-slate-300">${esc(r.title || 'não informado')}</strong> · HTTP ${esc(r.status || '?')} · ${esc(r.note || '')}`;
+    notice.innerHTML = identificationNotice(ident)
+      + `<div>Título lido: <strong class="text-slate-300">${esc(r.title || 'não informado')}</strong> · HTTP ${esc(r.status || '?')} · ${esc(r.note || '')}</div>`;
   }
-  show($('jg-msg'), 'Página aberta. Se a área acima aparecer vazia, o site recusou exibição em frame — use "Nova aba" (nenhuma proteção é contornada).', 'ok');
+  show(
+    $('jg-msg'),
+    ident
+      ? esc(ident.message)
+      : 'Página aberta. Se a área acima aparecer vazia, o site recusou exibição em frame — use "Nova aba" (nenhuma proteção é contornada).',
+    identMsgKind(ident)
+  );
 }
 
 /* ---------------- Análise ---------------- */
