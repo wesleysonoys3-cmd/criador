@@ -165,43 +165,37 @@ function shouldUseExternalAuthFlow(rawUrl) {
   return document.body.classList.contains('is-mobile') || isAppleMobile();
 }
 
-function openExternalBlankTab() {
+/* Abre a aba já navegando, de forma SÍNCRONA, dentro do gesto do usuário.
+   Importante: não usar 'noopener' na string de features — com noopener o
+   window.open retorna null, a aba fica em branco e não há handle para navegar. */
+function openExternalTab(url) {
+  const target = String(url || '').trim();
+  if (!target) return null;
   try {
-    const win = window.open('about:blank', '_blank', 'noopener,noreferrer');
-    if (win) {
-      try { win.opener = null; } catch {}
-      return win;
-    }
-  } catch {}
-  return null;
+    const win = window.open(target, '_blank');
+    if (!win) return null;
+    try { win.opener = null; } catch {}
+    return win;
+  } catch { return null; }
 }
 
-function navigateExternal(win, url) {
-  const target = String(url || '').trim();
-  if (!target) return false;
-  try {
-    if (win && !win.closed) {
-      win.location.replace(target);
-      return true;
-    }
-  } catch {}
-  const link = $('jg-browser-external');
-  if (link) {
-    link.href = target;
-    try { link.click(); return true; } catch {}
-  }
-  return false;
+/* Só é possível ler .location se a aba ainda estiver em about:blank (mesma origem).
+   Se lançar erro, a aba já navegou para o site e não deve ser fechada. */
+function isStillBlank(win) {
+  try { return !!win && !win.closed && win.location.href === 'about:blank'; } catch { return false; }
 }
 
 async function openBrowser() {
   const url = ($('jg-site-url') || {}).value || '';
   if (!url.trim()) { show($('jg-msg'), 'Informe a URL do site.', 'error'); return; }
   const externalAuthFlow = shouldUseExternalAuthFlow(url);
-  const popup = externalAuthFlow ? openExternalBlankTab() : null;
+  // Mobile Apple: a aba já abre navegando aqui, de forma síncrona, dentro do gesto
+  // do usuário. Navegar depois de um await perde o gesto e a aba fica em branco.
+  const popup = externalAuthFlow ? openExternalTab(url) : null;
   show($('jg-msg'), 'Abrindo e validando o endereço…', 'info');
   const r = await api('/browser/open', { method: 'POST', body: JSON.stringify({ url }) });
   if (!r.ok) {
-    try { if (popup && !popup.closed) popup.close(); } catch {}
+    if (isStillBlank(popup)) { try { popup.close(); } catch {} }
     hide($('jg-browser-frame'));
     const empty = $('jg-browser-empty'); if (empty) empty.classList.remove('hidden');
     show($('jg-msg'), esc(r.reason || 'Não foi possível abrir a página.'), 'error');
@@ -219,14 +213,18 @@ async function openBrowser() {
     const notice = $('jg-browser-notice');
     if (notice) {
       notice.classList.remove('hidden');
-      notice.innerHTML = `Login externo aberto em <strong class="text-slate-300">nova aba</strong> para preservar a sessão no iPhone/iPad. Alguns sites encerram o login quando ficam dentro do painel embutido.`;
+      notice.innerHTML = `Login aberto em <strong class="text-slate-300">nova aba</strong> para preservar a sessão no iPhone/iPad. Se a aba não abrir, use "Nova aba".`;
     }
-    const opened = navigateExternal(popup, finalUrl);
+    if (!popup) {
+      // Bloqueador de pop-up impediu a aba: cai no link "Nova aba".
+      const link = $('jg-browser-external');
+      if (link) { link.href = finalUrl; try { link.click(); } catch {} }
+    }
     show(
       $('jg-msg'),
-      opened
-        ? 'No iPhone/iPad, o login foi enviado para uma aba real do navegador para evitar que a sessão caia dentro do painel.'
-        : 'No iPhone/iPad, use "Nova aba" para fazer login fora do painel e preservar a sessão.',
+      popup
+        ? 'Login enviado para uma aba real do navegador para evitar que a sessão caia dentro do painel.'
+        : 'Se a aba não abriu, toque em "Nova aba" para fazer login fora do painel.',
       'ok'
     );
     return;
