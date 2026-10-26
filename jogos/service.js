@@ -27,9 +27,17 @@ export function init({ dataDir = null, allowFn = null, browserAgent = null } = {
   return { ok: true, dataDir: state.dataDir, sessions: state.sessions.size };
 }
 
+function isRealBrowser() {
+  if (!_browserAgent) return false;
+  if (typeof _browserAgent.hasRealBrowser === 'function') return _browserAgent.hasRealBrowser();
+  return _browserAgent.backend === 'MCP_INTEGRATED_BROWSER';
+}
+
 /** Status do módulo + capacidades reais (sem inventar recurso indisponível). */
 export function status() {
   const backend = _browserAgent ? _browserAgent.backend : null;
+  const engine = _browserAgent ? (_browserAgent.engineName || null) : null;
+  const real = isRealBrowser();
   return {
     ok: true,
     motorVersion: MOTOR_VERSION,
@@ -38,10 +46,16 @@ export function status() {
     browser: {
       available: !!_browserAgent,
       backend,
-      liveReadAvailable: backend === 'MCP_INTEGRATED_BROWSER',
-      note: backend === 'MCP_INTEGRATED_BROWSER'
-        ? 'Navegador real disponível (MCP integrated_browser). A leitura de resultados depende de os elementos da página estarem acessíveis e não bloqueados.'
-        : 'Sem navegador real neste ambiente: a abertura retorna apenas título/links/prévia de texto (fetch). A leitura contínua de resultados de rodadas NÃO é possível — use a importação autorizada de dados.',
+      engine: engine || (backend === 'MCP_INTEGRATED_BROWSER' ? 'mcp_integrated_browser' : null),
+      liveReadAvailable: real,
+      // Automação de giros exigiria ferramenta de clique, que este agente NÃO possui.
+      canControlTurns: false,
+      canControlTurnsReason: 'O agente integrado só navega e lê a página: não há ferramenta de clique, então ele não aciona giros.',
+      note: real
+        ? (engine
+          ? `Navegador real local disponível (${engine}). A página é renderizada, mas a leitura de resultados ainda depende de os elementos estarem acessíveis.`
+          : 'Navegador real disponível (MCP integrated_browser). A leitura de resultados depende de os elementos da página estarem acessíveis e não bloqueados.')
+        : 'Sem navegador real: a abertura usa fetch+parse do HTML estático. Páginas que dependem de JavaScript não são renderizadas e a leitura contínua de rodadas NÃO é possível — registre rodadas manualmente ou importe dados autorizados.',
     },
     minSampleInference: MIN_SAMPLE_INFERENCE,
     disclaimer: 'Módulo de ANÁLISE. Não prevê resultados aleatórios e não executa apostas com dinheiro real.',
@@ -186,11 +200,20 @@ export function identifyGame(input = {}) {
 
   let gameName = null;
   let confidence = 'baixa';
+  let origin = null;
+  const hint = String(input.hint || '').trim();
   const candidate = segments.find(seg => !isGeneric(seg) && normalizeLabel(seg).length >= 2);
   if (candidate) {
     gameName = candidate.slice(0, 120);
     confidence = (segments.length > 1 || provider) ? 'alta' : 'media';
+    origin = 'pagina';
     evidence.push(`Título da página: "${title.slice(0, 180)}"`);
+  } else if (hint && !isGeneric(hint)) {
+    // Nome digitado é usado apenas como PISTA — não é tratado como verificado na página.
+    gameName = hint.slice(0, 120);
+    confidence = 'baixa';
+    origin = 'usuario';
+    evidence.push('Sem nome de jogo legível na página: usado o nome informado pelo usuário como pista (não verificado no conteúdo).');
   } else if (title) {
     evidence.push(`Título sem nome de jogo distinto do cassino: "${title.slice(0, 180)}"`);
   } else {
@@ -200,10 +223,11 @@ export function identifyGame(input = {}) {
   const resultsAccessible = preview.trim().length > 0 && RESULT_MARKERS.test(preview);
   const status = gameName ? 'IDENTIFICADO' : 'INCONCLUSIVO';
 
+  const prefix = origin === 'usuario' ? '(pista informada por você) ' : '';
   let message;
   if (status === 'INCONCLUSIVO') message = 'Identificação inconclusiva: confirme o nome do jogo para iniciar a análise.';
-  else if (!resultsAccessible) message = 'Jogo identificado, mas os resultados não estão acessíveis.';
-  else message = 'Jogo identificado. Coleta dos resultados acessíveis iniciada.';
+  else if (!resultsAccessible) message = `${prefix}Jogo identificado, mas os resultados não estão acessíveis.`;
+  else message = `${prefix}Jogo identificado. Coleta dos resultados acessíveis iniciada.`;
 
   return {
     ok: true,
@@ -213,6 +237,7 @@ export function identifyGame(input = {}) {
     gameVersion,
     provider,
     confidence,
+    origin,
     status,
     resultsAccessible,
     evidence: evidence.slice(0, 12),
@@ -361,6 +386,7 @@ export function endSession(id) {
   const s = state.get(id);
   if (!s) return { ok: false, reason: 'Sessão não encontrada.' };
   s.status = 'encerrada'; s.endedAt = nowIso(); s.updatedAt = nowIso();
+  if (s.autoMode) s.autoMode.enabled = false; // encerrar também para qualquer automação
   state.save(s).catch(() => {});
   return { ok: true, session: sessionSummary(s) };
 }
@@ -374,6 +400,8 @@ export function setSessionState(id, status) {
   const next = String(status || '');
   if (!allowedStatus.includes(next)) return { ok: false, reason: `Estado inválido: use ${allowedStatus.join(' ou ')}.` };
   s.status = next; s.updatedAt = nowIso();
+  // Pausar interrompe IMEDIATAMENTE qualquer automação permitida.
+  if (next === 'pausada' && s.autoMode) s.autoMode.enabled = false;
   state.save(s).catch(() => {});
   return { ok: true, session: sessionSummary(s) };
 }
@@ -575,7 +603,18 @@ function checkRiskLimit(s, risk) {
 }
 
 /* ---------------- Navegador integrado ---------------- */
-export async function openBrowser(url) {
+/** Sessão ativa mais recente do host (para detectar troca de jogo). */
+function lastActiveSessionForHost(host) {
+  let best = null;
+  for (const s of state.sessions.values()) {
+    if (s.status === 'encerrada') continue;
+    if (s.siteHost !== host) continue;
+    if (!best || String(s.updatedAt || '') > String(best.updatedAt || '')) best = s;
+  }
+  return best;
+}
+
+export async function openBrowser(url, opts = {}) {
   const v = validateUrl(url);
   if (!v.ok) return { ok: false, reason: v.reason };
   if (!_browserAgent) return { ok: false, reason: 'Navegador integrado indisponível neste ambiente.' };
@@ -589,25 +628,38 @@ export async function openBrowser(url) {
     title: r.title || '',
     textPreview: info.ok ? info.textPreview : '',
     links: info.ok ? info.links : [],
+    hint: opts.hint || '',
   });
+  const previous = lastActiveSessionForHost(v.host);
   const identified = ensureIdentifiedSession(v.host, v.url, identification);
+  const real = isRealBrowser();
+  const frameBlocked = !!(info.ok && info.frameBlocked);
+
+  let note;
+  if (!real) note = 'Aberto em modo fetch (sem navegador real): a página não é renderizada, então só título/links/prévia do HTML estático são lidos. Leitura contínua de rodadas indisponível — registre rodadas ou importe dados autorizados.';
+  else if (frameBlocked) note = 'Página lida pelo servidor, mas o site impede exibição em iframe: use "Nova aba" (nenhuma proteção é contornada).';
+  else note = 'Página aberta. A leitura de resultados depende de os elementos estarem acessíveis na página.';
+
   return {
     ok: true,
     host: v.host,
     contextId: r.contextId,
     backend: r.backend,
+    realBrowser: real,
     status: r.status,
     title: r.title,
     finalUrl: r.finalUrl,
-    liveReadAvailable: r.backend === 'MCP_INTEGRATED_BROWSER',
+    liveReadAvailable: real,
+    frameBlocked,
+    frameReason: (info.ok && info.frameReason) || null,
     preview: info.ok ? String(info.textPreview || '').slice(0, 4000) : '',
     linksCount: info.ok ? info.linksCount : 0,
     identification,
     session: identified.session,
     sessionCreated: identified.created,
-    note: r.backend === 'MCP_INTEGRATED_BROWSER'
-      ? 'Página aberta. A leitura de resultados depende da estrutura do site e de as informações estarem acessíveis.'
-      : 'Aberto em modo fetch (sem navegador real): título/links/prévia apenas. Leitura contínua de rodadas indisponível — use importação autorizada.',
+    gameChanged: !!(previous && identification.gameName && String(previous.gameName) !== String(identification.gameName)),
+    previousGameName: previous ? previous.gameName : null,
+    note,
   };
 }
 
@@ -634,21 +686,28 @@ export function autoStep(id, input = {}) {
   const s = state.get(id);
   if (!s) return { ok: false, reason: 'Sessão não encontrada.' };
   if (!s.autoMode?.enabled) return { ok: false, reason: 'Modo automático desligado.' };
+  if (s.status !== 'observando') return { ok: false, reason: 'Sessão pausada ou encerrada: a automação está interrompida.' };
   const guard = guardAutoMode({ environment: 'demo', realMoney: false });
   if (!guard.allowed) return { ok: false, reason: guard.reason };
 
-  const report = analyze(id, input).report;
-  if (!report) return { ok: false, reason: 'Análise indisponível.' };
+  const analysis = analyze(id, input);
+  if (!analysis.ok || !analysis.report) return { ok: false, reason: analysis.reason || 'Análise indisponível.' };
+  const report = analysis.report;
   const decision = report.decision;
   const canTest = ['ANOMALIA A INVESTIGAR', 'NÃO HÁ VANTAGEM DEMONSTRADA'].includes(decision.decision) && !decision.stop;
+  const canControlTurns = status().browser.canControlTurns;
 
   const entry = {
     at: nowIso(),
     environment: 'demo',
     decision: decision.decision,
     reason: decision.reason,
-    action: canTest ? 'executar_giro_de_teste_em_demo' : 'pausar_sem_acao',
+    action: !canTest
+      ? 'pausar_sem_acao'
+      : (canControlTurns ? 'executar_giro_de_teste_em_demo' : 'registrar_analise_sem_controle_do_giro'),
     pausedBecause: canTest ? null : decision.reason,
+    controlAvailable: canControlTurns,
+    controlNote: canControlTurns ? null : status().browser.canControlTurnsReason,
     dataVersion: report.dataVersion,
   };
 

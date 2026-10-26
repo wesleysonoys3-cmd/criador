@@ -14,6 +14,31 @@
 //   - Bloqueia IP privado (10/8, 172.16/12, 192.168/16, 127/8, 169.254/16, 100.64/10, *.local, *.corp).
 //   - sanitizeForInternet em todos os campos devolvidos ao LLM (REDACT keys).
 
+/* Leitura de cabeçalho tolerante a Headers (fetch) e objeto simples (playwright). */
+function headerGet(headers, name) {
+  if (!headers) return '';
+  if (typeof headers.get === 'function') return String(headers.get(name) || '');
+  const key = Object.keys(headers).find(k => k.toLowerCase() === name.toLowerCase());
+  return key ? String(headers[key] || '') : '';
+}
+
+/**
+ * Motivo TÉCNICO real pelo qual a página não pode ser exibida em iframe.
+ * Retorna null quando não há impedimento detectável nos cabeçalhos.
+ */
+function frameBlockReason(headers) {
+  const xfo = headerGet(headers, 'x-frame-options').toLowerCase();
+  if (xfo.includes('deny')) return 'O site envia X-Frame-Options: DENY — proíbe exibição dentro de iframe.';
+  if (xfo.includes('sameorigin')) return 'O site envia X-Frame-Options: SAMEORIGIN — só permite exibição na própria origem.';
+  const csp = headerGet(headers, 'content-security-policy').toLowerCase();
+  const m = csp.match(/frame-ancestors\s+([^;]+)/);
+  if (m) {
+    const v = m[1].trim();
+    if (v && !v.includes('*')) return `O site envia CSP frame-ancestors: ${v} — restringe quem pode exibir a página em iframe.`;
+  }
+  return null;
+}
+
 export class BrowserAgent {
   constructor({ allowFn = null, sanitizeFn = null, netEnabled = true, webFetchToolEnabled = true, fetchFn = null } = {}) {
     this.contexts = new Map();
@@ -25,7 +50,32 @@ export class BrowserAgent {
     this.fetchFn = fetchFn || (typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : null);
     this.mcpRun = typeof (globalThis.__MCP_BRIDGE__ && globalThis.__MCP_BRIDGE__.run) === 'function' ? globalThis.__MCP_BRIDGE__.run : null;
     this.backend = this.mcpRun ? 'MCP_INTEGRATED_BROWSER' : 'FETCH_PARSE';
+    // Motor real OPCIONAL (playwright/puppeteer). Nada é instalado por este módulo:
+    // se a dependência existir, é usada; se não, seguimos no fallback fetch+parse.
+    this.engine = null;
+    this.engineName = null;
+    this._browser = null;
+    this._engineProbed = false;
   }
+
+  /** Detecta, sem instalar nada, se há um motor de navegador real disponível. */
+  async probeEngine() {
+    if (this.mcpRun) return null; // MCP integrated_browser tem precedência (runtime do IDE)
+    if (this.engineName) return this.engineName;
+    if (this._engineProbed) return null; // já sondado e não encontrado: não repete
+    this._engineProbed = true;
+    try { this.engine = await import('playwright'); this.engineName = 'playwright'; }
+    catch {
+      try { this.engine = await import('puppeteer'); this.engineName = 'puppeteer'; }
+      catch { this.engine = null; this.engineName = null; }
+    }
+    if (this.engineName) this.backend = 'REAL_BROWSER';
+    else this.backend = 'FETCH_PARSE';
+    return this.engineName;
+  }
+
+  /** true quando existe navegador de verdade (MCP do IDE ou motor local opcional). */
+  hasRealBrowser() { return this.backend === 'MCP_INTEGRATED_BROWSER' || !!this.engineName; }
 
   // ===================== HELPERS PARSER HTML LEVE (fallback sem browser real) =====================
   _stripTags(html) {
@@ -56,13 +106,17 @@ export class BrowserAgent {
   async open(rawUrl, opts = {}) {
     const v = this._validateUrl(rawUrl); if (!v.ok) return { ok: false, error: v.reason, code: v.code };
     const timeoutMs = Math.max(5000, Math.min(120000, parseInt(opts.timeoutMs || '60000', 10)));
+    // Detecta motor real local na primeira abertura (se ainda não foi sondado).
+    if (!this.mcpRun && !this.engineName) { try { await this.probeEngine(); } catch { /* segue para fetch */ } }
     const ctx = { id: 'br_' + Date.now().toString(36) + '_' + (this.counter++), url: v.url, host: v.host, backend: this.backend, openAtMs: Date.now(), lastInfo: null };
     let fetched;
     try {
-      if (this.backend === 'FETCH_PARSE') {
-        fetched = await this._openFetch(ctx, { timeoutMs });
-      } else {
+      if (this.mcpRun) {
         fetched = await this._openMcp(ctx, { timeoutMs });
+      } else if (this.engineName) {
+        fetched = await this._openReal(ctx, { timeoutMs });
+      } else {
+        fetched = await this._openFetch(ctx, { timeoutMs });
       }
       if (fetched && fetched.ok === false) return fetched;
       this.contexts.set(ctx.id, ctx);
@@ -77,12 +131,57 @@ export class BrowserAgent {
     const signal = typeof AbortSignal !== 'undefined' ? AbortSignal.timeout(timeoutMs) : undefined;
     const res = await this.fetchFn(ctx.url, { redirect: 'follow', signal, headers: { 'User-Agent': 'Mozilla/5.0 TiAgente-BrowserAgent/v1 (fetch fallback; research only)' } });
     const contentType = res.headers.get('content-type') || '';
+    const frameReason = frameBlockReason(res.headers);
     if (!/text|html|json|xml|markdown/i.test(contentType)) return { ok: false, error: `Tipo de conteúdo bloqueado: ${contentType.slice(0, 100)} (só text/html).`, code: 'CONTENT_BLOCKED' };
     const html = await res.text();
     const parsed = this._parseHtmlLight(html);
     const preview = this.sanitizeFn(this._stripTags(html)).slice(0, 10000);
-    ctx.lastInfo = { backend: 'FETCH_PARSE', status: res.status, url: res.url || ctx.url, title: this.sanitizeFn(parsed.title), description: this.sanitizeFn(parsed.description), links: parsed.hrefs.slice(0, 100).map(h => this.sanitizeFn(h)), textPreview: preview, contentType };
+    ctx.lastInfo = { backend: 'FETCH_PARSE', status: res.status, url: res.url || ctx.url, title: this.sanitizeFn(parsed.title), description: this.sanitizeFn(parsed.description), links: parsed.hrefs.slice(0, 100).map(h => this.sanitizeFn(h)), textPreview: preview, contentType, frameBlocked: !!frameReason, frameReason };
     return { ok: true };
+  }
+
+  /** Motor real local (opcional) — só usado se playwright/puppeteer existirem. */
+  async _ensureBrowser() {
+    if (this._browser) return this._browser;
+    if (this.engineName === 'playwright') {
+      this._browser = await this.engine.chromium.launch({ headless: true });
+    } else if (this.engineName === 'puppeteer') {
+      this._browser = await this.engine.launch({ headless: true });
+    } else {
+      throw new Error('Nenhum motor de navegador real disponível.');
+    }
+    return this._browser;
+  }
+
+  async _openReal(ctx, { timeoutMs }) {
+    let page = null;
+    try {
+      const browser = await this._ensureBrowser();
+      page = await browser.newPage();
+      let resp = null;
+      try { resp = await page.goto(ctx.url, { waitUntil: 'domcontentloaded', timeout: timeoutMs }); } catch { /* segue com o que carregou */ }
+      const status = resp ? resp.status() : 0;
+      const headers = resp ? resp.headers() : null;
+      if (status === 403 && /cloudflare/i.test(headerGet(headers, 'server'))) {
+        return { ok: false, error: 'O site respondeu 403 (Cloudflare): bloqueio anti-automação do próprio site. Nenhuma proteção é contornada.', code: 'BLOCKED_403' };
+      }
+      const title = await page.title().catch(() => '');
+      const html = await page.content().catch(() => '');
+      const parsed = this._parseHtmlLight(html);
+      const frameReason = frameBlockReason(headers);
+      ctx.lastInfo = {
+        backend: 'REAL_BROWSER', status: status || 200, url: page.url() || ctx.url,
+        title: this.sanitizeFn(title), description: this.sanitizeFn(parsed.description),
+        links: parsed.hrefs.slice(0, 100).map(h => this.sanitizeFn(h)),
+        textPreview: this.sanitizeFn(this._stripTags(html)).slice(0, 10000),
+        contentType: 'text/html', frameBlocked: !!frameReason, frameReason,
+      };
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: `Navegador real falhou: ${err.message || String(err)}`, code: 'REAL_BROWSER_FAILED' };
+    } finally {
+      if (page) await page.close().catch(() => {});
+    }
   }
 
   async _openMcp(ctx, { timeoutMs }) {
@@ -112,10 +211,14 @@ export class BrowserAgent {
     if (!ctx) return { ok: false, error: 'contexto browser não existe (já fechado ou nunca aberto).', code: 'CONTEXT_NOT_FOUND' };
     const info = ctx.lastInfo;
     if (!info) return { ok: false, error: 'contexto existe mas nenhuma página foi carregada ainda.', code: 'NO_PAGE_INFO' };
-    return { ok: true, contextId: ctx.id, backend: ctx.backend, openAtMs: ctx.openAtMs, status: info.status || 200, finalUrl: info.url, title: info.title, description: info.description, textPreview: info.textPreview, links: Array.isArray(info.links) ? info.links.slice(0, 100) : [], linksCount: Array.isArray(info.links) ? info.links.length : 0, contentType: info.contentType || '' };
+    return { ok: true, contextId: ctx.id, backend: ctx.backend, openAtMs: ctx.openAtMs, status: info.status || 200, finalUrl: info.url, title: info.title, description: info.description, textPreview: info.textPreview, links: Array.isArray(info.links) ? info.links.slice(0, 100) : [], linksCount: Array.isArray(info.links) ? info.links.length : 0, contentType: info.contentType || '', frameBlocked: !!info.frameBlocked, frameReason: info.frameReason || null };
   }
 
-  close(contextId) { if (contextId) this.contexts.delete(String(contextId)); else this.contexts.clear(); }
+  close(contextId) {
+    if (contextId) this.contexts.delete(String(contextId));
+    else this.contexts.clear();
+    if (this._browser) { this._browser.close().catch(() => {}); this._browser = null; }
+  }
 }
 
 // Singleton opcional para tool registry usar (lazy init via server.js)

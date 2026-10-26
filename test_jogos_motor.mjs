@@ -520,11 +520,82 @@ await (async () => {
   }
 })();
 
+/* ---------- 8) CORREÇÃO FUNCIONAL: pista, registro por rodada e parada imediata ---------- */
+await (async () => {
+  const dir = path.join(os.tmpdir(), 'jogos_flow_' + Date.now().toString(36));
+  try {
+    JogosSvc.init({ dataDir: dir, allowFn: () => ({ ok: true }), browserAgent: null });
+
+    ok('8.1 identifyGame usa o nome digitado apenas como PISTA (origem "usuario")', () => {
+      const ident = JogosSvc.identifyGame({ host: 'cassino.exemplo.com', title: 'Cassino Exemplo — Entrar', textPreview: '', hint: 'Fortune Tiger' });
+      assert.equal(ident.gameName, 'Fortune Tiger');
+      assert.equal(ident.origin, 'usuario');
+      assert.equal(ident.confidence, 'baixa');
+      assert.match(ident.message, /pista informada por você/i);
+      assert.equal(ident.resultsAccessible, false);
+    });
+
+    ok('8.2 identifyGame ignora pista genérica e não inventa nome', () => {
+      const ident = JogosSvc.identifyGame({ host: 'cassino.exemplo.com', title: 'Cassino Exemplo', textPreview: '', hint: 'login' });
+      assert.equal(ident.gameName, null);
+      assert.equal(ident.status, 'INCONCLUSIVO');
+    });
+
+    ok('8.3 identifyGame prefere o nome legível da página e detecta resultados acessíveis', () => {
+      const ident = JogosSvc.identifyGame({ host: 'cassino.exemplo.com', title: 'Fortune Tiger — Cassino Exemplo', textPreview: 'Histórico de rodadas com multiplicador da última rodada', hint: 'x' });
+      assert.equal(ident.origin, 'pagina');
+      assert.equal(ident.gameName, 'Fortune Tiger');
+      assert.equal(ident.resultsAccessible, true);
+      assert.equal(ident.status, 'IDENTIFICADO');
+      assert.equal(JogosSvc.status().browser.canControlTurns, false);
+      assert.match(JogosSvc.status().browser.canControlTurnsReason, /não aciona giros/i);
+    });
+
+    const id = JogosSvc.createSession({ siteUrl: 'https://cassino.exemplo.com/tiger', gameName: 'Fortune Tiger' }).session.id;
+
+    ok('8.4 rodada por tipo: estimado/simulado ficam FORA das métricas observadas', () => {
+      JogosSvc.appendRecords(id, [{ roundId: 1, outcome: 'x2', multiplier: 2, bet: 1, kind: 'observed' }]);
+      JogosSvc.appendRecords(id, [{ roundId: 2, outcome: 'x5', multiplier: 5, bet: 1, kind: 'estimated' }]);
+      JogosSvc.appendRecords(id, [{ roundId: 3, outcome: 'x10', multiplier: 10, bet: 1, kind: 'simulation' }]);
+      const rep = JogosSvc.analyze(id, {}).report;
+      assert.equal(rep.observed.nObserved, 1);
+      assert.equal(rep.observed.nEstimated, 1);
+      assert.equal(rep.observed.nSimulation, 1);
+      near(rep.observed.totalBet, 1);
+      assert.equal(rep.dataVersion, `${MOTOR_VERSION}·3registros`);
+    });
+
+    ok('8.5 Pausar interrompe IMEDIATAMENTE a automação de demonstração', () => {
+      assert.equal(JogosSvc.setAutoMode(id, { enabled: true, environment: 'demo', realMoney: false }).ok, true);
+      assert.equal(JogosSvc.getSession(id).autoMode.enabled, true);
+      assert.equal(JogosSvc.setSessionState(id, 'pausada').ok, true);
+      assert.equal(JogosSvc.getSession(id).autoMode.enabled, false);
+      const step = JogosSvc.autoStep(id, {});
+      assert.equal(step.ok, false);
+      assert.match(step.reason, /desligado/i);
+    });
+
+    ok('8.6 Encerrar desliga a automação e preserva o histórico', () => {
+      JogosSvc.setSessionState(id, 'observando');
+      JogosSvc.setAutoMode(id, { enabled: true, environment: 'demo', realMoney: false });
+      assert.equal(JogosSvc.endSession(id).ok, true);
+      const s = JogosSvc.getSession(id);
+      assert.equal(s.autoMode.enabled, false);
+      assert.equal(s.session.status, 'encerrada');
+      assert.equal(s.records.length, 3);
+    });
+  } catch (e) {
+    results.push({ name: '8.x fluxo', pass: false, err: String(e?.message || e) });
+  } finally {
+    try { await fsp.rm(dir, { recursive: true, force: true }); } catch {}
+  }
+})();
+
 /* ---------- 7) AUSÊNCIA DE ALTERAÇÕES EM FUNCIONALIDADES NÃO RELACIONADAS ---------- */
 ok('7.1 git status restrito ao escopo do módulo Jogos', () => {
   const out = execSync('git status --porcelain', { cwd: process.cwd() }).toString().trim();
   const lines = out ? out.split('\n').map(l => l.trim()) : [];
-  const allowedPrefixes = ['jogos/', 'public/jogos.js', 'public/index.html', 'public/styles.css', 'public/app.js', 'server.js', 'test_jogos_motor.mjs'];
+  const allowedPrefixes = ['jogos/', 'public/jogos.js', 'public/index.html', 'public/styles.css', 'public/app.js', 'server.js', 'browser_agent.mjs', 'test_jogos_motor.mjs'];
   // artefatos de DADOS gerados em runtime (scheduler do BTC) não são alterações de código
   const dataDirs = ['btc_market/data/', 'jogos/data/'];
   const unexpected = lines.filter(l => {

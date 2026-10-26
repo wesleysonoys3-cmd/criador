@@ -158,7 +158,7 @@ function pickWeighted(probs, rng) {
 /* =========================================================
  * 2) INTEGRIDADE DOS DADOS
  * =======================================================*/
-const KINDS = ['observed', 'official', 'simulation'];
+const KINDS = ['observed', 'official', 'simulation', 'estimated'];
 
 /** Normaliza e classifica um registro. Nunca inventa campos ausentes. */
 export function normalizeRecord(raw = {}, defaults = {}) {
@@ -229,7 +229,7 @@ export function checkSessionScope(records, scope = {}) {
   if (scope.siteHost && records.some(r => r.host && String(r.host).toLowerCase() !== String(scope.siteHost).toLowerCase())) {
     violations.push('registros de hosts diferentes na mesma sessão');
   }
-  if (kinds.has('observed') && (kinds.has('official') || kinds.has('simulation'))) {
+  if (kinds.has('observed') && (kinds.has('official') || kinds.has('simulation') || kinds.has('estimated'))) {
     // Permitido coexistir, mas NUNCA somados: sinaliza para a UI separar as séries.
     violations.push('sessão contém dados reais e simulados/oficiais — as séries são mantidas SEPARADAS nos cálculos');
   }
@@ -244,8 +244,10 @@ export function checkSessionScope(records, scope = {}) {
 function withMoney(records) { return records.filter(r => r.bet !== null && r.payout !== null); }
 
 export function computeObserved(records = []) {
-  const base = records.filter(r => r.kind !== 'simulation');
+  // 'simulation' e 'estimated' NÃO entram nas métricas observadas: não são medições.
+  const base = records.filter(r => r.kind !== 'simulation' && r.kind !== 'estimated');
   const sim = records.filter(r => r.kind === 'simulation');
+  const est = records.filter(r => r.kind === 'estimated');
   const m = withMoney(base);
   const totalBet = m.reduce((s, r) => s + r.bet, 0);
   const totalPayout = m.reduce((s, r) => s + r.payout, 0);
@@ -297,6 +299,7 @@ export function computeObserved(records = []) {
     nRecords: records.length,
     nObserved: base.length,
     nSimulation: sim.length,
+    nEstimated: est.length,
     nWithMoney: m.length,
     totalBet, totalPayout,
     netResult: totalBet > 0 ? totalPayout - totalBet : null,

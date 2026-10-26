@@ -1046,7 +1046,11 @@ const __BROWSER_AGENT = createBrowserAgent({
   webFetchToolEnabled: NET_OUT_TOOL_WEB_FETCH,
   fetchFn: (u, o) => fetch(u, Object.assign({ headers: { 'User-Agent': 'Mozilla/5.0 TiAgente-BrowserAgent/v1 (fetch fallback)' }, signal: (o && o.signal) ? o.signal : (typeof AbortSignal !== 'undefined' ? AbortSignal.timeout(60000) : undefined) }, o || {})),
 });
-console.log(`🌐 BrowserAgent v1: backend=${__BROWSER_AGENT.backend}${__BROWSER_AGENT.backend==='FETCH_PARSE'?' (fallback fetch+html — sem browser real; puppeteer/playwright não instalados)':' (MCP integrated_browser — navegador real)'}`);
+console.log(`🌐 BrowserAgent v1: backend=${__BROWSER_AGENT.backend}${__BROWSER_AGENT.backend==='FETCH_PARSE'?' (fallback fetch+html — sem browser real; playwright/puppeteer ausentes)':' (MCP integrated_browser — navegador real)'}`);
+// Motor real local OPCIONAL: não instala nada; liga sozinho se a dependência já existir.
+__BROWSER_AGENT.probeEngine()
+  .then(engine => { if (engine) console.log(`🌐 BrowserAgent: motor real local detectado — backend=${__BROWSER_AGENT.backend} (${engine})`); })
+  .catch(() => {});
 // Jogos · Central de inteligência matemática (módulo isolado · SOMENTE ANÁLISE)
 try {
   JogosSvc.init({
@@ -1054,7 +1058,7 @@ try {
     allowFn: isAllowedOutboundDomain,
     browserAgent: __BROWSER_AGENT,
   });
-  console.log(`🎲 Jogos: módulo iniciado · backend=${JogosSvc.status().browser.backend} · dataDir=${JOGOS_DATA_DIR}`);
+  console.log(`🎲 Jogos: módulo iniciado · dataDir=${JOGOS_DATA_DIR}`);
 } catch (e) {
   console.warn('[JOGOS] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
 }
@@ -7511,7 +7515,7 @@ app.post('/api/jogos/session/:id/end', _JG_JSON, _jg(async (req) => JogosSvc.end
 app.post('/api/jogos/session/:id/auto', _JG_JSON, _jg(async (req) => JogosSvc.setAutoMode(req.params.id, req.body || {})));
 app.post('/api/jogos/session/:id/auto/step', _JG_JSON, _jg(async (req) => JogosSvc.autoStep(req.params.id, req.body || {})));
 app.delete('/api/jogos/session/:id', _JG_JSON, _jg(async (req) => JogosSvc.deleteSession(req.params.id)));
-app.post('/api/jogos/browser/open', _JG_JSON, _jg(async (req) => JogosSvc.openBrowser(req.body?.url)));
+app.post('/api/jogos/browser/open', _JG_JSON, _jg(async (req) => JogosSvc.openBrowser(req.body?.url, { hint: req.body?.hint })));
 app.post('/api/jogos/montecarlo', _JG_JSON, _jg(async (req) => {
   const sim = monteCarlo(req.body || {});
   return sim.ok ? { ok: true, simulation: sim } : sim;

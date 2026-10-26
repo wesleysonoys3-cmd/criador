@@ -60,11 +60,14 @@ async function loadStatus() {
   if (!r.ok) { if (label) label.textContent = 'indisponível'; return; }
   const b = r.browser || {};
   if (dot) dot.textContent = b.liveReadAvailable ? '🟢' : '🟡';
-  if (label) label.textContent = b.liveReadAvailable ? 'navegador real' : 'sem navegador real';
+  if (label) label.textContent = b.liveReadAvailable ? (b.engine ? `navegador real (${b.engine})` : 'navegador real') : 'sem navegador real';
   const notice = $('jg-browser-notice');
-  if (notice && !b.liveReadAvailable) {
-    notice.classList.remove('hidden');
-    notice.innerHTML = esc(b.note || '');
+  if (notice) {
+    const parts = [];
+    if (b.note) parts.push(esc(b.note));
+    if (b.canControlTurns === false && b.canControlTurnsReason) parts.push(esc(b.canControlTurnsReason));
+    if (parts.length) { notice.classList.remove('hidden'); notice.innerHTML = parts.join('<br>'); }
+    else notice.classList.add('hidden');
   }
 }
 
@@ -95,8 +98,6 @@ async function selectSession(id) {
   if ($('jg-session-select')) $('jg-session-select').value = id;
   if ($('jg-site-url')) $('jg-site-url').value = s.siteUrl || '';
   if ($('jg-game-name')) $('jg-game-name').value = s.gameName || '';
-  if ($('jg-game-version')) $('jg-game-version').value = s.gameVersion || '';
-  if ($('jg-mode-select')) $('jg-mode-select').value = s.mode || '';
   if ($('jg-browser-host')) $('jg-browser-host').textContent = s.siteHost || '—';
   if (r.reference && $('jg-ref-content')) $('jg-ref-content').value = JSON.stringify({ probabilities: r.reference.probabilities, payouts: r.reference.payouts, source: r.reference.source }, null, 0);
   applyRiskToForm(r.risk);
@@ -109,11 +110,22 @@ async function selectSession(id) {
 }
 
 function updateSessionButtons(s) {
-  const started = s && s.status === 'observando';
-  const ended = s && s.status === 'encerrada';
-  if ($('jg-start-btn')) $('jg-start-btn').disabled = !s || started || ended;
-  if ($('jg-pause-btn')) $('jg-pause-btn').disabled = !s || !started || ended;
-  if ($('jg-end-btn')) $('jg-end-btn').disabled = !s || ended;
+  const has = !!s;
+  const observing = has && s.status === 'observando';
+  const ended = has && s.status === 'encerrada';
+  if ($('jg-pause-btn')) {
+    $('jg-pause-btn').disabled = !has || ended;
+    $('jg-pause-btn').textContent = observing ? 'Pausar' : 'Retomar';
+  }
+  if ($('jg-end-btn')) $('jg-end-btn').disabled = !has || ended;
+  if ($('jg-open-btn')) $('jg-open-btn').disabled = ended;
+  syncAutoUI();
+}
+
+/* Reflete o modo automático real (ligado/desligado) nos controles. */
+function syncAutoUI() {
+  if ($('jg-auto-toggle')) $('jg-auto-toggle').textContent = state.autoOn ? 'Desligar modo automático' : 'Ligar modo automático';
+  if ($('jg-auto-step')) $('jg-auto-step').disabled = !state.autoOn;
 }
 
 function renderSessionsReport() {
@@ -138,7 +150,8 @@ function renderHistory(records) {
     const when = r.ts ? new Date(r.ts).toLocaleString('pt-BR') : 'sem data';
     const mult = r.multiplier === null ? '?' : `×${n2(r.multiplier, 2)}`;
     const money = (r.bet === null ? '' : ` · aposta ${n2(r.bet)}`) + (r.payout === null ? '' : ` → retorno ${n2(r.payout)}`);
-    const kindTag = r.kind === 'simulation' ? ' [SIMULAÇÃO]' : (r.kind === 'official' ? ' [oficial]' : '');
+    const kindTag = r.kind === 'simulation' ? ' [SIMULAÇÃO]'
+      : (r.kind === 'estimated' ? ' [estimado]' : (r.kind === 'official' ? ' [oficial]' : ''));
     return `<div class="mb-1 pb-1 border-b border-white/5 last:border-0">
       <span class="text-slate-300">${esc(r.outcome === null ? '(sem resultado)' : r.outcome)}</span>
       <span class="text-violet-300"> ${esc(mult)}</span>${esc(kindTag)}
@@ -209,7 +222,6 @@ function identificationNotice(ident) {
 async function applyIdentification(ident) {
   if (!ident) return;
   if ($('jg-game-name') && ident.gameName) $('jg-game-name').value = ident.gameName;
-  if ($('jg-game-version') && ident.gameVersion) $('jg-game-version').value = ident.gameVersion;
   if (ident.status === 'INCONCLUSIVO' && $('jg-game-name')) { try { $('jg-game-name').focus(); } catch {} }
 }
 
@@ -219,20 +231,26 @@ function identMsgKind(ident) {
 
 async function openBrowser() {
   const url = ($('jg-site-url') || {}).value || '';
+  const hint = ($('jg-game-name') || {}).value || '';
   if (!url.trim()) { show($('jg-msg'), 'Informe a URL do site.', 'error'); return; }
   const externalAuthFlow = shouldUseExternalAuthFlow(url);
   // Mobile Apple: a aba já abre navegando aqui, de forma síncrona, dentro do gesto
   // do usuário. Navegar depois de um await perde o gesto e a aba fica em branco.
   const popup = externalAuthFlow ? openExternalTab(url) : null;
   show($('jg-msg'), 'Abrindo e validando o endereço…', 'info');
-  const r = await api('/browser/open', { method: 'POST', body: JSON.stringify({ url }) });
+  const r = await api('/browser/open', { method: 'POST', body: JSON.stringify({ url, hint }) });
   if (!r.ok) {
     if (isStillBlank(popup)) { try { popup.close(); } catch {} }
     hide($('jg-browser-frame'));
     const empty = $('jg-browser-empty'); if (empty) empty.classList.remove('hidden');
     show($('jg-msg'), esc(r.reason || 'Não foi possível abrir a página.'), 'error');
     const notice = $('jg-browser-notice');
-    if (notice) { notice.classList.remove('hidden'); notice.textContent = 'A leitura ao vivo está indisponível para este endereço. Use a importação autorizada de dados.'; }
+    if (notice) {
+      notice.classList.remove('hidden');
+      notice.textContent = r.code === 'BLOCKED_403'
+        ? 'O site recusou a leitura do servidor (HTTP 403 — proteção anti-bot). Nenhuma proteção é contornada: registre rodadas manualmente ou importe dados autorizados.'
+        : 'A leitura ao vivo está indisponível para este endereço. Use a importação autorizada de dados.';
+    }
     return;
   }
   if ($('jg-browser-host')) $('jg-browser-host').textContent = r.host;
@@ -248,13 +266,17 @@ async function openBrowser() {
     await loadSessions(r.session.id);
   }
 
+  const changeLine = r.gameChanged && r.previousGameName
+    ? `<div class="text-amber-300/90 mb-1">Mudança de jogo detectada nesta sessão: ${esc(r.previousGameName)} → ${esc((ident && ident.gameName) || 'novo jogo')}.</div>`
+    : '';
+
   if (externalAuthFlow) {
     hide($('jg-browser-frame'));
     const empty = $('jg-browser-empty'); if (empty) empty.classList.remove('hidden');
     const notice = $('jg-browser-notice');
     if (notice) {
       notice.classList.remove('hidden');
-      notice.innerHTML = identificationNotice(ident)
+      notice.innerHTML = identificationNotice(ident) + changeLine
         + `<div>Login aberto em <strong class="text-slate-300">nova aba</strong> para preservar a sessão no iPhone/iPad. Se a aba não abrir, use "Nova aba".</div>`;
     }
     if (!popup) {
@@ -273,13 +295,29 @@ async function openBrowser() {
     );
     return;
   }
+
   const frame = $('jg-browser-frame');
-  if (frame) { frame.src = finalUrl; frame.classList.remove('hidden'); }
-  const empty = $('jg-browser-empty'); if (empty) empty.classList.add('hidden');
+  const empty = $('jg-browser-empty');
   const notice = $('jg-browser-notice');
+
+  // Site impede exibição em iframe: não exibe área em branco, informa a causa real.
+  if (r.frameBlocked) {
+    if (frame) frame.classList.add('hidden');
+    if (empty) empty.classList.remove('hidden');
+    if (notice) {
+      notice.classList.remove('hidden');
+      notice.innerHTML = identificationNotice(ident) + changeLine
+        + `<div class="text-amber-300/90">${esc(r.frameReason || 'O site recusa exibição dentro de iframe.')} Use "Nova aba" para abrir o site (nenhuma proteção é contornada).</div>`;
+    }
+    show($('jg-msg'), ident ? esc(ident.message) : 'O site não permite exibição incorporada. Abra em "Nova aba" e registre as rodadas observadas.', identMsgKind(ident));
+    return;
+  }
+
+  if (frame) { frame.src = finalUrl; frame.classList.remove('hidden'); }
+  if (empty) empty.classList.add('hidden');
   if (notice) {
     notice.classList.remove('hidden');
-    notice.innerHTML = identificationNotice(ident)
+    notice.innerHTML = identificationNotice(ident) + changeLine
       + `<div>Título lido: <strong class="text-slate-300">${esc(r.title || 'não informado')}</strong> · HTTP ${esc(r.status || '?')} · ${esc(r.note || '')}</div>`;
   }
   show(
@@ -289,6 +327,35 @@ async function openBrowser() {
       : 'Página aberta. Se a área acima aparecer vazia, o site recusou exibição em frame — use "Nova aba" (nenhuma proteção é contornada).',
     identMsgKind(ident)
   );
+}
+
+/* ---------------- Registro de rodada observada ---------------- */
+async function registerRound() {
+  if (!state.sessionId) { show($('jg-round-msg'), 'Abra a página ou selecione uma sessão antes de registrar.', 'error'); return; }
+  const outcome = (($('jg-round-outcome') || {}).value || '').trim();
+  const multRaw = (($('jg-round-mult') || {}).value || '').trim();
+  const betRaw = (($('jg-round-bet') || {}).value || '').trim();
+  const kind = ($('jg-round-kind') || {}).value || 'observed';
+  if (!outcome && multRaw === '') {
+    show($('jg-round-msg'), 'Informe ao menos o resultado ou o multiplicador realmente observado.', 'error');
+    return;
+  }
+  const rec = { ts: Date.now(), kind };
+  if (outcome) rec.outcome = outcome;
+  if (multRaw !== '') rec.multiplier = Number(multRaw);
+  if (betRaw !== '') rec.bet = Number(betRaw);
+  const r = await api('/session/' + encodeURIComponent(state.sessionId) + '/records', {
+    method: 'POST',
+    body: JSON.stringify({ records: [rec], dataset: 'discovery' }),
+  });
+  if (!r.ok) { show($('jg-round-msg'), esc(r.reason || 'Registro recusado.'), 'error'); return; }
+  const kindLabel = kind === 'official' ? 'dado oficial' : kind === 'estimated' ? 'estimativa (fora das métricas observadas)'
+    : kind === 'simulation' ? 'simulação (fora das métricas observadas)' : 'observação real';
+  if (!r.added) { show($('jg-round-msg'), 'Rodada repetida: nada foi duplicado.', 'info'); return; }
+  show($('jg-round-msg'), `Rodada registrada como ${kindLabel}. Análise atualizada.`, 'ok');
+  if ($('jg-round-outcome')) $('jg-round-outcome').value = '';
+  if ($('jg-round-mult')) $('jg-round-mult').value = '';
+  await refreshSession();
 }
 
 /* ---------------- Análise ---------------- */
@@ -314,6 +381,7 @@ function renderNoAnalysis() {
   if ($('jg-decision-badge')) $('jg-decision-badge').textContent = 'CONTINUAR OBSERVAÇÃO';
   if ($('jg-decision-reason')) $('jg-decision-reason').textContent = state.reference ? 'Execute a análise para ver os resultados.' : 'Sem tabela de referência: o EV teórico não é calculável. Importe dados e informe a referência quando disponível.';
   if ($('jg-hypotheses')) $('jg-hypotheses').innerHTML = '<div class="text-[10.5px] text-slate-600">Nenhuma análise executada.</div>';
+  if ($('jg-sources')) $('jg-sources').textContent = '';
   if ($('jg-data-version')) $('jg-data-version').textContent = '';
 }
 
@@ -333,13 +401,19 @@ function renderReport(rep) {
   const k = $('jg-kpis');
   if (k) {
     k.innerHTML = [
-      kpi('Registros', String(o.nObserved), o.nSimulation ? `${o.nSimulation} simulado(s) separado(s)` : 'nenhum simulado'),
+      kpi('Rodadas medidas', String(o.nObserved), (o.nSimulation || o.nEstimated) ? `${o.nSimulation} simulado(s) · ${o.nEstimated} estimado(s) fora das métricas` : 'nenhum simulado/estimado'),
       kpi('RTP observado', pct(o.rtpObserved), 'da amostra, não teórico'),
       kpi('Resultado líquido', o.netResult === null ? '—' : n2(o.netResult), 'retorno − apostado'),
       kpi('EV observado/un.', o.evObservedPerUnit === null ? '—' : pct(o.evObservedPerUnit), 'por unidade apostada'),
       kpi('Acerto (r≥1)', pct(o.winRate), 'multiplicador ≥ 1'),
       kpi('Mediana ×', o.multiplier ? n2(o.multiplier.median) : '—', o.multiplier ? `máx ${n2(o.multiplier.max)}` : 'sem multiplicadores'),
     ].join('');
+  }
+  const src = $('jg-sources');
+  if (src) {
+    src.innerHTML = `Origem dos dados — medidos (observado/oficial): <strong class="text-slate-300">${esc(o.nObserved)}</strong>`
+      + ` · estimados: ${esc(o.nEstimated)} · simulados: ${esc(o.nSimulation)}.`
+      + (o.nEstimated || o.nSimulation ? ' Estimados e simulados ficam FORA das métricas observadas.' : '');
   }
   const sb = $('jg-state-badge');
   if (sb) { sb.textContent = `${rep.state.state}`; sb.className = 'inline-flex items-center rounded-md px-2 py-0.5 border text-[10.5px] font-bold ' + stateTone(rep.state.state); }
@@ -526,33 +600,15 @@ async function toggleAuto() {
     state.autoOn = r.autoMode.enabled;
     show($('jg-msg'), state.autoOn ? 'Modo automático (demonstração) ligado. Cada passo consulta o motor de decisão e registra o motivo.' : 'Modo automático desligado.', 'ok');
   }
-  if ($('jg-auto-toggle')) $('jg-auto-toggle').textContent = state.autoOn ? 'Desligar modo automático' : 'Ligar modo automático';
-  if ($('jg-auto-step')) $('jg-auto-step').disabled = !state.autoOn;
-}
-
-async function autoStep() {
-  if (!state.sessionId) return;
-  const r = await api('/session/' + encodeURIComponent(state.sessionId) + '/auto/step', { method: 'POST', body: JSON.stringify({ simulateRound: true }) });
-  if (!r.ok) { show($('jg-msg'), esc(r.reason || 'Passo indisponível.'), 'error'); return; }
-  show($('jg-msg'), `Decisão: ${esc(r.step.decision)} → ação: ${esc(r.step.action)}${r.step.pausedBecause ? ` (pausado: ${esc(r.step.pausedBecause)})` : ''}`, 'info');
-  await refreshSession();
+  syncAutoUI();
 }
 
 /* ---------------- Ações de sessão ---------------- */
-async function newSession() {
-  const siteUrl = ($('jg-site-url') || {}).value || '';
-  const gameName = ($('jg-game-name') || {}).value || '';
-  const r = await api('/session', {
-    method: 'POST',
-    body: JSON.stringify({
-      siteUrl, gameName,
-      gameVersion: ($('jg-game-version') || {}).value || '',
-      mode: ($('jg-mode-select') || {}).value || '',
-    }),
-  });
-  if (!r.ok) { show($('jg-msg'), esc(r.reason || 'Não foi possível criar a sessão.'), 'error'); return; }
-  show($('jg-msg'), 'Sessão criada.', 'ok');
-  await loadSessions(r.session.id);
+/* Pausar/Retomar. Pausar interrompe imediatamente também a automação (no servidor). */
+async function togglePause() {
+  const cur = state.sessions.find(s => s.id === state.sessionId);
+  const next = cur && cur.status === 'observando' ? 'pausada' : 'observando';
+  await setSessionStatus(next);
 }
 
 async function setSessionStatus(status) {
@@ -585,7 +641,7 @@ function report() {
   const lines = [
     `Sessão · ${rep.scope.gameName || '—'} ${rep.scope.gameVersion ? 'v' + rep.scope.gameVersion : ''} · ${rep.scope.siteHost || '—'}`,
     `Versão dos dados: ${rep.dataVersion} · ${new Date(rep.generatedAt).toLocaleString('pt-BR')}`,
-    `Registros analisados: ${rep.observed.nObserved} (simulados separados: ${rep.observed.nSimulation})`,
+    `Registros analisados: ${rep.observed.nObserved} (estimados separados: ${rep.observed.nEstimated} · simulados separados: ${rep.observed.nSimulation})`,
     `RTP observado: ${pct(rep.observed.rtpObserved)} · líquido: ${rep.observed.netResult === null ? '—' : n2(rep.observed.netResult)}`,
     `EV teórico: ${rep.theoreticalEV.ok ? pct(rep.theoreticalEV.ev) + ` (fonte: ${rep.theoreticalEV.source})` : 'não calculável — ' + rep.theoreticalEV.reason}`,
     `Estado: ${rep.state.state} — ${rep.state.reason}`,
@@ -609,10 +665,9 @@ function setBrowserExpanded(expanded) {
 /* ---------------- Bootstrap ---------------- */
 function wire() {
   $('jg-open-btn')?.addEventListener('click', openBrowser);
-  $('jg-new-session-btn')?.addEventListener('click', newSession);
-  $('jg-start-btn')?.addEventListener('click', () => setSessionStatus('observando'));
-  $('jg-pause-btn')?.addEventListener('click', () => setSessionStatus('pausada'));
+  $('jg-pause-btn')?.addEventListener('click', togglePause);
   $('jg-end-btn')?.addEventListener('click', endSession);
+  $('jg-round-btn')?.addEventListener('click', registerRound);
   $('jg-refresh-btn')?.addEventListener('click', refreshSession);
   $('jg-session-select')?.addEventListener('change', (e) => selectSession(e.target.value));
   $('jg-import-btn')?.addEventListener('click', doImport);
