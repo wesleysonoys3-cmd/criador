@@ -148,12 +148,60 @@ function renderHistory(records) {
 }
 
 /* ---------------- Navegador ---------------- */
+function getHost(rawUrl) {
+  try { return new URL(String(rawUrl || ''), window.location.href).hostname.toLowerCase(); } catch { return ''; }
+}
+
+function isAppleMobile() {
+  const ua = navigator.userAgent || '';
+  const touchPoints = navigator.maxTouchPoints || 0;
+  return /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && touchPoints > 1);
+}
+
+function shouldUseExternalAuthFlow(rawUrl) {
+  const targetHost = getHost(rawUrl);
+  const currentHost = getHost(window.location.href);
+  if (!targetHost || !currentHost || targetHost === currentHost) return false;
+  return document.body.classList.contains('is-mobile') || isAppleMobile();
+}
+
+function openExternalBlankTab() {
+  try {
+    const win = window.open('about:blank', '_blank', 'noopener,noreferrer');
+    if (win) {
+      try { win.opener = null; } catch {}
+      return win;
+    }
+  } catch {}
+  return null;
+}
+
+function navigateExternal(win, url) {
+  const target = String(url || '').trim();
+  if (!target) return false;
+  try {
+    if (win && !win.closed) {
+      win.location.replace(target);
+      return true;
+    }
+  } catch {}
+  const link = $('jg-browser-external');
+  if (link) {
+    link.href = target;
+    try { link.click(); return true; } catch {}
+  }
+  return false;
+}
+
 async function openBrowser() {
   const url = ($('jg-site-url') || {}).value || '';
   if (!url.trim()) { show($('jg-msg'), 'Informe a URL do site.', 'error'); return; }
+  const externalAuthFlow = shouldUseExternalAuthFlow(url);
+  const popup = externalAuthFlow ? openExternalBlankTab() : null;
   show($('jg-msg'), 'Abrindo e validando o endereço…', 'info');
   const r = await api('/browser/open', { method: 'POST', body: JSON.stringify({ url }) });
   if (!r.ok) {
+    try { if (popup && !popup.closed) popup.close(); } catch {}
     hide($('jg-browser-frame'));
     const empty = $('jg-browser-empty'); if (empty) empty.classList.remove('hidden');
     show($('jg-msg'), esc(r.reason || 'Não foi possível abrir a página.'), 'error');
@@ -163,9 +211,28 @@ async function openBrowser() {
   }
   state.lastReport = state.lastReport;
   if ($('jg-browser-host')) $('jg-browser-host').textContent = r.host;
-  if ($('jg-browser-external')) { $('jg-browser-external').href = r.finalUrl || url; }
+  const finalUrl = r.finalUrl || url;
+  if ($('jg-browser-external')) { $('jg-browser-external').href = finalUrl; }
+  if (externalAuthFlow) {
+    hide($('jg-browser-frame'));
+    const empty = $('jg-browser-empty'); if (empty) empty.classList.remove('hidden');
+    const notice = $('jg-browser-notice');
+    if (notice) {
+      notice.classList.remove('hidden');
+      notice.innerHTML = `Login externo aberto em <strong class="text-slate-300">nova aba</strong> para preservar a sessão no iPhone/iPad. Alguns sites encerram o login quando ficam dentro do painel embutido.`;
+    }
+    const opened = navigateExternal(popup, finalUrl);
+    show(
+      $('jg-msg'),
+      opened
+        ? 'No iPhone/iPad, o login foi enviado para uma aba real do navegador para evitar que a sessão caia dentro do painel.'
+        : 'No iPhone/iPad, use "Nova aba" para fazer login fora do painel e preservar a sessão.',
+      'ok'
+    );
+    return;
+  }
   const frame = $('jg-browser-frame');
-  if (frame) { frame.src = r.finalUrl || url; frame.classList.remove('hidden'); }
+  if (frame) { frame.src = finalUrl; frame.classList.remove('hidden'); }
   const empty = $('jg-browser-empty'); if (empty) empty.classList.add('hidden');
   const notice = $('jg-browser-notice');
   if (notice) {
