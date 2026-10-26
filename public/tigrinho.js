@@ -11,6 +11,8 @@ const S = {
   sessionId: null,
   url: '',
   host: '',
+  browserBackend: '',
+  browserReal: false,
   gameName: '',
   status: null,          // 'observando' | 'pausada' | 'encerrada' | null
   identification: null,
@@ -44,6 +46,41 @@ function shortTime(ts) {
   const d = Number.isFinite(n) && String(n).length >= 10 ? new Date(n < 1e12 ? n * 1000 : n) : new Date(ts);
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleTimeString('pt-BR');
+}
+function getHost(rawUrl) {
+  try { return new URL(String(rawUrl || ''), window.location.href).hostname.toLowerCase(); } catch { return ''; }
+}
+function isCrossOrigin(rawUrl) {
+  const targetHost = getHost(rawUrl);
+  const currentHost = getHost(window.location.href);
+  return !!targetHost && !!currentHost && targetHost !== currentHost;
+}
+function isAppleMobile() {
+  const ua = navigator.userAgent || '';
+  const touchPoints = navigator.maxTouchPoints || 0;
+  return /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && touchPoints > 1);
+}
+function shouldUseExternalAuthFlow(rawUrl) {
+  if (!isCrossOrigin(rawUrl)) return false;
+  return document.body.classList.contains('is-mobile') || isAppleMobile();
+}
+function shouldPreferExternalLogin(rawUrl) {
+  if (!isCrossOrigin(rawUrl)) return false;
+  if (shouldUseExternalAuthFlow(rawUrl)) return true;
+  return !S.browserReal;
+}
+function openExternalTab(url) {
+  const target = String(url || '').trim();
+  if (!target) return null;
+  try {
+    const win = window.open(target, '_blank');
+    if (!win) return null;
+    try { win.opener = null; } catch {}
+    return win;
+  } catch { return null; }
+}
+function isStillBlank(win) {
+  try { return !!win && !win.closed && win.location.href === 'about:blank'; } catch { return false; }
 }
 
 /** Mensagem fixa na barra de abertura. kind: 'ok' | 'warn' | 'err' */
@@ -102,6 +139,8 @@ async function loadStatus() {
   if (!r || r.ok === false) { dot.textContent = '🔴'; label.textContent = 'indisponível'; return; }
   const real = !!r.realBrowser;
   const live = !!r.liveReadAvailable;
+  S.browserReal = real;
+  S.browserBackend = String(r.backend || '');
   dot.textContent = real ? '🟢' : '🟡';
   label.textContent = real ? (live ? 'navegador real' : 'abre página (sem leitura contínua)') : 'fetch (sem navegador real)';
   label.title = r.note || '';
@@ -126,12 +165,15 @@ async function openGame() {
   const url = String($('tg-url')?.value || '').trim();
   const hint = String($('tg-game')?.value || '').trim();
   if (!url) { flash('tg-msg', 'Informe a URL completa da plataforma.', 'err'); return; }
+  const externalAuthFlow = shouldPreferExternalLogin(url);
+  const popup = externalAuthFlow ? openExternalTab(url) : null;
 
   const btn = $('tg-open-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Abrindo…'; }
   try {
     const r = await api('/browser/open', 'POST', { url, hint: hint || undefined });
     if (!r || r.ok === false) {
+      if (isStillBlank(popup)) { try { popup.close(); } catch {} }
       const reason = (r && r.reason) || 'Não foi possível abrir a página.';
       flash('tg-msg', reason + (r && r.code ? ` (${r.code})` : ''), 'err');
       notify('Falha ao abrir: ' + reason, 'err');
@@ -159,10 +201,26 @@ async function openGame() {
     renderIdentification(r.identification || null);
     showNotice(r.note || '');
 
-    // Só exibe no frame quando o próprio site permite (nada é contornado).
-    if (!r.frameBlocked) {
-      const frame = $('tg-browser-frame'), empty = $('tg-browser-empty');
-      if (frame) { frame.src = r.finalUrl || url; frame.classList.remove('hidden'); }
+    const frame = $('tg-browser-frame');
+    const empty = $('tg-browser-empty');
+    const finalUrl = r.finalUrl || url;
+    if (ext) ext.href = finalUrl;
+
+    if (externalAuthFlow) {
+      if (frame) { frame.removeAttribute('src'); frame.classList.add('hidden'); }
+      if (empty) empty.classList.remove('hidden');
+      if (!popup) {
+        if (ext) { try { ext.click(); } catch {} }
+      }
+      const reason = !S.browserReal
+        ? 'Este ambiente está em modo fetch, então o login dentro do painel tende a cortar a página ou perder a sessão.'
+        : 'Para preservar a sessão de login, a abertura foi enviada para uma aba real do navegador.';
+      flash('tg-msg', `${reason} Use a aba real para fazer login e, se precisar, volte ao painel para acompanhar a sessão e registrar rodadas.`, 'warn');
+      showNotice(`${r.note || ''} Login aberto em uma aba real do navegador para preservar a sessão e permitir ver a página inteira.`.trim());
+      notify('Login aberto em aba real para evitar corte da página e perda de sessão.', 'ok', 8000);
+    } else if (!r.frameBlocked) {
+      // Só exibe no frame quando o próprio site permite e o fluxo é estável.
+      if (frame) { frame.src = finalUrl; frame.classList.remove('hidden'); }
       if (empty) empty.classList.add('hidden');
     } else {
       const frame = $('tg-browser-frame'), empty = $('tg-browser-empty');
@@ -178,6 +236,9 @@ async function openGame() {
     if (r.frameBlocked) limits.push(r.frameReason || 'O site impede exibição em iframe.');
     if (!S.liveRead.available) limits.push('Sem navegador real neste ambiente: a página não é renderizada, então não há leitura ao vivo de rodadas.');
     else if (!S.liveRead.accessible) limits.push('A página não expõe os resultados de forma acessível.');
+    if (externalAuthFlow) {
+      limits.push('Login direcionado para aba real do navegador para preservar a sessão e permitir ver a página inteira.');
+    }
     if (limits.length) {
       limits.push('Registre rodadas manualmente (marcadas como manuais) ou importe dados autorizados — nada é preenchido por suposição.');
       flash('tg-msg', limits.join(' '), 'warn');
@@ -553,6 +614,15 @@ function renderReport(rep) {
   el.textContent = lines.join('\n');
 }
 
+function setBrowserExpanded(expanded) {
+  const panel = document.getElementById('tigrinho-panel');
+  S.expanded = !!expanded;
+  if (!panel) return;
+  panel.classList.toggle('tg-browser-expanded', S.expanded);
+  document.body.classList.toggle('tg-browser-expanded-lock', S.expanded);
+  if ($('tg-expand-btn')) $('tg-expand-btn').textContent = S.expanded ? 'Reduzir' : 'Ampliar';
+}
+
 /* ---------------- correção manual do nome do jogo ---------------- */
 async function saveGameName() {
   const name = String($('tg-game')?.value || '').trim();
@@ -592,12 +662,9 @@ function bind() {
     if (!id) { S.sessionId = null; S.status = null; renderHistory([]); renderEmptyAnalysis(); updateControls(); return; }
     await loadSession(id);
   });
-  $('tg-expand-btn')?.addEventListener('click', () => {
-    const gameCol = $('tg-game-col'), sideCol = $('tg-side-col'), btn = $('tg-expand-btn');
-    S.expanded = !S.expanded;
-    if (gameCol) gameCol.style.gridColumn = S.expanded ? 'span 12 / span 12' : '';
-    if (sideCol) sideCol.style.gridColumn = S.expanded ? 'span 12 / span 12' : '';
-    if (btn) btn.textContent = S.expanded ? 'Reduzir' : 'Ampliar';
+  $('tg-expand-btn')?.addEventListener('click', () => setBrowserExpanded(!S.expanded));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && S.expanded) setBrowserExpanded(false);
   });
 }
 
@@ -612,7 +679,7 @@ async function onTabOpen() {
 async function boot() {
   // Observa quando a aba fica ativa (o clique na aba é tratado pelo app.js).
   window.__tigrinhoOnTabOpen = () => { onTabOpen().catch(() => {}); };
-  window.__tigrinhoOnTabClose = () => { stopTimer(); };
+  window.__tigrinhoOnTabClose = () => { stopTimer(); setBrowserExpanded(false); };
   // Se a aba já estiver ativa no carregamento, inicializa.
   const panels = document.getElementById('editor-panels');
   if (panels && panels.dataset.active === 'tigrinho') { bind(); await onTabOpen(); }
