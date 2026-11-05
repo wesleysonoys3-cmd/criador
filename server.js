@@ -45,8 +45,10 @@ import { QuantfuryMonitor } from './quantfury/scheduler.mjs';
 import { analyzeQuantfuryPosition } from './quantfury/analysis.mjs';
 import * as JogosSvc from './jogos/service.js';
 import { monteCarlo } from './jogos/motor.js';
+import * as CurriculosSvc from './curriculos/service.js';
 const BTC_MI_DATA_DIR = path.resolve(process.cwd(), 'btc_market/data');
 const JOGOS_DATA_DIR = path.resolve(process.cwd(), 'jogos/data');
+const CURRICULOS_DATA_DIR = path.resolve(process.cwd(), 'curriculos/data');
 const BTC_MI_INTERVAL_MS = Number(process.env.BTC_MI_INTERVAL_MS || 60000) || 60000;
 
 const execAsync = promisify(exec);
@@ -1061,6 +1063,17 @@ try {
   console.log(`🎲 Jogos: módulo iniciado · dataDir=${JOGOS_DATA_DIR}`);
 } catch (e) {
   console.warn('[JOGOS] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
+}
+// Currículos · Módulo inteligente (reutiliza a IA já existente do TI Agente)
+try {
+  const _cvInit = CurriculosSvc.init({
+    dataDir: CURRICULOS_DATA_DIR,
+    runLLMTextOnly: (opts) => runLLMTextOnly(opts),
+    providers: ['groq', 'cerebras', 'openrouter', 'mistral', 'deepseek', 'gemini'],
+  });
+  console.log(`📄 Currículos: módulo iniciado · dataDir=${CURRICULOS_DATA_DIR} · IA=${_cvInit.ai ? 'disponível' : 'indisponível'}`);
+} catch (e) {
+  console.warn('[CURRICULOS] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
 }
 const RC27_SAVE_EVERY_N_TOOL_CALLS = Math.max(1, parseInt(process.env.RC27_SAVE_EVERY_N_TOOL_CALLS || '3', 10));
 
@@ -7520,6 +7533,53 @@ app.post('/api/jogos/montecarlo', _JG_JSON, _jg(async (req) => {
   const sim = monteCarlo(req.body || {});
   return sim.ok ? { ok: true, simulation: sim } : sim;
 }));
+
+/* =============== CURRÍCULOS · Módulo inteligente de currículos (módulo isolado) =============== */
+const _CV_JSON = express.json({ limit: '12mb' });
+const _cvOwner = (req) => String((req.query && req.query.owner) || (req.body && req.body.owner) || '');
+const _cv = (fn) => async (req, res) => {
+  try {
+    const out = await fn(req);
+    if (out && out.ok === false && out.error) return res.status(400).json(out);
+    res.json(out);
+  } catch (e) {
+    console.error('[CURRICULOS] erro:', String(e && e.message || e));
+    res.status(500).json({ ok: false, error: 'Não foi possível concluir a operação agora.' });
+  }
+};
+
+app.get('/api/curriculos/status', _JG_NO_CACHE, _cv(async () => CurriculosSvc.status()));
+app.get('/api/curriculos/areas', _JG_NO_CACHE, _cv(async () => CurriculosSvc.areas()));
+app.get('/api/curriculos/list', _JG_NO_CACHE, _cv(async (req) => CurriculosSvc.list(_cvOwner(req))));
+app.post('/api/curriculos/create', _CV_JSON, _cv(async (req) => CurriculosSvc.create(req.body || {})));
+app.get('/api/curriculos/:id', _JG_NO_CACHE, _cv(async (req) => CurriculosSvc.get(req.params.id, _cvOwner(req))));
+app.put('/api/curriculos/:id', _CV_JSON, _cv(async (req) => CurriculosSvc.update(req.params.id, _cvOwner(req), req.body || {})));
+app.delete('/api/curriculos/:id', _CV_JSON, _cv(async (req) => CurriculosSvc.remove(req.params.id, _cvOwner(req))));
+app.post('/api/curriculos/:id/interview', _CV_JSON, _cv(async (req) => CurriculosSvc.interview(req.params.id, _cvOwner(req), req.body || {})));
+app.post('/api/curriculos/:id/import', _CV_JSON, _cv(async (req) => CurriculosSvc.importOriginal(req.params.id, _cvOwner(req), req.body || {})));
+app.post('/api/curriculos/:id/generate', _CV_JSON, _cv(async (req) => CurriculosSvc.generate(req.params.id, _cvOwner(req), req.body || {})));
+app.post('/api/curriculos/:id/analyze', _CV_JSON, _cv(async (req) => CurriculosSvc.analyze(req.params.id, _cvOwner(req), req.body || {})));
+app.post('/api/curriculos/:id/tailor', _CV_JSON, _cv(async (req) => CurriculosSvc.tailor(req.params.id, _cvOwner(req), req.body || {})));
+app.post('/api/curriculos/:id/chat', _CV_JSON, _cv(async (req) => CurriculosSvc.chat(req.params.id, _cvOwner(req), req.body || {})));
+app.post('/api/curriculos/:id/preview', _CV_JSON, _cv(async (req) => CurriculosSvc.preview(req.params.id, _cvOwner(req), req.body || {})));
+app.post('/api/curriculos/:id/restore', _CV_JSON, _cv(async (req) => CurriculosSvc.restoreVersion(req.params.id, _cvOwner(req), req.body && req.body.versionId)));
+app.get('/api/curriculos/:id/download', _JG_NO_CACHE, async (req, res) => {
+  try {
+    const out = await CurriculosSvc.download(req.params.id, _cvOwner(req), {
+      format: (req.query && req.query.format) || 'pdf',
+      templateId: (req.query && req.query.templateId) || null,
+      versionId: (req.query && req.query.versionId) || null,
+    });
+    if (!out.ok) return res.status(400).json({ ok: false, error: out.error || 'Não foi possível gerar o arquivo.' });
+    res.setHeader('Content-Type', out.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${out.filename}"`);
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(out.buffer);
+  } catch (e) {
+    console.error('[CURRICULOS] download erro:', String(e && e.message || e));
+    res.status(500).json({ ok: false, error: 'Não foi possível gerar o arquivo agora.' });
+  }
+});
 
 // =============== STARTUP: Garante TODOS projetos (mounted e workspace) têm SERVIDOR PREVIEW DEDICADO RODANDO ANTES do listen ===============
 // Isso RESOLVE o bug do usuário "preview em branco / porta não abre após restart servidor" — antes startProjectPreviewServer só era chamado no endpoint mount, nunca no startup!

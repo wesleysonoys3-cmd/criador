@@ -260,6 +260,10 @@
             <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-amber-300 shrink-0"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8z"/></svg>
             <span class="truncate font-medium">Tigrinho</span>
           </button>
+          <button class="editor-tab flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="curriculos" title="Currículos IA · entrevista guiada, análise ATS, pontuação e geração automática (PDF/DOCX)">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-violet-300 shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h4"/></svg>
+            <span class="truncate font-medium">Currículos IA</span>
+          </button>
         </div>
         <!-- Ln/Col info (legível) -->
         <div class="ml-auto mr-2.5 flex items-center gap-2 text-[10.5px] text-slate-500 font-mono whitespace-nowrap pb-1">
@@ -838,6 +842,24 @@
             </div>
           </div>
         </div>
+
+        <!-- ===== 📄 Currículos IA · Módulo inteligente de currículos (aba isolada) ===== -->
+        <div data-editor-panel="curriculos" class="editor-panel hidden flex-1 flex-col min-h-0 bg-[#060918] relative" id="cv-panel">
+          <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between gap-2 text-[10.5px]">
+            <div class="flex items-center gap-2 text-violet-300 font-bold uppercase tracking-wider min-w-0">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h4"/></svg>
+              <span class="truncate">Currículos IA · entrevista guiada, análise ATS, pontuação e geração automática</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span id="cvd-ai-chip" class="px-2 py-[3px] rounded-full border border-white/10 bg-white/5 text-slate-400 font-mono hidden sm:inline">IA…</span>
+              <button id="cvd-home" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition">Início</button>
+              <button id="cvd-list" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition">Meus currículos</button>
+              <button id="cvd-reload" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition" title="Recarregar dados do módulo">Recarregar</button>
+            </div>
+          </div>
+          <div id="cvd-body" class="flex-1 min-h-0 overflow-auto p-3 md:p-4 text-slate-200"></div>
+          <div id="cvd-toasts" class="pointer-events-none absolute right-3 bottom-3 z-30 flex flex-col gap-2 items-end max-w-[86%]"></div>
+        </div>
       </div>
     </section>
 
@@ -1205,5 +1227,6 @@
 <script src="/app.js" type="module"></script>
 <script src="/jogos.js" type="module"></script>
 <script src="/tigrinho.js" type="module"></script>
+<script src="/curriculos.js" type="module"></script>
 </body>
 </html>
