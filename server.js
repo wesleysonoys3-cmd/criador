@@ -55,7 +55,7 @@ const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ENV_FILE_PATH = path.resolve(__dirname, '.env');
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 const GOOGLE_MODEL = process.env.GOOGLE_MODEL || 'gemini-3.5-flash-lite';
 const WORKSPACE_ROOT = path.resolve(process.env.WORK_DIR || './workspace');
 globalThis.__WORKSPACE_ROOT = WORKSPACE_ROOT;
@@ -657,7 +657,10 @@ function providerIsUsable(name) {
   try { return Boolean(p.requiresKey()); } catch { return false; }
 }
 function resolveProvider(requested, fallback='gemini') {
-  const r = (requested || '').trim().toLowerCase();
+  const first = Array.isArray(requested)
+    ? (requested.map(String).find(p => providerIsUsable(String(p || '').trim().toLowerCase())) || '')
+    : String(requested || '');
+  const r = String(first).trim().toLowerCase();
   if (providerIsUsable(r)) return r;
   if (r !== fallback && providerIsUsable(fallback)) return fallback;
   if (providerIsUsable('gemini')) return 'gemini';
@@ -831,16 +834,29 @@ async function runLLMTextOnly({ provider, model, system, user, temperature=0.2, 
     return { text: text || '', tokensIn: u?.prompt_tokens || u?.input_tokens || 0, tokensOut: u?.completion_tokens || u?.output_tokens || 0, provider: prov, model: ep.bodyModel };
   };
   if (!AI_RESILIENCE_ENABLED) {
-    const effectiveProvider = resolveProvider(provider, 'gemini');
-    const ep = providerEndpoint(effectiveProvider, model);
-    if (!ep) {
-      try { return await fallbackToGemini(); } catch (e) { throw e; }
+    // Fallback sequencial: tenta CADA provedor configurado em ordem; se um falhar, usa o próximo.
+    // Só recorre ao Gemini por último. Nunca fica sem resposta enquanto houver um provedor utilizável.
+    const rawList = Array.isArray(provider) ? provider.map(String) : [String(provider || '')];
+    const orderList = [];
+    for (const p of rawList) {
+      const n = String(p || '').trim().toLowerCase();
+      if (n && providerIsUsable(n) && !orderList.includes(n)) orderList.push(n);
     }
-    try { return await callNonStream(effectiveProvider); }
-    catch (err) {
-      console.log(`[RC22 provider ${effectiveProvider} erro: ${(err?.message||'').slice(0,80)}] fallback para gemini.`);
-      try { return await fallbackToGemini(); } catch (e2) { throw err; }
+    if (!orderList.length) {
+      const eff = resolveProvider(provider, 'gemini');
+      if (eff && !orderList.includes(eff)) orderList.push(eff);
     }
+    let lastErr = null;
+    for (const prov of orderList) {
+      const ep = providerEndpoint(prov, model);
+      if (!ep) { try { return await fallbackToGemini(); } catch (e) { lastErr = e; continue; } }
+      try { return await callNonStream(prov); }
+      catch (err) {
+        lastErr = err;
+        console.log(`[RC22 provider ${prov} erro: ${(err?.message||'').slice(0,80)}] tentando próximo provedor.`);
+      }
+    }
+    try { return await fallbackToGemini(); } catch (e2) { throw lastErr || e2; }
   }
   const preferred = Array.isArray(provider) && provider.length ? provider : (typeof provider === 'string' ? [provider] : []);
   const order = aiResilienceBuildOrder(preferred.length ? preferred : null);
@@ -1069,7 +1085,7 @@ try {
   const _cvInit = CurriculosSvc.init({
     dataDir: CURRICULOS_DATA_DIR,
     runLLMTextOnly: (opts) => runLLMTextOnly(opts),
-    providers: ['groq', 'cerebras', 'openrouter', 'mistral', 'deepseek', 'gemini'],
+    providers: ['groq', 'cloudflare', 'cerebras', 'mistral', 'openrouter', 'deepseek', 'gemini'],
   });
   console.log(`📄 Currículos: módulo iniciado · dataDir=${CURRICULOS_DATA_DIR} · IA=${_cvInit.ai ? 'disponível' : 'indisponível'}`);
 } catch (e) {

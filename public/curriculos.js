@@ -1057,32 +1057,48 @@ async function doDelete(id) {
   finally { busy(false); }
 }
 
-function doDownload(fmt, opts = {}) {
-  const id = S.doc?.id;
-  if (!id) return;
+/** Baixa um arquivo do currículo como blob — nunca navega para a URL da API,
+ *  de modo que uma falha do servidor vira mensagem clara (toast) em vez de
+ *  substituir a tela por um JSON de erro. */
+async function downloadDoc(id, fmt, opts = {}) {
+  if (!id) { toast('Nenhum currículo selecionado.', 'err'); return; }
+  const format = String(fmt || 'pdf').toLowerCase();
   const url = new URL(`${API}/${id}/download`, location.origin);
   url.searchParams.set('owner', getOwner());
-  url.searchParams.set('format', fmt || 'pdf');
-  const tpl = opts.templateId || (S.view === 'doc' && S.docTab === 'previa' ? ($('#cv-tpl')?.value || S.previewTemplate) : null);
-  if (tpl) url.searchParams.set('templateId', tpl);
+  url.searchParams.set('format', format);
+  if (opts.templateId) url.searchParams.set('templateId', opts.templateId);
   if (opts.versionId) url.searchParams.set('versionId', opts.versionId);
-  const a = document.createElement('a');
-  a.href = url.toString();
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  toast(`Gerando ${String(fmt).toUpperCase()}…`, 'info');
+  try {
+    busy(true, `Gerando ${format.toUpperCase()}…`);
+    const r = await fetch(url.toString());
+    if (!r.ok) {
+      let msg = 'Não foi possível gerar o arquivo agora.';
+      try { const j = await r.json(); if (j && j.error) msg = j.error; } catch {}
+      throw new Error(msg);
+    }
+    const blob = await r.blob();
+    const cd = r.headers.get('Content-Disposition') || '';
+    const m = cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+    const name = m ? decodeURIComponent(m[1]) : `curriculo.${format}`;
+    const objUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objUrl; a.download = name; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(objUrl), 4000);
+    toast(`${format.toUpperCase()} pronto.`, 'ok');
+  } catch (e) {
+    toast(e?.message || 'Falha ao baixar o arquivo.', 'err');
+  } finally { busy(false); }
 }
 
-async function quickPdf(id) {
-  const url = new URL(`${API}/${id}/download`, location.origin);
-  url.searchParams.set('owner', getOwner());
-  url.searchParams.set('format', 'pdf');
-  const a = document.createElement('a');
-  a.href = url.toString(); a.rel = 'noopener';
-  document.body.appendChild(a); a.click(); a.remove();
-  toast('Gerando PDF…', 'info');
+function doDownload(fmt, opts = {}) {
+  const onPreview = S.view === 'doc' && S.docTab === 'previa';
+  const tpl = opts.templateId || (onPreview ? ($('#cv-tpl')?.value || S.previewTemplate) : null);
+  return downloadDoc(S.doc?.id, fmt, { ...opts, templateId: tpl });
+}
+
+function quickPdf(id) {
+  return downloadDoc(id, 'pdf', {});
 }
 
 async function sendMessage() {

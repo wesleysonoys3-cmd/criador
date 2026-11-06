@@ -201,6 +201,29 @@ export function renderHtml(profile, { templateId = 'moderno', sectionOrder = nul
 
 /* ---------------- PDF ---------------- */
 let _browserPromise = null;
+let _installTried = false;
+
+/** Instala o Chromium do Playwright uma única vez, apenas quando a inicialização
+ *  falha (ambiente novo/servidor sem o binário). Best-effort: nunca lança. */
+async function tryInstallChromium() {
+  if (_installTried) return false;
+  _installTried = true;
+  try {
+    const { execFile } = await import('node:child_process');
+    const { fileURLToPath } = await import('node:url');
+    const path = await import('node:path');
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const cli = path.resolve(here, '..', 'node_modules', 'playwright', 'cli.js');
+    await new Promise((resolve, reject) => {
+      execFile(process.execPath, [cli, 'install', 'chromium'], { timeout: 240000 }, (err) => (err ? reject(err) : resolve()));
+    });
+    console.log('[CURRICULOS] Chromium do Playwright instalado para geração de PDF.');
+    return true;
+  } catch (e) {
+    console.warn('[CURRICULOS] não foi possível instalar o Chromium:', String(e?.message || e).slice(0, 160));
+    return false;
+  }
+}
 
 async function getBrowser() {
   if (_browserPromise) return _browserPromise;
@@ -222,7 +245,13 @@ export async function htmlToPdf(html) {
   let browser;
   try { browser = await getBrowser(); }
   catch (e) {
-    return { ok: false, error: 'Gerador de PDF indisponível no servidor (navegador de renderização ausente).', detail: String(e?.message || e) };
+    // Primeira falha pode ser só a ausência do binário: tenta instalar e repetir uma vez.
+    if (await tryInstallChromium()) {
+      try { browser = await getBrowser(); }
+      catch (e2) { return { ok: false, error: 'Gerador de PDF indisponível no servidor (navegador de renderização não pôde ser iniciado).', detail: String(e2?.message || e2) }; }
+    } else {
+      return { ok: false, error: 'Gerador de PDF indisponível no servidor (navegador de renderização ausente).', detail: String(e?.message || e) };
+    }
   }
   const ctx = await browser.newContext();
   const page = await ctx.newPage();

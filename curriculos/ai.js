@@ -6,7 +6,7 @@
  * =======================================================*/
 
 let _run = null;                 // função injetada (runLLMTextOnly)
-let _providers = ['groq', 'cerebras', 'openrouter', 'mistral', 'deepseek', 'gemini'];
+let _providers = ['groq', 'cloudflare', 'cerebras', 'mistral', 'openrouter', 'deepseek', 'gemini'];
 let _model = null;
 let _lastError = null;
 let _lastMeta = null;
