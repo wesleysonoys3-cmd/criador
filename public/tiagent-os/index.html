@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TIAgente OS">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#201b55">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+  <title>TIAgente OS</title>
+</head>
+<body>
+  <div id="os" class="os accent-violet theme-dark">
+    <header class="menubar">
+      <button class="brand" type="button" data-action="menu" aria-label="Abrir menu principal">
+        <span class="brand-mark" aria-hidden="true">
+          <img src="icon.svg" alt="">
+        </span>
+        <span class="brand-name">TIAgente OS</span>
+      </button>
+      <nav class="menus" aria-label="Menu principal">
+        <button type="button" data-menu="arquivo">Arquivo</button>
+        <button type="button" data-menu="editar">Editar</button>
+        <button type="button" data-menu="visualizar">Visualizar</button>
+        <button type="button" data-menu="ajuda">Ajuda</button>
+      </nav>
+      <div class="system-status">
+        <span id="network-status" class="network-status" title="Estado da conexão">
+          <i class="status-dot"></i><span id="network-label">Online</span>
+        </span>
+        <span id="battery-status" class="battery-status" hidden></span>
+        <time id="clock" class="clock"></time>
+      </div>
+    </header>
+
+    <main id="desktop" class="desktop" aria-label="Área de trabalho TIAgente OS">
+      <div id="desktop-icons" class="desktop-icons" aria-label="Aplicativos"></div>
+      <div id="windows" class="windows" aria-live="polite"></div>
+      <div id="menu-popover" class="menu-popover" hidden></div>
+      <div id="notice" class="notice" role="status" aria-live="polite"></div>
+    </main>
+
+    <nav id="dock" class="dock" aria-label="Dock de aplicativos"></nav>
+  </div>
+  <script src="app.js" defer></script>
+</body>
+</html>

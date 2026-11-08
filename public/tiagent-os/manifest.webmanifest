@@ -1,0 +1,15 @@
+{
+  "name": "TIAgente OS",
+  "short_name": "TIAgente OS",
+  "start_url": "/tiagent-os/",
+  "display": "standalone",
+  "background_color": "#201b55",
+  "theme_color": "#201b55",
+  "icons": [
+    {
+      "src": "/tiagent-os/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    }
+  ]
+}
