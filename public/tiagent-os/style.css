@@ -1112,11 +1112,61 @@ button {
 
 .hidden { display: none !important; }
 
+/* Central de aplicativos (FASE 2) */
+.launcher .launcher-search { margin: 0 0 14px; }
+.launcher .launcher-search input { width: 100%; }
+.launcher-groups { padding-bottom: 4px; }
+.launcher-group { margin: 0 0 16px; }
+.launcher-group h3 {
+  margin: 0 0 9px;
+  color: #5b5c78;
+  font-size: 11px;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+.launcher-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+}
+.launcher-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 6px;
+  border: 1px solid #e2e0ec;
+  border-radius: 13px;
+  background: #fff;
+  cursor: pointer;
+}
+.launcher-item:active { background: #f1eefb; }
+.launcher-item .app-icon { width: 46px; height: 46px; margin: 0 0 7px; border-radius: 13px; }
+.launcher-item-label { color: #33354f; font-size: 11px; line-height: 1.25; text-align: center; }
+
+.global-search {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  margin-right: 12px;
+  padding: 0 11px;
+  color: #f2efff;
+  background: rgba(255, 255, 255, .13);
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.global-search-icon { margin-right: 5px; font-size: 14px; }
+.global-search:active { background: rgba(255, 255, 255, .26); }
+
 @media (max-width: 760px) {
   .menubar { padding: 0 8px; }
   .brand { left: 8px; }
   .brand-name { font-size: 13px; }
   .menus { display: none; }
+  .global-search { margin-right: 9px; padding: 0 8px; }
+  .global-search-icon { margin-right: 0; }
+  .global-search-text { display: none; }
   .system-status { right: 9px; }
   .network-status { margin-right: 9px; }
   .network-status #network-label { display: none; }

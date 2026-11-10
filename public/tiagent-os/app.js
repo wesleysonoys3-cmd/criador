@@ -9,6 +9,7 @@
     { id: "email", name: "E-mail" },
     { id: "terminal", name: "Terminal" },
     { id: "agent", name: "TIAgente" },
+    { id: "launcher", name: "Aplicativos" },
     { id: "settings", name: "Configurações" },
     { id: "gallery", name: "Galeria" },
     { id: "calculator", name: "Calculadora" },
@@ -33,13 +34,22 @@
     btc: "BTC Market",
     quantfury: "Quantfury"
   };
+  // Categorias da central de aplicativos (FASE 2).
+  var APP_CATEGORIES = [
+    { id: "inteligencia", name: "Inteligência", apps: ["agent", "memoria", "pesquisa", "curriculos"] },
+    { id: "criacao", name: "Criação", apps: ["gamestudio", "jogos", "tigrinho", "studio", "gallery"] },
+    { id: "desenvolvimento", name: "Desenvolvimento", apps: ["browser", "files", "terminal"] },
+    { id: "gerenciamento", name: "Gerenciamento", apps: ["launcher", "settings", "calculator", "email", "btc", "quantfury"] }
+  ];
   var DEFAULTS = {
     theme: "dark",
     accent: "violet",
     wallpaper: "",
     labels: {},
-    order: ["browser", "studio", "files", "email", "terminal", "agent", "settings", "gallery", "calculator", "gamestudio", "jogos", "tigrinho", "curriculos", "memoria", "pesquisa", "btc", "quantfury"],
-    dock: ["browser", "studio", "files", "email", "agent", "settings", "calculator", "gallery", "terminal"],
+    order: ["launcher", "browser", "studio", "files", "email", "terminal", "agent", "settings", "gallery", "calculator", "gamestudio", "jogos", "tigrinho", "curriculos", "memoria", "pesquisa", "btc", "quantfury"],
+    // Ícones exibidos na área de trabalho (conjunto enxuto; o restante fica na central de aplicativos).
+    desktop: ["agent", "browser", "studio", "files", "gamestudio", "settings"],
+    dock: ["launcher", "browser", "studio", "files", "email", "agent", "settings", "calculator", "gallery", "terminal"],
     taskHistory: [],
     favorites: [],
     browserHistory: [],
@@ -139,7 +149,8 @@
       memoria: '<rect width="64" height="64" rx="14" fill="#7c3aed"/><rect x="18" y="18" width="28" height="28" rx="7" fill="#e9d5ff"/><rect x="25" y="25" width="14" height="14" rx="3" fill="#7c3aed"/><g stroke="#e9d5ff" stroke-width="3" stroke-linecap="round"><path d="M32 8v6M32 50v6M8 32h6M50 32h6M15 15l4 4M49 49l-4-4M49 15l-4 4M15 49l4-4"/></g>',
       pesquisa: '<rect width="64" height="64" rx="14" fill="#0ea5e9"/><circle cx="27" cy="27" r="14" fill="#e0f2fe"/><circle cx="27" cy="27" r="14" fill="none" stroke="#0369a1" stroke-width="3"/><rect x="37" y="37" width="9" height="19" rx="4.5" fill="#0369a1" transform="rotate(-45 41.5 46.5)"/>',
       btc: '<circle cx="32" cy="32" r="25" fill="#f7931a"/><g fill="none" stroke="#fff" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"><path d="M27 16h7a7 7 0 0 1 0 14h-7zM27 30h9a7 7 0 0 1 0 14h-9z"/><path d="M23 16h4M23 44h4M30 12v6M30 42v6"/></g>',
-      quantfury: '<rect width="64" height="64" rx="14" fill="#0b1220"/><path d="M14 44l11-13 10 6 15-19" fill="none" stroke="#22d3ee" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="50" cy="18" r="4.5" fill="#34d399"/>'
+      quantfury: '<rect width="64" height="64" rx="14" fill="#0b1220"/><path d="M14 44l11-13 10 6 15-19" fill="none" stroke="#22d3ee" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="50" cy="18" r="4.5" fill="#34d399"/>',
+      launcher: '<rect width="64" height="64" rx="14" fill="#4c1d95"/><g fill="#fff"><rect x="13" y="13" width="16" height="16" rx="5"/><rect x="35" y="13" width="16" height="16" rx="5"/><rect x="13" y="35" width="16" height="16" rx="5"/><rect x="35" y="35" width="16" height="16" rx="5"/></g><circle cx="42" cy="42" r="4" fill="#f97316"/>'
     };
     return '<svg viewBox="0 0 64 64" aria-hidden="true">' + (icons[id] || icons.agent) + "</svg>";
   }
@@ -173,8 +184,19 @@
     return false;
   }
 
+  function desktopApps() {
+    var list = settings.desktop && settings.desktop.length ? settings.desktop : DEFAULTS.desktop;
+    var result = [];
+    var i, id;
+    for (i = 0; i < list.length; i++) {
+      id = list[i];
+      if (appExists(id) && result.indexOf(id) < 0) result.push(id);
+    }
+    return result;
+  }
+
   function renderDesktopIcons() {
-    var ids = getOrderedApps();
+    var ids = desktopApps();
     var html = "";
     var i, id;
     for (i = 0; i < ids.length; i++) {
@@ -186,14 +208,28 @@
     renderDock();
   }
 
+  function dockItemHtml(id) {
+    return '<button type="button" class="dock-item' + (findWindow(id) ? " opened" : "") + '" data-app="' + id + '" title="' + escapeHtml(labelFor(id)) + '" aria-label="Abrir ' + escapeHtml(labelFor(id)) + '">'
+      + iconMarkup(id, true) + "</button>";
+  }
+
   function renderDock() {
     var html = "";
+    var favorites = settings.dock || [];
+    var running = [];
     var i, id;
-    for (i = 0; i < settings.dock.length; i++) {
-      id = settings.dock[i];
-      if (!appExists(id)) continue;
-      html += '<button type="button" class="dock-item' + (findWindow(id) ? " opened" : "") + '" data-app="' + id + '" title="' + escapeHtml(labelFor(id)) + '" aria-label="Abrir ' + escapeHtml(labelFor(id)) + '">'
-        + iconMarkup(id, true) + "</button>";
+    for (i = 0; i < favorites.length; i++) {
+      id = favorites[i];
+      if (appExists(id)) html += dockItemHtml(id);
+    }
+    // Aplicativos abertos que não estão nos favoritos.
+    for (i = 0; i < windows.length; i++) {
+      id = windows[i].appId;
+      if (favorites.indexOf(id) < 0 && running.indexOf(id) < 0 && appExists(id)) running.push(id);
+    }
+    if (running.length) {
+      if (favorites.length) html += '<span class="dock-separator" aria-hidden="true"></span>';
+      for (i = 0; i < running.length; i++) html += dockItemHtml(running[i]);
     }
     dock.innerHTML = html;
   }
@@ -320,6 +356,7 @@
     else if (win.appId === "gallery") renderGallery(win);
     else if (win.appId === "calculator") renderCalculator(win);
     else if (win.appId === "settings") renderSettings(win);
+    else if (win.appId === "launcher") renderLauncher(win);
     else if (Object.prototype.hasOwnProperty.call(MODULE_APPS, win.appId)) renderModuleApp(win, win.appId);
   }
 
@@ -653,6 +690,78 @@
       + '<div class="calculator-keys">' + html + "</div></div></div>";
   }
 
+  // Central de aplicativos: agrupa tudo por categoria e permite pesquisar.
+  function launcherCategories() {
+    var used = {};
+    var others = [];
+    var list = [];
+    var i, j, cat;
+    for (i = 0; i < APP_CATEGORIES.length; i++) {
+      cat = APP_CATEGORIES[i];
+      for (j = 0; j < cat.apps.length; j++) used[cat.apps[j]] = true;
+      list.push(cat);
+    }
+    for (i = 0; i < APP_LIST.length; i++) {
+      if (!used[APP_LIST[i].id]) others.push(APP_LIST[i].id);
+    }
+    if (others.length) list.push({ id: "outros", name: "Outros", apps: others });
+    return list;
+  }
+
+  function renderLauncher(win) {
+    win.content.innerHTML = '<div class="app-panel launcher">'
+      + '<h2>Aplicativos</h2>'
+      + '<div class="launcher-search"><input class="text-field" id="' + win.id + '-launcher-search" type="text" placeholder="Pesquisar aplicativos" aria-label="Pesquisar aplicativos" autocomplete="off"></div>'
+      + '<div class="launcher-groups" id="' + win.id + '-launcher-groups"></div>'
+      + '<p class="muted" id="' + win.id + '-launcher-empty" hidden>Nenhum aplicativo encontrado.</p></div>';
+    renderLauncherGroups(win, "");
+    setStatusLine(win, "Aplicativos prontos");
+  }
+
+  function renderLauncherGroups(win, query) {
+    var host = document.getElementById(win.id + "-launcher-groups");
+    if (!host) return;
+    var q = String(query == null ? "" : query).replace(/^\s+|\s+$/g, "").toLowerCase();
+    var categories = launcherCategories();
+    var html = "";
+    var total = 0;
+    var i, j, cat, apps, id, name;
+    for (i = 0; i < categories.length; i++) {
+      cat = categories[i];
+      apps = "";
+      for (j = 0; j < cat.apps.length; j++) {
+        id = cat.apps[j];
+        if (!appExists(id)) continue;
+        name = labelFor(id);
+        if (q && name.toLowerCase().indexOf(q) < 0 && id.toLowerCase().indexOf(q) < 0) continue;
+        apps += '<button type="button" class="launcher-item" data-app="' + id + '" aria-label="Abrir ' + escapeHtml(name) + '">'
+          + iconMarkup(id, false) + '<span class="launcher-item-label">' + escapeHtml(name) + "</span></button>";
+        total++;
+      }
+      if (apps) {
+        html += '<section class="launcher-group"><h3>' + escapeHtml(cat.name) + '</h3><div class="launcher-grid">' + apps + "</div></section>";
+      }
+    }
+    host.innerHTML = html;
+    var empty = document.getElementById(win.id + "-launcher-empty");
+    if (empty) empty.hidden = total > 0;
+    setStatusLine(win, total + (total === 1 ? " aplicativo" : " aplicativos"));
+  }
+
+  function openLauncherSearch() {
+    var win = openApp("launcher");
+    var field = document.getElementById(win.id + "-launcher-search");
+    if (field) {
+      try { field.focus(); field.select(); } catch (e) {}
+    }
+    return win;
+  }
+
+  function handleLauncherInput(target) {
+    var win = findWindow("launcher");
+    if (win) renderLauncherGroups(win, target.value);
+  }
+
   function renderSettings(win) {
     var i, id, rows = "";
     var order = getOrderedApps();
@@ -662,7 +771,8 @@
         + '<input type="text" maxlength="18" aria-label="Nome de ' + escapeHtml(appById(id).name) + '" data-label-app="' + id + '" value="' + escapeHtml(labelFor(id)) + '">'
         + '<button type="button" data-order-move="-1" data-app-id="' + id + '" aria-label="Mover para cima">↑</button>'
         + '<button type="button" data-order-move="1" data-app-id="' + id + '" aria-label="Mover para baixo">↓</button>'
-        + '<label><input type="checkbox" data-dock-app="' + id + '"' + (settings.dock.indexOf(id) >= 0 ? " checked" : "") + '> Dock</label></div>';
+        + '<label><input type="checkbox" data-dock-app="' + id + '"' + (settings.dock.indexOf(id) >= 0 ? " checked" : "") + '> Dock</label>'
+        + '<label><input type="checkbox" data-desktop-app="' + id + '"' + (settings.desktop.indexOf(id) >= 0 ? " checked" : "") + '> Desktop</label></div>';
     }
     win.content.innerHTML = '<div class="app-panel"><h2>Configurações</h2>'
       + '<section class="settings-group"><strong>Aparência</strong>'
@@ -673,7 +783,7 @@
       + '<label class="action-button" for="' + win.id + '-wallpaper-file">Escolher imagem de fundo</label>'
       + '<input class="hidden" type="file" accept="image/*" id="' + win.id + '-wallpaper-file">'
       + '<button class="action-button" type="button" data-settings-action="reset-wallpaper">Restaurar paisagem original</button></section>'
-      + '<section class="settings-group"><strong>Ícones e Dock</strong><p>Use as setas para reorganizar os ícones da área de trabalho.</p>'
+      + '<section class="settings-group"><strong>Ícones, Desktop e Dock</strong><p>Escolha o que aparece na área de trabalho e no Dock. O restante fica na central de aplicativos.</p>'
       + '<div id="' + win.id + '-app-order">' + rows + '</div></section>'
       + '<section class="settings-group"><strong>Dados locais</strong><p>Preferências, favoritos e tarefas recentes ficam neste aparelho.</p>'
       + '<button class="action-button" type="button" data-settings-action="reset">Restaurar configurações</button></section>'
@@ -1286,7 +1396,7 @@
   function renderMenu(kind, anchor) {
     var items = [];
     if (kind === "arquivo" || kind === "main") {
-      items = [["TIAgente", "app:agent"], ["Navegador", "app:browser"], ["Arquivos", "app:files"], ["Configurações", "app:settings"]];
+      items = [["TIAgente", "app:agent"], ["Navegador", "app:browser"], ["Arquivos", "app:files"], ["Configurações", "app:settings"], ["Aplicativos", "app:launcher"]];
     } else if (kind === "editar") {
       items = [["Calculadora", "app:calculator"], ["Galeria", "app:gallery"], ["E-mail", "app:email"]];
     } else if (kind === "visualizar") {
@@ -1307,7 +1417,7 @@
 
   function handleMenuAction(action) {
     if (action.indexOf("app:") === 0) openApp(action.slice(4));
-    else if (action === "show-apps") openApp("settings");
+    else if (action === "show-apps") openLauncherSearch();
     else if (action === "restore-windows") {
       var i;
       for (i = 0; i < windows.length; i++) if (windows[i].minimized) focusWindow(windows[i]);
@@ -1347,6 +1457,7 @@
     }
     if (menuButton) { renderMenu(menuButton.getAttribute("data-menu"), menuButton); return; }
     if (actionButton && actionButton.getAttribute("data-action") === "menu") { renderMenu("main", actionButton); return; }
+    if (actionButton && actionButton.getAttribute("data-action") === "global-search") { menuPopover.hidden = true; openLauncherSearch(); return; }
     if (menuAction) { handleMenuAction(menuAction.getAttribute("data-menu-action")); return; }
     if (winAction) {
       var id = winAction.getAttribute("data-window");
@@ -1635,6 +1746,15 @@
       renderDock();
       return;
     }
+    if (target.getAttribute("data-desktop-app")) {
+      var deskId = target.getAttribute("data-desktop-app");
+      var deskIndex = settings.desktop.indexOf(deskId);
+      if (target.checked && deskIndex < 0) settings.desktop.push(deskId);
+      if (!target.checked && deskIndex >= 0) settings.desktop.splice(deskIndex, 1);
+      saveSettings();
+      renderDesktopIcons();
+      return;
+    }
     if (target.id && /-theme$/.test(target.id)) {
       settings.theme = target.value;
       saveSettings();
@@ -1666,6 +1786,11 @@
       var gallery = findWindow("gallery");
       if (gallery && target.files) renderGalleryFiles(gallery, target.files);
     }
+  }
+
+  function handleInput(event) {
+    var target = event.target;
+    if (target && target.id && /-launcher-search$/.test(target.id)) handleLauncherInput(target);
   }
 
   function handleSubmit(event) {
@@ -1747,6 +1872,7 @@
     }, false);
     document.addEventListener("click", handleClick, false);
     document.addEventListener("change", handleChange, false);
+    document.addEventListener("input", handleInput, false);
     document.addEventListener("submit", handleSubmit, false);
     document.addEventListener("keydown", handleKeydown, false);
     windowsHost.addEventListener("mousedown", startDrag, false);
