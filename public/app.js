@@ -3610,9 +3610,18 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
     try { tab = new URLSearchParams(location.search).get('tab') || (location.hash || '').replace(/^#\/?/, ''); } catch (_) {}
     tab = String(tab || '').toLowerCase();
     if (!tab || !specials.includes(tab)) return;
-    const go = () => { try { switchEditorPanel(tab); } catch (_) {} };
+    let cancelled = false;
+    // Se o usuário trocar de aba à mão, paramos de reimpor a rota
+    els.editorTabs?.addEventListener('click', () => { cancelled = true; });
+    const go = () => {
+      if (cancelled) return;
+      if (els.editorPanels && els.editorPanels.dataset.active === tab) return; // já aberta
+      try { switchEditorPanel(tab); } catch (_) {}
+    };
     if (document.readyState === 'complete') go();
     else window.addEventListener('load', go, { once: true });
+    // A restauração de sessão pode trocar a aba (auto-preview) depois do load — reimpõe por um curto período
+    [500, 1500, 2800].forEach((ms) => setTimeout(go, ms));
   })();
 })();
 

@@ -21,6 +21,9 @@ const STATE = {
   previewUrl: null,
   busy: false,
   confirmPublish: false, // passo de confirmação explícita de publicação
+  detailTab: 'jogar',    // aba interna do jogo: jogar | ajustes | publicar | historico
+  newGenre: '',          // modelo escolhido na galeria de ideias
+  newDraft: { name: '', description: '' }, // preserva o rascunho ao trocar de modelo
 };
 
 const STATUS_META = {
@@ -91,71 +94,113 @@ function statusBadge(status) {
   return `<span class="px-2 py-[2px] rounded-full border text-[10px] font-bold ${cls}">${esc(status)}</span>`;
 }
 
+/* Ícone do motor (2D = controle · 3D = cubo) usado na galeria de ideias */
+function modelIcon(type) {
+  if (type === '3d') {
+    return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.8 20.5 7.5v9L12 21.2 3.5 16.5v-9z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9.2"/></svg>';
+  }
+  return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2.5" y="7.5" width="19" height="9.5" rx="4.75"/><path d="M7 10.5v3M5.5 12h3M16 11h3M17.5 9.5v3"/></svg>';
+}
+
+/* Abas internas do jogo (evitam empilhar tudo numa tela só) */
+const DETAIL_TABS = [
+  { key: 'jogar', label: 'Jogar' },
+  { key: 'ajustes', label: 'Ajustes' },
+  { key: 'publicar', label: 'Publicar' },
+  { key: 'historico', label: 'Histórico' },
+];
+
+/* Guarda o que o usuário já digitou antes de redesenhar a tela de criação */
+function captureDraft() {
+  const n = $('#gs-f-name');
+  const d = $('#gs-f-desc');
+  const prev = STATE.newDraft || { name: '', description: '' };
+  STATE.newDraft = {
+    name: n ? n.value : prev.name,
+    description: d ? d.value : prev.description,
+  };
+}
+
 function renderList() {
   if (!STATE.games.length) {
-    return `<div class="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-center text-slate-400 text-[13px]">
-      Nenhum jogo criado ainda. Use <span class="text-violet-300 font-semibold">Novo jogo</span> para gerar um jogo jogável (2D em Phaser 3 ou 3D em Three.js).
+    return `<div class="rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center space-y-3">
+      <div class="w-12 h-12 mx-auto rounded-2xl bg-violet-500/15 text-violet-200 grid place-items-center">${modelIcon('3d')}</div>
+      <div class="text-[13px] text-slate-200 font-semibold">Nenhum jogo por aqui ainda</div>
+      <div class="text-[12px] text-slate-500 max-w-[440px] mx-auto">Escolha um modelo e crie seu primeiro jogo em segundos — 2D (Phaser) ou 3D (Three.js).</div>
+      <button data-gs-act="new" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-semibold">Criar meu primeiro jogo</button>
     </div>`;
   }
   const cards = STATE.games.map((g) => {
-    const c = g.config || {};
-    return `<div class="rounded-2xl border border-white/10 bg-white/[0.02] hover:border-violet-400/30 transition p-3">
-      <div class="flex items-start gap-2 flex-wrap">
-        <span class="px-2 py-[2px] rounded-full border border-violet-400/30 bg-violet-500/10 text-[10px] font-bold text-violet-200">${esc(g.genreLabel || genreLabel(g.genre))}</span>
+    const pub = g.publication && g.publication.active;
+    return `<div class="rounded-2xl border border-white/10 bg-white/[0.02] hover:border-violet-400/30 transition p-3.5 flex flex-col">
+      <div class="flex items-center gap-1.5 flex-wrap">
         <span class="px-2 py-[2px] rounded-full border border-white/10 bg-white/5 text-[10px] font-bold text-slate-300">${g.type === '3d' ? '3D' : '2D'}</span>
+        <span class="px-2 py-[2px] rounded-full border border-violet-400/30 bg-violet-500/10 text-[10px] font-bold text-violet-200">${esc(g.genreLabel || genreLabel(g.genre))}</span>
         ${statusBadge(g.status)}
-        ${g.publication && g.publication.active ? `<span class="px-2 py-[2px] rounded-full border text-[10px] font-bold ${g.publication.public ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200' : 'border-amber-400/30 bg-amber-500/10 text-amber-200'}">${g.publication.public ? 'no ar · público' : 'no ar · privado'}</span>` : ''}
-        <span class="px-2 py-[2px] rounded-full border border-white/10 bg-white/5 text-[10px] text-slate-400">${esc(g.technology)}</span>
-        <span class="ml-auto text-[10px] text-slate-500 font-mono">${fmtDate(g.updatedAt)}</span>
+        ${pub ? `<span class="px-2 py-[2px] rounded-full border text-[10px] font-bold ${g.publication.public ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200' : 'border-amber-400/30 bg-amber-500/10 text-amber-200'}">${g.publication.public ? 'no ar' : 'link privado'}</span>` : ''}
       </div>
-      <div class="mt-2 text-[13px] font-semibold text-slate-100">${esc(g.name)}</div>
-      ${g.description ? `<div class="mt-1 text-[12px] text-slate-400">${esc(g.description)}</div>` : ''}
-      <div class="mt-2 flex items-center gap-2 flex-wrap text-[10px] text-slate-500">
-        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm border border-white/20" style="background:${esc(asHex(c.playerColor))}"></span>jogador</span>
-        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm border border-white/20" style="background:${esc(asHex(c.enemyColor))}"></span>inimigo</span>
-        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm border border-white/20" style="background:${esc(asHex(c.itemColor))}"></span>item</span>
-        <span class="px-1.5 py-[1px] rounded bg-white/5 border border-white/10">vel. ${esc(c.speed)}</span>
-        <span class="px-1.5 py-[1px] rounded bg-white/5 border border-white/10">${esc(c.difficulty)}</span>
-        <span class="ml-auto">${g.versionsCount} versão(ões) · ${g.testsCount} teste(s)</span>
-      </div>
-      <div class="mt-2.5 flex items-center gap-1.5 flex-wrap">
-        <button data-gs-act="open" data-id="${esc(g.id)}" class="text-[11px] px-2 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300">Abrir</button>
-        <button data-gs-act="preview" data-id="${esc(g.id)}" class="text-[11px] px-2 py-1 rounded-lg border border-sky-400/30 bg-sky-500/10 hover:bg-sky-500/20 text-sky-200">Pré-visualizar</button>
-        <button data-gs-act="test" data-id="${esc(g.id)}" class="text-[11px] px-2 py-1 rounded-lg border border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-200">Testar</button>
-        <button data-gs-act="copy" data-url="${esc(g.previewUrl)}" class="text-[11px] px-2 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300">Copiar link</button>
-        <button data-gs-act="delete" data-id="${esc(g.id)}" class="text-[11px] px-2 py-1 rounded-lg border border-rose-400/20 bg-rose-500/5 hover:bg-rose-500/15 text-rose-300 ml-auto">Excluir</button>
+      <div class="mt-2 text-[14px] font-semibold text-slate-100 truncate">${esc(g.name)}</div>
+      <div class="mt-0.5 text-[11.5px] text-slate-400 leading-snug min-h-[32px]">${g.description ? esc(g.description) : '<span class="text-slate-600">Sem descrição</span>'}</div>
+      <div class="mt-2 text-[10.5px] text-slate-500">Atualizado ${fmtDate(g.updatedAt)} · ${g.versionsCount} versão(ões) · ${g.testsCount} teste(s)</div>
+      <div class="mt-3 flex items-center gap-1.5 flex-wrap">
+        <button data-gs-act="open" data-id="${esc(g.id)}" class="text-[11.5px] px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold">Abrir jogo</button>
+        <button data-gs-act="test" data-id="${esc(g.id)}" class="text-[11.5px] px-3 py-1.5 rounded-lg border border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-200">Testar</button>
+        <button data-gs-act="delete" data-id="${esc(g.id)}" class="text-[11.5px] px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-rose-300 hover:bg-rose-500/10 ml-auto" title="Excluir do Game Studio">Excluir</button>
       </div>
     </div>`;
   }).join('');
   return `<div class="space-y-3">
     <div class="flex items-center gap-2 flex-wrap">
-      <div class="text-[12px] text-slate-400">${STATE.games.length} jogo(s) no workspace.</div>
-      <button data-gs-act="new" class="ml-auto px-3 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-semibold">Novo jogo</button>
+      <div class="text-[12px] text-slate-400">${STATE.games.length} jogo(s)</div>
+      <button data-gs-act="new" class="ml-auto px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-semibold">+ Novo jogo</button>
     </div>
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-3">${cards}</div>
   </div>`;
 }
 
 function renderNew() {
-  const opt = (t) => `<option value="${esc(t.genre)}">${esc(t.label)} — ${esc(t.description)}</option>`;
   const only2d = STATE.templates.filter(t => t.type !== '3d');
   const only3d = STATE.templates.filter(t => t.type === '3d');
-  const opts = (only2d.length ? `<optgroup label="2D · Phaser 3">${only2d.map(opt).join('')}</optgroup>` : '')
-    + (only3d.length ? `<optgroup label="3D · Three.js">${only3d.map(opt).join('')}</optgroup>` : '');
-  return `<div class="max-w-[900px] space-y-3">
-    <div class="text-[13px] font-bold text-violet-200">Novo jogo (2D ou 3D)</div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <label class="text-[11px] text-slate-400 md:col-span-2">Nome do jogo
-        <input id="gs-f-name" class="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[13px] text-slate-100" placeholder="Ex.: Caverna Azul" value=""></label>
-      <label class="text-[11px] text-slate-400 md:col-span-2">Tipo de jogo
-        <select id="gs-f-genre" class="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[13px] text-slate-100">${opts}</select></label>
-      <label class="text-[11px] text-slate-400 md:col-span-2">Descrição (opcional)
-        <input id="gs-f-desc" class="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[13px] text-slate-100" placeholder="Uma frase sobre o objetivo do jogo"></label>
+  const draft = STATE.newDraft || { name: '', description: '' };
+  const selected = STATE.newGenre
+    || (only2d[0] && only2d[0].genre)
+    || (only3d[0] && only3d[0].genre)
+    || '';
+  STATE.newGenre = selected;
+
+  const card = (t) => {
+    const on = t.genre === selected;
+    return `<button type="button" data-gs-act="pick-genre" data-genre="${esc(t.genre)}" class="text-left rounded-2xl border p-3 flex items-start gap-3 transition ${on ? 'border-violet-400/60 bg-violet-500/10' : 'border-white/10 bg-white/[0.02] hover:border-violet-300/30 hover:bg-white/[0.04]'}">
+      <span class="shrink-0 w-10 h-10 rounded-xl grid place-items-center ${t.type === '3d' ? 'bg-violet-500/20 text-violet-200' : 'bg-sky-500/15 text-sky-200'}">${modelIcon(t.type)}</span>
+      <span class="min-w-0">
+        <span class="block text-[12.5px] font-semibold text-slate-100">${esc(t.label)}</span>
+        <span class="block text-[11px] text-slate-400 leading-snug">${esc(t.description)}</span>
+      </span>
+      <span class="ml-auto shrink-0 text-[13px] ${on ? 'text-violet-300' : 'text-transparent'}">✓</span>
+    </button>`;
+  };
+  const group = (title, hint, list) => list.length ? `<div class="space-y-2">
+      <div class="flex items-baseline gap-2">
+        <span class="text-[11.5px] font-bold text-violet-200 uppercase tracking-wide">${title}</span>
+        <span class="text-[10.5px] text-slate-500">${hint}</span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">${list.map(card).join('')}</div>
+    </div>` : '';
+
+  return `<div class="max-w-[880px] space-y-4">
+    <div class="space-y-1">
+      <div class="text-[14px] font-bold text-slate-100">Criar um jogo novo</div>
+      <div class="text-[11.5px] text-slate-500">Dê um nome, escolha um modelo e pronto — você ajusta o resto depois, jogando.</div>
     </div>
-    <div class="flex items-center gap-2">
-      <button data-gs-act="create" class="px-3 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-semibold">Criar jogo</button>
-      <button data-gs-act="cancel" class="px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 text-[12px]">Cancelar</button>
-      <span class="text-[10.5px] text-slate-500">Jogos 2D usam Phaser 3; jogos 3D usam Three.js (ambos MIT). Nenhuma imagem/som externo é baixado.</span>
+    <label class="block text-[11px] text-slate-400">Nome do jogo
+      <input id="gs-f-name" value="${esc(draft.name)}" class="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-[13px] text-slate-100" placeholder="Ex.: Caverna Azul"></label>
+    <label class="block text-[11px] text-slate-400">Descrição <span class="text-slate-600">(opcional)</span>
+      <input id="gs-f-desc" value="${esc(draft.description)}" class="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[12.5px] text-slate-100" placeholder="Uma frase sobre o objetivo do jogo"></label>
+    ${group('2D · Phaser 3', 'clássicos em tela plana', only2d)}
+    ${group('3D · Three.js', 'câmera em perspectiva', only3d)}
+    <div class="flex items-center gap-2 pt-1">
+      <button data-gs-act="create" class="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[12.5px] font-semibold">Criar jogo</button>
+      <button data-gs-act="cancel" class="px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 text-[12.5px]">Cancelar</button>
     </div>
   </div>`;
 }
@@ -164,9 +209,100 @@ function renderDetail() {
   const d = STATE.detail;
   if (!d) return '<div class="text-[12px] text-slate-400">Carregando…</div>';
   const g = d.game;
-  const c = g.config || {};
-  const lastTest = g.lastTest;
+  const tab = DETAIL_TABS.some(t => t.key === STATE.detailTab) ? STATE.detailTab : 'jogar';
+  STATE.detailTab = tab;
+  const pubActive = !!(g.publication && g.publication.active);
 
+  const tabs = DETAIL_TABS.map(t =>
+    `<button data-gs-act="detail-tab" data-tab="${t.key}" class="px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition ${tab === t.key ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}">${t.label}${t.key === 'publicar' && pubActive ? '<span class="text-emerald-300"> •</span>' : ''}</button>`).join('');
+
+  let panel = '';
+  if (tab === 'ajustes') panel = renderTabAjustes(g);
+  else if (tab === 'publicar') panel = renderPublication(g);
+  else if (tab === 'historico') panel = renderTabHistorico(d, g);
+  else panel = renderTabJogar(g);
+
+  return `<div class="space-y-3">
+    <div class="flex items-center gap-2 flex-wrap">
+      <button data-gs-act="back" class="text-[11px] px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300">‹ Meus projetos</button>
+      <div class="text-[15px] font-bold text-slate-100 truncate">${esc(g.name)}</div>
+      <span class="px-2 py-[2px] rounded-full border border-white/10 bg-white/5 text-[10px] font-bold text-slate-300">${g.type === '3d' ? '3D' : '2D'}</span>
+      <span class="px-2 py-[2px] rounded-full border border-violet-400/30 bg-violet-500/10 text-[10px] font-bold text-violet-200">${esc(g.genreLabel)}</span>
+      ${statusBadge(g.status)}
+      <div class="ml-auto flex items-center gap-1.5">
+        ${pubActive ? `<button data-gs-act="copy" data-url="${esc(g.publication.url)}" class="text-[11px] px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300">Copiar link</button>` : ''}
+        <button data-gs-act="test" data-id="${esc(g.id)}" class="text-[11px] px-3 py-1.5 rounded-lg border border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-200 font-semibold">Testar</button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1 flex-wrap border-b border-white/10 pb-2">${tabs}</div>
+
+    ${panel}
+
+    <details class="rounded-2xl border border-white/10 bg-white/[0.02]">
+      <summary class="cursor-pointer select-none px-3 py-2 text-[11.5px] text-slate-400 hover:text-slate-200">Detalhes técnicos</summary>
+      <div class="px-3 pb-3 pt-1 space-y-1.5">
+        ${(d.resources || []).map(r => `<div class="text-[11px] text-slate-400">${esc(r.name)} ${esc(r.version)} · licença ${esc(r.license)} · <span class="font-mono text-slate-500">${esc(r.url)}</span></div>`).join('')}
+        <div class="text-[11px] text-slate-500">Projeto no workspace: <span class="font-mono">${esc(g.slug)}</span> · arquivos: ${esc((g.files || []).join(', '))}</div>
+      </div>
+    </details>
+  </div>`;
+}
+
+function renderTabJogar(g) {
+  const url = STATE.previewUrl || g.previewUrl || '';
+  return `<div class="space-y-3">
+    <div class="rounded-2xl border border-white/10 overflow-hidden bg-black/40">
+      <div class="flex items-center gap-2 px-3 py-1.5 border-b border-white/10 text-[10.5px] text-slate-500">
+        <span id="gs-url" class="font-mono truncate">${esc(url)}</span>
+        <button data-gs-act="reload-preview" data-id="${esc(g.id)}" class="ml-auto shrink-0 px-2 py-0.5 rounded-md border border-sky-400/30 bg-sky-500/10 hover:bg-sky-500/20 text-sky-200">Atualizar prévia</button>
+      </div>
+      <iframe id="gs-frame" sandbox="allow-forms allow-scripts" title="Pré-visualização do jogo"
+        class="w-full block bg-black" style="height:min(56vh,520px)" src="${url ? esc(url) : 'about:blank'}"></iframe>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
+      <div class="text-[12px] font-semibold text-violet-200">Descreva uma mudança</div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <input id="gs-cmd" class="flex-1 min-w-[220px] rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[12px] text-slate-100" placeholder="Ex.: deixe o jogador verde e mais rápido">
+        <button data-gs-act="command" data-id="${esc(g.id)}" class="px-3 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-semibold">Aplicar</button>
+      </div>
+      <div class="flex items-center gap-1.5 flex-wrap">
+        ${QUICK_COMMANDS.map(q => `<button data-gs-act="quick" data-id="${esc(g.id)}" data-cmd="${esc(q)}" class="text-[10.5px] px-2 py-1 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300">${esc(q)}</button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTabAjustes(g) {
+  const c = g.config || {};
+  return `<div class="rounded-2xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
+    <div class="text-[12px] font-semibold text-violet-200">Ajustes rápidos</div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <label class="text-[10.5px] text-slate-400">Cor do jogador
+        <input id="gs-c-player" type="color" value="${esc(asHex(c.playerColor))}" class="mt-1 w-full h-8 rounded-lg border border-white/10 bg-black/30"></label>
+      <label class="text-[10.5px] text-slate-400">Cor do inimigo
+        <input id="gs-c-enemy" type="color" value="${esc(asHex(c.enemyColor))}" class="mt-1 w-full h-8 rounded-lg border border-white/10 bg-black/30"></label>
+      <label class="text-[10.5px] text-slate-400">Cor do item
+        <input id="gs-c-item" type="color" value="${esc(asHex(c.itemColor))}" class="mt-1 w-full h-8 rounded-lg border border-white/10 bg-black/30"></label>
+      <label class="text-[10.5px] text-slate-400">Fundo
+        <input id="gs-c-bg" type="color" value="${esc(asHex(c.background))}" class="mt-1 w-full h-8 rounded-lg border border-white/10 bg-black/30"></label>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <label class="text-[10.5px] text-slate-400">Velocidade: <span id="gs-v-speed">${esc(c.speed)}</span>
+        <input id="gs-c-speed" type="range" min="80" max="900" step="10" value="${esc(c.speed)}" class="mt-1 w-full"></label>
+      <label class="text-[10.5px] text-slate-400">Dificuldade
+        <select id="gs-c-diff" class="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-[12px] text-slate-100">
+          ${['facil', 'normal', 'dificil'].map(dd => `<option value="${dd}" ${c.difficulty === dd ? 'selected' : ''}>${dd}</option>`).join('')}
+        </select></label>
+      <label class="text-[10.5px] text-slate-400">Inimigos extras
+        <input id="gs-c-enemies" type="number" min="0" max="12" value="${esc(c.extraEnemies)}" class="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-[12px] text-slate-100"></label>
+    </div>
+    <button data-gs-act="save-config" data-id="${esc(g.id)}" class="px-3 py-2 rounded-xl border border-violet-400/30 bg-violet-500/10 hover:bg-violet-500/20 text-violet-100 text-[12px] font-semibold">Salvar ajustes</button>
+  </div>`;
+}
+
+function renderTabHistorico(d, g) {
   const commands = (d.commands || []).slice().reverse().map(cm =>
     `<div class="text-[11px] text-slate-400 border-b border-white/5 py-1 flex items-center gap-2">
       <span class="text-slate-500 font-mono">${fmtDate(cm.at)}</span>
@@ -191,89 +327,18 @@ function renderDetail() {
       <button data-gs-act="restore" data-id="${esc(g.id)}" data-version="${esc(v.id)}" class="text-[10.5px] px-2 py-0.5 rounded-md border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300">Restaurar</button>
     </div>`).join('') || '<div class="text-[11px] text-slate-500">Sem versões.</div>';
 
-  const pubCard = renderPublication(g);
-
-  return `<div class="space-y-3">
-    <div class="flex items-center gap-2 flex-wrap">
-      <button data-gs-act="back" class="text-[11px] px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300">Voltar</button>
-      <div class="text-[13px] font-bold text-slate-100 truncate">${esc(g.name)}</div>
-      <span class="px-2 py-[2px] rounded-full border border-violet-400/30 bg-violet-500/10 text-[10px] font-bold text-violet-200">${esc(g.genreLabel)}</span>
-      ${statusBadge(g.status)}
-      <span class="px-2 py-[2px] rounded-full border border-white/10 bg-white/5 text-[10px] text-slate-400">${esc(g.technology)}</span>
-      <div class="ml-auto flex items-center gap-1.5">
-        <button data-gs-act="reload-preview" data-id="${esc(g.id)}" class="text-[11px] px-2.5 py-1.5 rounded-lg border border-sky-400/30 bg-sky-500/10 hover:bg-sky-500/20 text-sky-200">Atualizar prévia</button>
-        <button data-gs-act="test" data-id="${esc(g.id)}" class="text-[11px] px-2.5 py-1.5 rounded-lg border border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-200">Testar</button>
-        <button data-gs-act="copy" data-url="${esc(g.previewUrl)}" class="text-[11px] px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300">Copiar link</button>
-      </div>
-    </div>
-
-    <div class="rounded-2xl border border-white/10 overflow-hidden bg-black/40">
-      <div class="flex items-center gap-2 px-3 py-1.5 border-b border-white/10 text-[10.5px] text-slate-500">
-        <span class="font-mono truncate">${esc(STATE.previewUrl || g.previewUrl)}</span>
-        <span class="ml-auto">pré-visualização isolada</span>
-      </div>
-      <iframe id="gs-frame" sandbox="allow-forms allow-scripts" title="Pré-visualização do jogo"
-        class="w-full block bg-black" style="height:min(58vh,540px)" src="${STATE.previewUrl ? esc(STATE.previewUrl) : 'about:blank'}"></iframe>
-    </div>
-
+  return `<div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
     <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
-      <div class="text-[12px] font-semibold text-violet-200">Editar por comando</div>
-      <div class="flex items-center gap-2 flex-wrap">
-        <input id="gs-cmd" class="flex-1 min-w-[220px] rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[12px] text-slate-100" placeholder="Ex.: deixe o jogador verde e mais rápido">
-        <button data-gs-act="command" data-id="${esc(g.id)}" class="px-3 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-semibold">Aplicar</button>
-      </div>
-      <div class="flex items-center gap-1.5 flex-wrap">
-        ${QUICK_COMMANDS.map(q => `<button data-gs-act="quick" data-id="${esc(g.id)}" data-cmd="${esc(q)}" class="text-[10.5px] px-2 py-1 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300">${esc(q)}</button>`).join('')}
-      </div>
-      <div class="text-[10.5px] text-slate-500">A alteração reescreve apenas o game.js (e o título, se mudar) — o projeto não é regerado inteiro.</div>
+      <div class="text-[12px] font-semibold text-violet-200">Testes</div>
+      ${tests}
     </div>
-
     <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
-      <div class="text-[12px] font-semibold text-violet-200">Ajustes rápidos</div>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <label class="text-[10.5px] text-slate-400">Cor do jogador
-          <input id="gs-c-player" type="color" value="${esc(asHex(c.playerColor))}" class="mt-1 w-full h-8 rounded-lg border border-white/10 bg-black/30"></label>
-        <label class="text-[10.5px] text-slate-400">Cor do inimigo
-          <input id="gs-c-enemy" type="color" value="${esc(asHex(c.enemyColor))}" class="mt-1 w-full h-8 rounded-lg border border-white/10 bg-black/30"></label>
-        <label class="text-[10.5px] text-slate-400">Cor do item
-          <input id="gs-c-item" type="color" value="${esc(asHex(c.itemColor))}" class="mt-1 w-full h-8 rounded-lg border border-white/10 bg-black/30"></label>
-        <label class="text-[10.5px] text-slate-400">Fundo
-          <input id="gs-c-bg" type="color" value="${esc(asHex(c.background))}" class="mt-1 w-full h-8 rounded-lg border border-white/10 bg-black/30"></label>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-        <label class="text-[10.5px] text-slate-400">Velocidade: <span id="gs-v-speed">${esc(c.speed)}</span>
-          <input id="gs-c-speed" type="range" min="80" max="900" step="10" value="${esc(c.speed)}" class="mt-1 w-full"></label>
-        <label class="text-[10.5px] text-slate-400">Dificuldade
-          <select id="gs-c-diff" class="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-[12px] text-slate-100">
-            ${['facil', 'normal', 'dificil'].map(dd => `<option value="${dd}" ${c.difficulty === dd ? 'selected' : ''}>${dd}</option>`).join('')}
-          </select></label>
-        <label class="text-[10.5px] text-slate-400">Inimigos extras
-          <input id="gs-c-enemies" type="number" min="0" max="12" value="${esc(c.extraEnemies)}" class="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-[12px] text-slate-100"></label>
-      </div>
-      <button data-gs-act="save-config" data-id="${esc(g.id)}" class="px-3 py-2 rounded-xl border border-violet-400/30 bg-violet-500/10 hover:bg-violet-500/20 text-violet-100 text-[12px] font-semibold">Salvar ajustes</button>
+      <div class="text-[12px] font-semibold text-violet-200">Histórico de versões</div>
+      <div class="space-y-1.5">${versions}</div>
     </div>
-
-    ${pubCard}
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-      <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
-        <div class="text-[12px] font-semibold text-violet-200">Testes</div>
-        ${tests}
-      </div>
-      <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
-        <div class="text-[12px] font-semibold text-violet-200">Histórico de versões</div>
-        <div class="space-y-1.5">${versions}</div>
-      </div>
-      <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
-        <div class="text-[12px] font-semibold text-violet-200">Alterações por comando</div>
-        ${commands}
-      </div>
-    </div>
-
-    <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-3 space-y-1.5">
-      <div class="text-[12px] font-semibold text-violet-200">Fontes e licenças</div>
-      ${(d.resources || []).map(r => `<div class="text-[11px] text-slate-400">${esc(r.name)} ${esc(r.version)} · licença ${esc(r.license)} · <span class="font-mono text-slate-500">${esc(r.url)}</span></div>`).join('')}
-      <div class="text-[11px] text-slate-500">Projeto no workspace: <span class="font-mono">${esc(g.slug)}</span> · arquivos: ${esc((g.files || []).join(', '))}</div>
+    <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
+      <div class="text-[12px] font-semibold text-violet-200">Alterações por comando</div>
+      ${commands}
     </div>
   </div>`;
 }
@@ -381,21 +446,25 @@ async function startPreview(id, reload) {
     STATE.previewUrl = d.url + (reload ? ('?t=' + Date.now()) : '');
     const frame = $('#gs-frame');
     if (frame) frame.src = STATE.previewUrl;
-    else render();
+    const label = $('#gs-url');
+    if (label) label.textContent = STATE.previewUrl;
   } catch (e) { toast(e.message || 'Falha na pré-visualização.', 'err'); }
 }
 
 async function createGame() {
   const name = ($('#gs-f-name') && $('#gs-f-name').value.trim()) || '';
-  const genre = ($('#gs-f-genre') && $('#gs-f-genre').value) || '';
+  const genre = STATE.newGenre || '';
   const description = ($('#gs-f-desc') && $('#gs-f-desc').value.trim()) || '';
   if (!name) { toast('Informe o nome do jogo.', 'err'); return; }
+  if (!genre) { toast('Escolha um modelo para o jogo.', 'err'); return; }
   if (STATE.busy) return;
   STATE.busy = true;
   try {
     const d = await api('/create', { method: 'POST', body: { name, genre, description } });
     toast('Jogo criado: ' + d.game.name, 'ok');
     if (d.hints && d.hints.length) toast('Memória: ' + d.hints.length + ' registro(s) relacionado(s) encontrado(s).', 'info');
+    STATE.newDraft = { name: '', description: '' };
+    STATE.newGenre = '';
     await loadList();
     await openDetail(d.game.id);
   } catch (e) { toast(e.message || 'Falha ao criar o jogo.', 'err'); }
@@ -498,12 +567,19 @@ function onClick(ev) {
   if (!t) return;
   const act = t.getAttribute('data-gs-act');
   const id = t.getAttribute('data-id');
-  if (act === 'new') { STATE.view = 'new'; render(); }
-  else if (act === 'cancel') { STATE.view = 'list'; render(); }
+  if (act === 'new') { STATE.view = 'new'; STATE.newDraft = { name: '', description: '' }; STATE.newGenre = ''; render(); }
+  else if (act === 'cancel') { STATE.view = 'list'; STATE.newDraft = { name: '', description: '' }; STATE.newGenre = ''; render(); }
+  else if (act === 'pick-genre') { captureDraft(); STATE.newGenre = t.getAttribute('data-genre'); render(); }
   else if (act === 'create') { createGame(); }
-  else if (act === 'open' && id) { openDetail(id); }
+  else if (act === 'open' && id) { STATE.detailTab = 'jogar'; openDetail(id); }
   else if (act === 'back') { STATE.view = 'list'; loadList(); }
-  else if (act === 'preview' && id) { openDetail(id); }
+  else if (act === 'preview' && id) { STATE.detailTab = 'jogar'; openDetail(id); }
+  else if (act === 'detail-tab') {
+    const tb = t.getAttribute('data-tab');
+    STATE.detailTab = DETAIL_TABS.some(x => x.key === tb) ? tb : 'jogar';
+    if (STATE.detailTab === 'jogar' && STATE.detail && !STATE.previewUrl) startPreview(STATE.detail.game.id, false);
+    render();
+  }
   else if (act === 'reload-preview' && id) { startPreview(id, true); }
   else if (act === 'test' && id) { runTest(id); }
   else if (act === 'command' && id) { runCommand(id, ($('#gs-cmd') && $('#gs-cmd').value.trim()) || ''); }
