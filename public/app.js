@@ -1843,7 +1843,7 @@ function switchEditorPanel(name) {
     els.app?.classList.add('right-open');
     try { els.agentInput?.focus(); } catch {}
   }
-  const allowed = ['code','preview','console','terminal','ia-config','btc','quantfury','jogos','tigrinho','curriculos'];
+  const allowed = ['code','preview','console','terminal','ia-config','btc','quantfury','jogos','tigrinho','curriculos','memoria','gamestudio','pesquisa'];
   if (allowed.includes(activeKey) || n.startsWith('code:')) {
     if (previousActive === 'jogos' && activeKey !== 'jogos') {
       if (typeof window.__jogosOnTabClose === 'function') try { window.__jogosOnTabClose(); } catch(_) {}
@@ -1853,6 +1853,15 @@ function switchEditorPanel(name) {
     }
     if (previousActive === 'curriculos' && activeKey !== 'curriculos') {
       if (typeof window.__curriculosOnTabClose === 'function') try { window.__curriculosOnTabClose(); } catch(_) {}
+    }
+    if (previousActive === 'memoria' && activeKey !== 'memoria') {
+      if (typeof window.__memoriaOnTabClose === 'function') try { window.__memoriaOnTabClose(); } catch(_) {}
+    }
+    if (previousActive === 'gamestudio' && activeKey !== 'gamestudio') {
+      if (typeof window.__gamestudioOnTabClose === 'function') try { window.__gamestudioOnTabClose(); } catch(_) {}
+    }
+    if (previousActive === 'pesquisa' && activeKey !== 'pesquisa') {
+      if (typeof window.__pesquisaOnTabClose === 'function') try { window.__pesquisaOnTabClose(); } catch(_) {}
     }
     if (els.editorPanels) els.editorPanels.dataset.active = activeKey;
     if (activeKey === 'btc') _btcLoadStatusIfMissing();
@@ -1864,6 +1873,15 @@ function switchEditorPanel(name) {
     }
     if (activeKey === 'curriculos') {
       if (typeof window.__curriculosOnTabOpen === 'function') try { window.__curriculosOnTabOpen(); } catch(_) {}
+    }
+    if (activeKey === 'memoria') {
+      if (typeof window.__memoriaOnTabOpen === 'function') try { window.__memoriaOnTabOpen(); } catch(_) {}
+    }
+    if (activeKey === 'gamestudio') {
+      if (typeof window.__gamestudioOnTabOpen === 'function') try { window.__gamestudioOnTabOpen(); } catch(_) {}
+    }
+    if (activeKey === 'pesquisa') {
+      if (typeof window.__pesquisaOnTabOpen === 'function') try { window.__pesquisaOnTabOpen(); } catch(_) {}
     }
     if (activeKey === 'quantfury') {
       if (typeof window.__editorTabHandler === 'function') try { window.__editorTabHandler('quantfury'); } catch(_) {}
@@ -3576,7 +3594,7 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
     else if (!t.dataset.codeFile) t.classList.remove('active');
   });
   // Listeners das 4 abas fixas (Chat removido do centro — foi pro painel direito TiAi)
-  const specials = ['preview','console','terminal','code','ia-config','btc','quantfury','jogos','tigrinho','curriculos'];
+  const specials = ['preview','console','terminal','code','ia-config','btc','quantfury','jogos','tigrinho','curriculos','memoria','gamestudio','pesquisa'];
   specials.forEach(key => {
     const tab = els.editorTabs?.querySelector(`[data-editor-tab="${key}"]`);
     if (tab && !tab.__attSp) {
@@ -3586,12 +3604,22 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
   });
   // RC15: Garante Code como aba inicial (se não tiver nenhum arquivo aberto ainda)
   switchEditorPanel('code');
+  // Rota de URL: /?tab=<modulo> abre o painel direto (usado pelo TIAgente OS)
+  (function openTabFromUrl(){
+    let tab = '';
+    try { tab = new URLSearchParams(location.search).get('tab') || (location.hash || '').replace(/^#\/?/, ''); } catch (_) {}
+    tab = String(tab || '').toLowerCase();
+    if (!tab || !specials.includes(tab)) return;
+    const go = () => { try { switchEditorPanel(tab); } catch (_) {} };
+    if (document.readyState === 'complete') go();
+    else window.addEventListener('load', go, { once: true });
+  })();
 })();
 
 /* switchTab LEGADA (rotas antigas chamam switchTab('preview')) — redireciona para switchEditorPanel moderno */
 const _origSwitchTab = switchTab;
 switchTab = function(name) {
-  if (['preview','console','terminal','chat','code','ia-config','btc','quantfury','jogos','tigrinho','curriculos'].includes(String(name))) {
+  if (['preview','console','terminal','chat','code','ia-config','btc','quantfury','jogos','tigrinho','curriculos','memoria','gamestudio','pesquisa'].includes(String(name))) {
     switchEditorPanel(String(name));
   } else if (_origSwitchTab) {
     return _origSwitchTab(name);

@@ -4,21 +4,42 @@
   var STORAGE_KEY = "tiagente.os.v1";
   var APP_LIST = [
     { id: "browser", name: "Navegador" },
+    { id: "studio", name: "Estúdio" },
     { id: "files", name: "Arquivos" },
     { id: "email", name: "E-mail" },
     { id: "terminal", name: "Terminal" },
     { id: "agent", name: "TIAgente" },
     { id: "settings", name: "Configurações" },
     { id: "gallery", name: "Galeria" },
-    { id: "calculator", name: "Calculadora" }
+    { id: "calculator", name: "Calculadora" },
+    { id: "gamestudio", name: "Game Studio" },
+    { id: "jogos", name: "Jogos" },
+    { id: "tigrinho", name: "Tigrinho" },
+    { id: "curriculos", name: "Currículos" },
+    { id: "memoria", name: "Memória" },
+    { id: "pesquisa", name: "Pesquisa" },
+    { id: "btc", name: "BTC Market" },
+    { id: "quantfury", name: "Quantfury" }
   ];
+  // Módulos da SPA principal exibidos como apps. Cada um abre a aba
+  // correspondente num iframe via rota "/?tab=<id>" (reaproveita as telas existentes).
+  var MODULE_APPS = {
+    gamestudio: "Game Studio",
+    jogos: "Jogos",
+    tigrinho: "Tigrinho",
+    curriculos: "Currículos",
+    memoria: "Memória",
+    pesquisa: "Pesquisa",
+    btc: "BTC Market",
+    quantfury: "Quantfury"
+  };
   var DEFAULTS = {
     theme: "dark",
     accent: "violet",
     wallpaper: "",
     labels: {},
-    order: ["browser", "files", "email", "terminal", "agent", "settings", "gallery", "calculator"],
-    dock: ["browser", "files", "email", "agent", "settings", "calculator", "gallery", "terminal"],
+    order: ["browser", "studio", "files", "email", "terminal", "agent", "settings", "gallery", "calculator", "gamestudio", "jogos", "tigrinho", "curriculos", "memoria", "pesquisa", "btc", "quantfury"],
+    dock: ["browser", "studio", "files", "email", "agent", "settings", "calculator", "gallery", "terminal"],
     taskHistory: [],
     favorites: [],
     browserHistory: [],
@@ -103,13 +124,22 @@
   function iconSvg(id) {
     var icons = {
       browser: '<circle cx="32" cy="32" r="25" fill="#16a8ed"/><circle cx="32" cy="32" r="21" fill="none" stroke="#baf4ff" stroke-width="2"/><path d="M43 18L35 37 20 45l9-17z" fill="#fff"/><path d="M43 18L35 37l-6-9z" fill="#fa526f"/><circle cx="32" cy="32" r="2.5" fill="#fff"/>',
+      studio: '<rect x="7" y="12" width="50" height="34" rx="6" fill="#2b2540"/><rect x="11" y="16" width="42" height="26" rx="3" fill="#f6f5ff"/><path d="M13 18h10" stroke="#8f86c9" stroke-width="2"/><rect x="13" y="23" width="16" height="15" rx="2" fill="#6d4be0"/><path d="M33 25h18M33 30h18M33 35h12" stroke="#b9b2e8" stroke-width="2.4"/><path d="M24 50h16l-2 6H26z" fill="#3d3660"/>',
       files: '<path d="M8 18a5 5 0 0 1 5-5h13l5 5h20a5 5 0 0 1 5 5v20a5 5 0 0 1-5 5H13a5 5 0 0 1-5-5z" fill="#10b7ee"/><path d="M8 26h48l-5 20a4 4 0 0 1-4 3H12a4 4 0 0 1-4-4z" fill="#0786db"/>',
       email: '<rect x="8" y="15" width="48" height="34" rx="5" fill="#f4fbff"/><path d="M10 18l22 17 22-17" fill="none" stroke="#168de0" stroke-width="4" stroke-linejoin="round"/><path d="M10 46l15-13m29 13L39 33" fill="none" stroke="#6dcaf2" stroke-width="2"/>',
       terminal: '<rect x="7" y="10" width="50" height="44" rx="9" fill="#1b2030"/><path d="M17 23l9 8-9 8m14 0h13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>',
       agent: '<circle cx="32" cy="32" r="27" fill="#311082"/><path d="M32 12v7" stroke="#f2eaff" stroke-width="3"/><circle cx="32" cy="9" r="4" fill="#fff"/><rect x="16" y="20" width="32" height="25" rx="9" fill="#f8f6ff"/><rect x="20" y="25" width="24" height="14" rx="6" fill="#101b51"/><circle cx="27" cy="32" r="2.5" fill="#38ddff"/><circle cx="37" cy="32" r="2.5" fill="#38ddff"/><path d="M23 49h18" stroke="#fff" stroke-width="4" stroke-linecap="round"/>',
       settings: '<path d="M28 8h8l2 6 5 2 5-3 6 6-3 5 2 5 6 2v8l-6 2-2 5 3 5-6 6-5-3-5 2-2 6h-8l-2-6-5-2-5 3-6-6 3-5-2-5-6-2v-8l6-2 2-5-3-5 6-6 5 3 5-2z" fill="#9098ac" transform="translate(-1,-3) scale(.98)"/><circle cx="32" cy="32" r="10" fill="#34394c"/><circle cx="32" cy="32" r="5" fill="#dfe6f8"/>',
       gallery: '<rect x="9" y="12" width="46" height="40" rx="6" fill="#7650df"/><circle cx="22" cy="24" r="4" fill="#ffe27a"/><path d="M12 46l13-14 9 9 8-11 11 16z" fill="#72dfdc"/>',
-      calculator: '<rect x="11" y="8" width="42" height="48" rx="8" fill="#444a61"/><rect x="17" y="14" width="30" height="12" rx="3" fill="#d8fbef"/><g fill="#fff"><circle cx="21" cy="34" r="3"/><circle cx="32" cy="34" r="3"/><circle cx="43" cy="34" r="3"/><circle cx="21" cy="45" r="3"/><circle cx="32" cy="45" r="3"/></g><circle cx="43" cy="45" r="4" fill="#f1a341"/>'
+      calculator: '<rect x="11" y="8" width="42" height="48" rx="8" fill="#444a61"/><rect x="17" y="14" width="30" height="12" rx="3" fill="#d8fbef"/><g fill="#fff"><circle cx="21" cy="34" r="3"/><circle cx="32" cy="34" r="3"/><circle cx="43" cy="34" r="3"/><circle cx="21" cy="45" r="3"/><circle cx="32" cy="45" r="3"/></g><circle cx="43" cy="45" r="4" fill="#f1a341"/>',
+      gamestudio: '<rect width="64" height="64" rx="14" fill="#6d28d9"/><rect x="8" y="24" width="48" height="19" rx="9.5" fill="#fff"/><circle cx="16.5" cy="42.5" r="9" fill="#fff"/><circle cx="47.5" cy="42.5" r="9" fill="#fff"/><rect x="20.4" y="28.5" width="4.2" height="12.2" rx="1.4" fill="#5b21b6"/><rect x="16.4" y="32.5" width="12.2" height="4.2" rx="1.4" fill="#5b21b6"/><circle cx="41" cy="31.5" r="2.7" fill="#f97316"/><circle cx="45.8" cy="35.6" r="2.7" fill="#7c3aed"/>',
+      jogos: '<rect width="64" height="64" rx="14" fill="#0f9d6b"/><g fill="#eafff6"><rect x="16" y="34" width="6" height="13" rx="2"/><rect x="26" y="26" width="6" height="21" rx="2"/><rect x="36" y="30" width="6" height="17" rx="2"/><rect x="46" y="20" width="6" height="27" rx="2"/></g>',
+      tigrinho: '<circle cx="32" cy="32" r="25" fill="#f5b301"/><circle cx="32" cy="32" r="20" fill="#ffd765"/><path d="M32 17l4.3 9.3 10.2 1.1-7.6 7 1.9 10.1L32 49.6l-8.8 4.9 1.9-10.1-7.6-7 10.2-1.1z" fill="#ef8f00"/>',
+      curriculos: '<rect width="64" height="64" rx="14" fill="#2f7de1"/><rect x="15" y="12" width="30" height="40" rx="5" fill="#fff"/><rect x="21" y="19" width="18" height="3.4" rx="1.7" fill="#9dc1f2"/><rect x="21" y="27" width="18" height="3.4" rx="1.7" fill="#9dc1f2"/><rect x="21" y="35" width="12" height="3.4" rx="1.7" fill="#9dc1f2"/><circle cx="44" cy="44" r="11" fill="#1e40af"/><circle cx="44" cy="41" r="3.4" fill="#dbeafe"/><path d="M37 51c1.4-3.4 5.6-5 7-5s5.6 1.6 7 5z" fill="#dbeafe"/>',
+      memoria: '<rect width="64" height="64" rx="14" fill="#7c3aed"/><rect x="18" y="18" width="28" height="28" rx="7" fill="#e9d5ff"/><rect x="25" y="25" width="14" height="14" rx="3" fill="#7c3aed"/><g stroke="#e9d5ff" stroke-width="3" stroke-linecap="round"><path d="M32 8v6M32 50v6M8 32h6M50 32h6M15 15l4 4M49 49l-4-4M49 15l-4 4M15 49l4-4"/></g>',
+      pesquisa: '<rect width="64" height="64" rx="14" fill="#0ea5e9"/><circle cx="27" cy="27" r="14" fill="#e0f2fe"/><circle cx="27" cy="27" r="14" fill="none" stroke="#0369a1" stroke-width="3"/><rect x="37" y="37" width="9" height="19" rx="4.5" fill="#0369a1" transform="rotate(-45 41.5 46.5)"/>',
+      btc: '<circle cx="32" cy="32" r="25" fill="#f7931a"/><g fill="none" stroke="#fff" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"><path d="M27 16h7a7 7 0 0 1 0 14h-7zM27 30h9a7 7 0 0 1 0 14h-9z"/><path d="M23 16h4M23 44h4M30 12v6M30 42v6"/></g>',
+      quantfury: '<rect width="64" height="64" rx="14" fill="#0b1220"/><path d="M14 44l11-13 10 6 15-19" fill="none" stroke="#22d3ee" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="50" cy="18" r="4.5" fill="#34d399"/>'
     };
     return '<svg viewBox="0 0 64 64" aria-hidden="true">' + (icons[id] || icons.agent) + "</svg>";
   }
@@ -283,12 +313,14 @@
   function renderApp(win) {
     if (win.appId === "agent") renderAgent(win);
     else if (win.appId === "browser") renderBrowser(win);
+    else if (win.appId === "studio") renderStudio(win);
     else if (win.appId === "email") renderEmail(win);
     else if (win.appId === "files") renderFiles(win);
     else if (win.appId === "terminal") renderTerminal(win);
     else if (win.appId === "gallery") renderGallery(win);
     else if (win.appId === "calculator") renderCalculator(win);
     else if (win.appId === "settings") renderSettings(win);
+    else if (Object.prototype.hasOwnProperty.call(MODULE_APPS, win.appId)) renderModuleApp(win, win.appId);
   }
 
   function renderAgent(win) {
@@ -340,24 +372,223 @@
       + '<input type="text" id="' + win.id + '-address" placeholder="Digite um endereço ou pesquise" aria-label="Endereço ou pesquisa">'
       + '<button type="button" data-browser-action="go">Ir</button>'
       + '</div><div class="browser-actions"><button type="button" data-browser-action="favorite">☆ Favorito</button>'
-      + '<button type="button" data-browser-action="external">Abrir no Safari</button>'
       + '<span class="browser-recent-label">Favoritos:</span><span id="' + win.id + '-favorites"></span>'
       + '<span class="browser-recent-label">Histórico:</span><span id="' + win.id + '-history"></span></div>'
-      + '<div class="browser-frame-wrap"><iframe class="browser-frame" id="' + win.id + '-frame" title="Página web" sandbox="allow-forms allow-scripts allow-popups" src="about:blank"></iframe>'
-      + '<div class="browser-empty" id="' + win.id + '-browser-note">Pesquise ou digite um endereço. Alguns sites bloqueiam a visualização dentro de outros aplicativos; nesses casos, abra no Safari.</div></div>';
+      + '<div class="browser-frame-wrap"><iframe class="browser-frame" id="' + win.id + '-frame" title="Página web" sandbox="allow-forms allow-scripts" src="about:blank"></iframe>'
+      + '<div class="browser-empty" id="' + win.id + '-browser-note">Digite um endereço ou pesquise. As páginas serão abertas neste painel; alguns sites podem bloquear a incorporação.</div></div>';
     win.browserHistory = settings.browserHistory.slice(0);
     win.browserCursor = win.browserHistory.length - 1;
     refreshBrowserFavorites(win);
     refreshBrowserHistory(win);
   }
 
+  function renderStudio(win) {
+    var slug = settings.project || "default";
+    win.content.innerHTML = '<div class="studio-app">'
+      + '<div class="studio-head"><h2>Estúdio de visualização</h2>'
+      + '<p>O Tiagente abre aqui os sistemas que criar, sem você escolher um aplicativo.</p></div>'
+      + '<div class="studio-toolbar">'
+      + '<input class="text-field" id="' + win.id + '-studio-project" type="text" value="' + escapeHtml(slug) + '" aria-label="Nome do projeto">'
+      + '<button class="action-button" type="button" data-studio-action="load">Abrir prévia</button>'
+      + '<button class="action-button" type="button" data-studio-action="reload">Atualizar</button>'
+      + '<button class="action-button" type="button" data-studio-action="fullscreen">Tela cheia</button>'
+      + '<button class="action-button" type="button" data-studio-action="reopen">Reabrir projeto</button>'
+      + '<button class="action-button primary" type="button" data-studio-action="publish">Publicar</button></div>'
+      + '<div class="studio-meta"><span class="studio-badge" id="' + win.id + '-studio-kind"></span>'
+      + '<span class="studio-path" id="' + win.id + '-studio-path"></span></div>'
+      + '<div class="studio-url" id="' + win.id + '-studio-url"></div>'
+      + '<input class="text-field studio-publish-field hidden" id="' + win.id + '-studio-publish" type="text" readonly aria-label="Link público">'
+      + '<div class="studio-status" id="' + win.id + '-studio-status" role="status"></div>'
+      + '<div class="studio-frame-wrap"><iframe class="browser-frame" id="' + win.id + '-studio-frame" title="Prévia do projeto" sandbox="allow-forms allow-scripts" src="about:blank"></iframe>'
+      + '<div class="browser-empty" id="' + win.id + '-studio-note">A prévia aparece aqui. Toque em “Abrir prévia”.</div></div></div>';
+    setStatusLine(win, "Estúdio pronto");
+  }
+
+  // Apps de módulo: reaproveitam a tela da SPA num iframe via rota "/?tab=<id>".
+  function renderModuleApp(win, appId) {
+    var label = MODULE_APPS[appId] || labelFor(appId);
+    var url = "/?tab=" + encodeURIComponent(appId);
+    win.content.innerHTML = '<div class="toolbar">'
+      + '<span class="browser-recent-label">' + escapeHtml(label) + '</span>'
+      + '<button type="button" style="margin-left:auto" data-module-action="reload" data-window="' + win.id + '">Atualizar</button>'
+      + '</div><div class="browser-frame-wrap"><iframe class="browser-frame" id="' + win.id + '-module-frame" title="' + escapeHtml(label) + '" sandbox="allow-forms allow-scripts allow-same-origin allow-popups" src="' + url + '"></iframe>'
+      + '<div class="browser-empty" id="' + win.id + '-module-note">Carregando ' + escapeHtml(label) + '…</div></div>';
+    var frame = document.getElementById(win.id + "-module-frame");
+    var note = document.getElementById(win.id + "-module-note");
+    if (frame && note) frame.onload = function () { note.style.display = "none"; };
+    setStatusLine(win, label + " pronto");
+  }
+
+  function handleModuleAction(button) {
+    var win = windowById(button.getAttribute("data-window"));
+    if (!win) return;
+    var action = button.getAttribute("data-module-action");
+    if (action !== "reload") return;
+    var frame = document.getElementById(win.id + "-module-frame");
+    var note = document.getElementById(win.id + "-module-note");
+    if (note) { note.textContent = "Atualizando…"; note.style.display = ""; }
+    if (frame) frame.src = "/?tab=" + encodeURIComponent(win.appId) + "&t=" + new Date().getTime();
+    setStatusLine(win, "Atualizando…");
+  }
+
+  function studioPreviewUrl(slug) {
+    return "/preview/" + encodeURIComponent(slug) + "/";
+  }
+
+  function studioEl(win, suffix) {
+    return document.getElementById(win.id + suffix);
+  }
+
+  function studioSetNote(win, text) {
+    var note = studioEl(win, "-studio-note");
+    if (!note) return;
+    note.textContent = text || "";
+    note.style.display = text ? "" : "none";
+  }
+
+  function studioSetStatus(win, text, isError) {
+    var status = studioEl(win, "-studio-status");
+    if (!status) return;
+    status.textContent = text || "";
+    status.className = "studio-status" + (isError ? " error" : "");
+  }
+
+  function studioShowError(win, message) {
+    var frame = studioEl(win, "-studio-frame");
+    if (frame) frame.src = "about:blank";
+    studioSetNote(win, (message || "Não foi possível carregar a prévia.") + " Toque em “Reabrir projeto” para tentar de novo.");
+    studioSetStatus(win, message || "Erro ao carregar a prévia.", true);
+    setStatusLine(win, "Erro na prévia");
+  }
+
+  function studioLoadFrame(win, url, okMessage) {
+    var frame = studioEl(win, "-studio-frame");
+    if (frame) frame.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + "t=" + new Date().getTime();
+    studioSetNote(win, "");
+    studioSetStatus(win, okMessage || "", false);
+    setStatusLine(win, "Prévia carregada");
+  }
+
+  function loadStudioPreview(win, slug) {
+    var value = String(slug == null ? "" : slug).replace(/^\s+|\s+$/g, "");
+    if (!value) { showNotice("Informe o nome do projeto."); return; }
+    settings.project = value;
+    saveSettings();
+    var urlLabel = studioEl(win, "-studio-url");
+    var kindLabel = studioEl(win, "-studio-kind");
+    var pathLabel = studioEl(win, "-studio-path");
+    if (urlLabel) urlLabel.textContent = location.origin + studioPreviewUrl(value);
+    if (kindLabel) kindLabel.textContent = "";
+    if (pathLabel) pathLabel.textContent = "";
+    studioSetStatus(win, "Consultando o projeto…", false);
+    studioSetNote(win, "Carregando a prévia de “" + value + "”…");
+    setStatusLine(win, "Carregando prévia…");
+    getJSON("/api/projects/" + encodeURIComponent(value) + "/preview/info", function (err, info) {
+      if (err || !info || info.ok === false) {
+        studioShowError(win, (info && info.error) || (err && err.message) || "Não foi possível consultar o projeto.");
+        return;
+      }
+      if (pathLabel) pathLabel.textContent = info.path ? ("Arquivos: " + info.path) : "";
+      if (info.kind === "node") {
+        if (kindLabel) kindLabel.textContent = "Projeto com dependências" + (info.devCommand ? " (" + info.devCommand + ")" : "");
+        previewStudioNodeProject(win, value, info);
+        return;
+      }
+      if (info.kind === "empty") {
+        if (kindLabel) kindLabel.textContent = "Sem página inicial";
+        studioShowError(win, "O projeto “" + value + "” ainda não tem uma página inicial (index.html).");
+        return;
+      }
+      if (kindLabel) kindLabel.textContent = info.entry ? ("Entrada: " + info.entry) : "Projeto HTML";
+      studioLoadFrame(win, studioPreviewUrl(value), info.entry ? ("Página de entrada: " + info.entry) : "Prévia carregada.");
+    });
+  }
+
+  function previewStudioNodeProject(win, slug, info) {
+    if (!info.devCommand) {
+      studioShowError(win, "Projeto com dependências, mas sem servidor de desenvolvimento reconhecido. Use vite, next ou react-scripts com as dependências instaladas.");
+      return;
+    }
+    studioSetStatus(win, "Iniciando servidor de desenvolvimento…", false);
+    studioSetNote(win, "Projeto com dependências. Iniciando o servidor de desenvolvimento…");
+    setStatusLine(win, "Iniciando servidor…");
+    request("POST", "/api/projects/" + encodeURIComponent(slug) + "/dev/start", {}, function (err, dev) {
+      if (err || !dev || dev.ok === false || !dev.url) {
+        studioShowError(win, (dev && dev.error) || (err && err.message) || "Não foi possível iniciar o servidor de desenvolvimento.");
+        return;
+      }
+      studioLoadFrame(win, dev.url, "Servidor de desenvolvimento ativo.");
+    }, 30000);
+  }
+
+  function copyText(text, callback) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { if (callback) callback(true); }, function () { if (callback) callback(false); });
+      return;
+    }
+    var ok = false;
+    try {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "absolute";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      ok = document.execCommand("copy");
+      document.body.removeChild(area);
+    } catch (e) { ok = false; }
+    if (callback) callback(ok);
+  }
+
+  function publishStudio(win) {
+    var input = document.getElementById(win.id + "-studio-project");
+    var slug = input ? input.value.replace(/^\s+|\s+$/g, "") : "";
+    if (!slug) slug = settings.project || "default";
+    if (!slug) { showNotice("Informe o nome do projeto antes de publicar."); return; }
+    var url = location.origin + studioPreviewUrl(slug);
+    var localOnly = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+    var field = document.getElementById(win.id + "-studio-publish");
+    if (field) { field.value = url; field.className = "text-field studio-publish-field"; }
+    copyText(url, function (copied) {
+      if (copied) showNotice("Link copiado. Envie para quem quiser divulgar.");
+      else showNotice("Link pronto. Toque e segure no campo para copiar.");
+    });
+    if (navigator.share) {
+      try {
+        navigator.share({ title: "Projeto " + slug, text: "Confira o site:", url: url }).catch(function () {});
+      } catch (e) {}
+    }
+    setStatusLine(win, localOnly ? "Link local (só neste aparelho)" : "Link público pronto");
+    if (localOnly) showNotice("Atenção: este link é local e só funciona neste aparelho.");
+  }
+
+  function openStudioForProject(slug) {
+    var win = openApp("studio");
+    var value = chromeSafeSlug(slug);
+    var input = document.getElementById(win.id + "-studio-project");
+    if (input) input.value = value;
+    loadStudioPreview(win, value);
+    return win;
+  }
+
+  function chromeSafeSlug(slug) {
+    var value = String(slug == null ? "" : slug).replace(/^\s+|\s+$/g, "");
+    return value || settings.project || "default";
+  }
+
+  function maybeOpenStudioAfterTask(prompt) {
+    if (!/cri(e|ar|ando)|site|p[aá]gina|landing|html|portf[oó]lio|projeto/i.test(String(prompt || ""))) return;
+    openStudioForProject(settings.project);
+  }
+
   function renderEmail(win) {
     win.content.innerHTML = '<div class="app-panel"><h2>E-mail</h2>'
-      + '<p>Abra seu serviço de e-mail no navegador do sistema. O TIAgente OS não solicita nem armazena sua senha.</p>'
+      + '<p>Abra seu serviço de e-mail no navegador integrado. O TIAgente OS não solicita nem armazena sua senha.</p>'
       + '<button class="email-service" type="button" data-email-url="https://mail.google.com/"><strong>Gmail</strong><span>Conta Google</span></button>'
       + '<button class="email-service" type="button" data-email-url="https://outlook.live.com/mail/"><strong>Outlook</strong><span>Conta Microsoft</span></button>'
       + '<button class="email-service" type="button" data-email-url="https://www.icloud.com/mail/"><strong>iCloud Mail</strong><span>Conta Apple</span></button>'
-      + '<p>Sites modernos podem não funcionar corretamente no iOS 9. Se uma página não abrir, use o serviço em outro dispositivo ou cliente compatível.</p>'
+      + '<p>Alguns serviços podem bloquear a abertura integrada ou exigir um navegador mais recente.</p>'
       + '</div>';
   }
 
@@ -854,6 +1085,12 @@
       finishAgentTask(data.reason || "finished");
       return;
     }
+    if (message.type === "project:created" || message.type === "project:switched") {
+      var projectSlug = data.project && (data.project.slug || data.project.name) ? (data.project.slug || data.project.name) : data.project;
+      if (typeof data.slug === "string") projectSlug = data.slug;
+      openStudioForProject(typeof projectSlug === "string" ? projectSlug : settings.project);
+      return;
+    }
     if (message.type === "error") {
       agentCurrentText = String(data.message || "O agente encontrou um erro.");
       showAgentOutput();
@@ -914,6 +1151,7 @@
   function finishAgentTask(reason) {
     var win = windowById(agentWindowId);
     if (!agentCurrentTask) return;
+    var finishedPrompt = agentCurrentTask.prompt;
     var status = reason === "finished" ? "Concluída" : "Finalizada";
     settings.taskHistory.push({
       prompt: agentCurrentTask.prompt,
@@ -940,6 +1178,7 @@
       idleSocket.onclose = null;
       try { idleSocket.close(); } catch (e) {}
     }
+    maybeOpenStudioAfterTask(finishedPrompt);
   }
 
   function refreshAgentHistory(win) {
@@ -989,16 +1228,15 @@
       win.browserCursor = win.browserHistory.length - 1;
       refreshBrowserHistory(win);
     }
+    if (navigator.userAgent.indexOf("TIAgenteOSNative/1.0") >= 0) {
+      if (note) note.textContent = "Abrindo a página no navegador interno do aplicativo.";
+      setStatusLine(win, "Abrindo navegador interno");
+      window.location.href = url;
+      return;
+    }
     if (frame) frame.src = url;
-    if (note) note.textContent = "Se a página não aparecer, ela pode bloquear incorporação. Use “Abrir no Safari”.";
+    if (note) note.textContent = "Página solicitada neste painel. Se o site bloquear a incorporação, ele não poderá ser exibido aqui.";
     setStatusLine(win, "Página solicitada");
-  }
-
-  function openExternal(url) {
-    if (!url) return;
-    var opened = null;
-    try { opened = window.open(url, "_blank"); } catch (e) {}
-    if (!opened) showNotice("O Safari pode bloquear a nova janela. Toque novamente ou abra o link no menu do navegador.");
   }
 
   function toggleFavorite(win) {
@@ -1097,6 +1335,8 @@
     var email = closestAttribute(target, "data-email-url");
     var fileAction = closestAttribute(target, "data-files-action");
     var terminalAction = closestAttribute(target, "data-terminal-action");
+    var studioAction = closestAttribute(target, "data-studio-action");
+    var moduleAction = closestAttribute(target, "data-module-action");
     var appWindow;
     if (appButton) {
       menuPopover.hidden = true;
@@ -1147,9 +1387,15 @@
     }
     if (browserAction) { handleBrowserAction(browserAction); return; }
     if (navigate) { navigateBrowser(findWindow("browser"), navigate.getAttribute("data-navigate")); return; }
-    if (email) { openExternal(email.getAttribute("data-email-url")); return; }
+    if (email) {
+      var browserWindow = openApp("browser");
+      navigateBrowser(browserWindow, email.getAttribute("data-email-url"));
+      return;
+    }
     if (fileAction) { handleFilesAction(fileAction); return; }
     if (terminalAction) { handleTerminalAction(terminalAction); return; }
+    if (studioAction) { handleStudioAction(studioAction); return; }
+    if (moduleAction) { handleModuleAction(moduleAction); return; }
     if (closestAttribute(target, "data-file-path")) { handleFileEntry(closestAttribute(target, "data-file-path")); return; }
     if (closestAttribute(target, "data-calc")) { handleCalculator(closestAttribute(target, "data-calc")); return; }
     if (closestAttribute(target, "data-settings-action")) { handleSettingsAction(closestAttribute(target, "data-settings-action")); return; }
@@ -1204,13 +1450,8 @@
       var frame = document.getElementById(win.id + "-frame");
       if (frame) frame.src = "about:blank";
       var note = document.getElementById(win.id + "-browser-note");
-      if (note) note.textContent = "Pesquise ou digite um endereço. Alguns sites bloqueiam a visualização dentro de outros aplicativos; nesses casos, abra no Safari.";
+      if (note) note.textContent = "Digite um endereço ou pesquise. As páginas serão abertas neste painel; alguns sites podem bloquear a incorporação.";
     } else if (action === "favorite") toggleFavorite(win);
-    else if (action === "external") {
-      var address = document.getElementById(win.id + "-address");
-      if (address && address.value) openExternal(address.value);
-      else showNotice("Digite ou abra um endereço primeiro.");
-    }
   }
 
   function handleFilesAction(button) {
@@ -1242,6 +1483,17 @@
     if (action === "run") runRemoteJob(winId);
     else if (action === "refresh-job") refreshRemoteJob(winId);
     else if (action === "refresh-agents") refreshRemoteAgents(winId);
+  }
+
+  function handleStudioAction(button) {
+    var win = findWindow("studio");
+    if (!win) return;
+    var action = button.getAttribute("data-studio-action");
+    var input = document.getElementById(win.id + "-studio-project");
+    var slug = input ? input.value.replace(/^\s+|\s+$/g, "") : settings.project;
+    if (action === "load" || action === "reload" || action === "reopen") loadStudioPreview(win, slug);
+    else if (action === "publish") publishStudio(win);
+    else if (action === "fullscreen") toggleMaximize(win);
   }
 
   function handleSettingsAction(button) {

@@ -825,6 +825,108 @@ button {
   min-height: 2px;
 }
 
+.studio-app {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.studio-head h2 { margin: 0 0 4px; font-size: 16px; color: #2b2c49; }
+.studio-head p { margin: 0 0 10px; color: #5c5d78; font-size: 12px; }
+
+.studio-meta {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-align-items: center;
+  align-items: center;
+  margin: 0 3px 6px;
+}
+
+.studio-badge {
+  margin: 1px 6px 1px 0;
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: #4c1d95;
+  background: #ece7fb;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.studio-badge:empty { display: none; }
+
+.studio-path {
+  color: #6a6b85;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.studio-path:empty { display: none; }
+
+.studio-status {
+  margin: 0 3px 8px;
+  min-height: 15px;
+  color: #3c7a55;
+  font-size: 12px;
+}
+
+.studio-status:empty { display: none; }
+.studio-status.error { color: #b3261e; font-weight: 700; }
+
+.studio-toolbar {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.studio-toolbar .text-field { -webkit-flex: 1 1 150px; flex: 1 1 150px; margin: 3px; }
+.studio-toolbar .action-button { margin: 3px; }
+
+.action-button.primary {
+  color: #fff;
+  background: #4c1d95;
+  border-color: #4c1d95;
+  font-weight: 700;
+}
+
+.studio-url {
+  margin: 2px 3px 8px;
+  min-height: 14px;
+  color: #5c5d78;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.studio-url:empty { display: none; }
+
+.studio-publish-field {
+  width: 100%;
+  margin: 0 0 8px;
+  box-sizing: border-box;
+}
+
+.studio-frame-wrap {
+  position: relative;
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-height: 190px;
+  background: #fff;
+  border: 1px solid #d5d4e1;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
 .email-service {
   display: block;
   width: 100%;
@@ -1094,7 +1196,8 @@ button {
     overflow-x: auto;
     overflow-y: hidden;
   }
-  .desktop-icon { flex: 0 0 80px; min-height: 85px; margin: 0 5px; }
+  .desktop-icon { flex: 0 0 80px; min-width: 0; min-height: 85px; margin: 0 5px; }
+  .desktop-icon-label { max-width: 74px; }
   .app-window {
     top: 112px;
     left: 4%;

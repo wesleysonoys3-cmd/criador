@@ -46,9 +46,15 @@ import { analyzeQuantfuryPosition } from './quantfury/analysis.mjs';
 import * as JogosSvc from './jogos/service.js';
 import { monteCarlo } from './jogos/motor.js';
 import * as CurriculosSvc from './curriculos/service.js';
+import * as MemoriaSvc from './memoria/service.js';
+import * as GamestudioSvc from './gamestudio/service.js';
+import * as PesquisaSvc from './pesquisa/service.js';
 const BTC_MI_DATA_DIR = path.resolve(process.cwd(), 'btc_market/data');
 const JOGOS_DATA_DIR = path.resolve(process.cwd(), 'jogos/data');
 const CURRICULOS_DATA_DIR = path.resolve(process.cwd(), 'curriculos/data');
+const MEMORIA_DATA_DIR = path.resolve(process.cwd(), 'memoria/data');
+const GAMESTUDIO_DATA_DIR = path.resolve(process.cwd(), 'gamestudio/data');
+const PESQUISA_DATA_DIR = path.resolve(process.cwd(), 'pesquisa/data');
 const BTC_MI_INTERVAL_MS = Number(process.env.BTC_MI_INTERVAL_MS || 60000) || 60000;
 
 const execAsync = promisify(exec);
@@ -1091,6 +1097,44 @@ try {
 } catch (e) {
   console.warn('[CURRICULOS] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
 }
+// Memória Inteligente · Aprendizado contínuo (persistente em arquivo; sem IA)
+try {
+  const _memInit = MemoriaSvc.init({ dataDir: MEMORIA_DATA_DIR });
+  console.log(`🧠 Memória: módulo iniciado · dataDir=${MEMORIA_DATA_DIR} · registros=${_memInit.records}`);
+} catch (e) {
+  console.warn('[MEMORIA] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
+}
+// Game Studio 2D · Criação/edição/teste/prévia de jogos (reutiliza workspace + Memória; sem IA)
+try {
+  const _gsInit = GamestudioSvc.init({
+    dataDir: GAMESTUDIO_DATA_DIR,
+    memorySvc: MemoriaSvc,
+    projectApi: {
+      ensureProject,
+      resolveWritableProjectDir,
+      detectProjectPreview,
+      startProjectPreviewServer,
+      stopProjectPreviewServer,
+      listProjects,
+      isRenderHeadless: IS_RENDER_OR_HEADLESS_LINUX,
+    },
+  });
+  console.log(`🎮 Game Studio: módulo iniciado · dataDir=${GAMESTUDIO_DATA_DIR} · jogos=${_gsInit.games}`);
+} catch (e) {
+  console.warn('[GAMESTUDIO] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
+}
+// Pesquisa autorizada · PIN + pesquisa com cache + catálogo de recursos (reutiliza gate §11 + Memória)
+try {
+  const _psqInit = PesquisaSvc.init({
+    dataDir: PESQUISA_DATA_DIR,
+    fetchFn: (u, o) => safeFetchInternet(u, o),
+    allowFn: (urlOrHost) => isAllowedOutboundDomain(urlOrHost),
+    memorySvc: MemoriaSvc,
+  });
+  console.log(`🔎 Pesquisa: módulo iniciado · dataDir=${PESQUISA_DATA_DIR} · PIN=${_psqInit.hasPin ? 'definido' : 'não configurado (aguardando setup seguro)'}`);
+} catch (e) {
+  console.warn('[PESQUISA] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
+}
 const RC27_SAVE_EVERY_N_TOOL_CALLS = Math.max(1, parseInt(process.env.RC27_SAVE_EVERY_N_TOOL_CALLS || '3', 10));
 
 console.log(
@@ -1658,6 +1702,39 @@ app.use('/workspace', (req, res, next) => {
     if (err) return next(err);
     next();
   });
+});
+/* ============================================================
+   ETAPA 5 — Jogos PUBLICADOS: /play/:slug/*
+   Serve SOMENTE o snapshot de build publicado (congelado), e
+   apenas quando a publicação está ativa e pública. Caso contrário
+   retorna 404 — sem expor arquivos vivos nem dados do Tiagente.
+   ============================================================ */
+app.use('/play', (req, res, next) => {
+  try {
+    const rel = decodeURIComponent(req.path.replace(/^\/+/, ''));
+    const parts = rel.split('/').filter(Boolean);
+    const slug = parts.shift() || '';
+    const info = GamestudioSvc.publicStatus(slug);
+    if (!info.ok || !info.dir) {
+      return res.status(404).type('html').send('<!doctype html><meta charset="utf-8"><title>Jogo indisponível</title><body style="font-family:system-ui;background:#0b0b12;color:#cbd5e1;display:grid;place-items:center;height:100vh;margin:0"><div style="text-align:center"><h1 style="font-size:20px">Jogo indisponível</h1><p style="color:#94a3b8">Este jogo não está publicado ou foi retirado do ar.</p></div></body>');
+    }
+    const base = path.resolve(info.dir);
+    const restPath = '/' + parts.map(encodeURIComponent).join('/');
+    const inside = path.resolve(base, parts.join('/'));
+    if (!inside.startsWith(base)) return res.status(403).type('txt').send('403 Fora do diretório do jogo');
+    const origUrl = req.url;
+    req.url = restPath || '/';
+    const staticHandler = express.static(base, {
+      index: ['index.html'],
+      setHeaders: (r2, filePath) => setStaticPreviewHeaders(r2, filePath),
+      extensions: ['html', 'htm'],
+    });
+    staticHandler(req, res, (err) => {
+      req.url = origUrl;
+      if (err) return next(err);
+      res.status(404).type('txt').send('404 — Arquivo não encontrado neste jogo.');
+    });
+  } catch (e) { next(e); }
 });
 app.use('/', express.static(path.join(__dirname, 'public')));
 
@@ -3204,6 +3281,48 @@ async function stopProjectPreviewServer(slug) {
     try { projectServers.get(slug).close(); } catch {}
     projectServers.delete(slug);
   }
+}
+
+// ===== Preview Inteligente: detecta arquivo de entrada e tipo do projeto =====
+// Whitelist fixa — NUNCA executa comandos arbitrários, só estes runners conhecidos.
+const PREVIEW_DEV_BINS = { vite: [], 'react-scripts': ['start'], next: ['dev'] };
+const previewDevServers = new Map(); // slug -> { proc, port, url, bin }
+
+async function detectProjectPreview(slug) {
+  const dir = resolveWritableProjectDir(slug);
+  let entry = null;
+  for (const cand of ['index.html', 'index.htm']) {
+    if (fsc.existsSync(path.join(dir, cand))) { entry = cand; break; }
+  }
+  let pkg = null;
+  const pkgPath = path.join(dir, 'package.json');
+  if (fsc.existsSync(pkgPath)) {
+    try { pkg = JSON.parse(await fs.readFile(pkgPath, 'utf8')); } catch { pkg = null; }
+  }
+  let devCommand = null;
+  if (pkg) {
+    const scripts = pkg.scripts || {};
+    const deps = Object.assign({}, pkg.dependencies, pkg.devDependencies);
+    const devScript = String(scripts.dev || scripts.start || '');
+    if (deps.vite && fsc.existsSync(path.join(dir, 'node_modules', '.bin', 'vite'))) devCommand = 'vite';
+    else if (/next/.test(devScript) && fsc.existsSync(path.join(dir, 'node_modules', '.bin', 'next'))) devCommand = 'next';
+    else if (/react-scripts/.test(devScript) && fsc.existsSync(path.join(dir, 'node_modules', '.bin', 'react-scripts'))) devCommand = 'react-scripts';
+  }
+  let kind;
+  if (devCommand) kind = 'node';
+  else if (entry) kind = 'static';
+  else if (pkg) kind = 'node';
+  else kind = 'empty';
+  return { ok: true, slug, path: dir, kind, entry, devCommand, hasPackage: !!pkg };
+}
+
+async function getDevPort() {
+  const used = new Set(projectPorts.values());
+  for (let p = PROJECT_PORT_MIN; p <= PROJECT_PORT_MAX; p++) {
+    if (RESERVED_PROJECT_PORTS.has(p) || used.has(p)) continue;
+    if (await isPortFree(p)) return p;
+  }
+  return findFreePort();
 }
 async function listProjects() {
   const map = new Map(); // slug -> projeto (mounted=true tem prioridade sobre workspace interno, evita duplicado mesmo slug)
@@ -5045,6 +5164,72 @@ app.post('/api/projects/:slug/preview/stop', async (req, res) => {
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
+});
+
+// Preview Inteligente — informações de entrada do projeto (só leitura, dentro do workspace)
+app.get('/api/projects/:slug/preview/info', async (req, res) => {
+  try {
+    const slug = String(req.params.slug || '').trim();
+    if (!slug) return res.status(400).json({ ok: false, error: 'Slug é obrigatório.' });
+    const info = await detectProjectPreview(slug);
+    res.json(info);
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Preview Inteligente — inicia o servidor de desenvolvimento (apenas runners da whitelist, só local)
+app.post('/api/projects/:slug/dev/start', async (req, res) => {
+  try {
+    const slug = String(req.params.slug || '').trim();
+    if (!slug) return res.status(400).json({ ok: false, error: 'Slug é obrigatório.' });
+    if (IS_RENDER_OR_HEADLESS_LINUX) {
+      return res.status(400).json({ ok: false, error: 'Servidor de desenvolvimento só funciona no ambiente local.' });
+    }
+    const info = await detectProjectPreview(slug);
+    if (!info.devCommand) {
+      return res.status(400).json({ ok: false, error: 'Projeto sem servidor de desenvolvimento reconhecido (vite, next ou react-scripts).' });
+    }
+    const existing = previewDevServers.get(slug);
+    if (existing && !(await isPortFree(existing.port))) {
+      return res.json({ ok: true, url: existing.url, port: existing.port, alreadyRunning: true });
+    }
+    const binName = info.devCommand;
+    const binPath = path.join(info.path, 'node_modules', '.bin', binName);
+    if (!fsc.existsSync(binPath)) {
+      return res.status(400).json({ ok: false, error: 'Dependências não instaladas (node_modules/.bin ausente).' });
+    }
+    const port = await getDevPort();
+    const env = Object.assign({}, process.env, { PORT: String(port), HOST: '127.0.0.1', BROWSER: 'none', FORCE_COLOR: '0' });
+    const proc = spawn(binPath, PREVIEW_DEV_BINS[binName] || [], { cwd: info.path, env, detached: true, stdio: 'ignore' });
+    proc.unref();
+    const url = `http://127.0.0.1:${port}/`;
+    previewDevServers.set(slug, { proc, port, url, bin: binName });
+    let up = false;
+    for (let i = 0; i < 40; i++) {
+      await new Promise((r) => setTimeout(r, 500));
+      if (proc.exitCode !== null) break;
+      if (!(await isPortFree(port))) { up = true; break; }
+    }
+    if (!up) {
+      try { process.kill(-proc.pid); } catch {}
+      previewDevServers.delete(slug);
+      return res.status(500).json({ ok: false, error: 'O servidor de desenvolvimento não subiu a tempo.' });
+    }
+    res.json({ ok: true, url, port, alreadyRunning: false });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/api/projects/:slug/dev/stop', async (req, res) => {
+  const slug = String(req.params.slug || '').trim();
+  const rec = previewDevServers.get(slug);
+  if (rec && rec.proc) {
+    try { process.kill(-rec.proc.pid); } catch { try { rec.proc.kill(); } catch {} }
+  }
+  previewDevServers.delete(slug);
+  res.json({ ok: true });
 });
 
 function restProjectSession(projectName) {
@@ -7549,6 +7734,109 @@ app.post('/api/jogos/montecarlo', _JG_JSON, _jg(async (req) => {
   const sim = monteCarlo(req.body || {});
   return sim.ok ? { ok: true, simulation: sim } : sim;
 }));
+
+/* =============== MEMÓRIA · Inteligência e aprendizado contínuo (módulo isolado · persistente) =============== */
+const _MEM_JSON = express.json({ limit: '8mb' });
+const _memOwner = (req) => String((req.query && req.query.owner) || (req.body && req.body.owner) || '');
+const _mem = (fn) => async (req, res) => {
+  try {
+    const out = await fn(req);
+    if (out && out.ok === false && out.error) return res.status(400).json(out);
+    res.json(out);
+  } catch (e) {
+    console.error('[MEMORIA] erro:', String(e && e.message || e));
+    res.status(500).json({ ok: false, error: 'Não foi possível concluir a operação agora.' });
+  }
+};
+
+app.get('/api/memoria/status', _JG_NO_CACHE, _mem(async () => MemoriaSvc.status()));
+app.get('/api/memoria/categories', _JG_NO_CACHE, _mem(async () => ({ ok: true, categories: MemoriaSvc.categories() })));
+app.post('/api/memoria/category', _MEM_JSON, _mem(async (req) => MemoriaSvc.setCategoryEnabled(req.body?.category, req.body?.enabled !== false)));
+app.get('/api/memoria/list', _JG_NO_CACHE, _mem(async (req) => MemoriaSvc.list({
+  category: req.query?.category, project: req.query?.project, status: req.query?.status,
+  kind: req.query?.kind, limit: req.query?.limit, includeDisabled: req.query?.includeDisabled === '1',
+}, _memOwner(req))));
+app.get('/api/memoria/search', _JG_NO_CACHE, _mem(async (req) => MemoriaSvc.search({
+  query: req.query?.q || req.query?.query, project: req.query?.project, category: req.query?.category,
+  kind: req.query?.kind,
+  tags: req.query?.tags ? String(req.query.tags).split(',') : [],
+  technologies: req.query?.technologies ? String(req.query.technologies).split(',') : [],
+  limit: req.query?.limit, includeDisabled: req.query?.includeDisabled === '1', track: req.query?.track === '1',
+}, _memOwner(req))));
+app.get('/api/memoria/record/:id', _JG_NO_CACHE, _mem(async (req) => MemoriaSvc.get(req.params.id, _memOwner(req))));
+app.post('/api/memoria/register', _MEM_JSON, _mem(async (req) => MemoriaSvc.register(req.body || {}, _memOwner(req))));
+app.post('/api/memoria/task', _MEM_JSON, _mem(async (req) => MemoriaSvc.registerTask(req.body || {}, _memOwner(req))));
+app.put('/api/memoria/record/:id', _MEM_JSON, _mem(async (req) => MemoriaSvc.update(req.params.id, req.body || {}, _memOwner(req))));
+app.post('/api/memoria/record/:id/validate', _MEM_JSON, _mem(async (req) => MemoriaSvc.validate(req.params.id, req.body || {}, _memOwner(req))));
+app.post('/api/memoria/record/:id/use', _MEM_JSON, _mem(async (req) => MemoriaSvc.markUsed(req.params.id)));
+app.delete('/api/memoria/record/:id', _MEM_JSON, _mem(async (req) => MemoriaSvc.remove(req.params.id, _memOwner(req))));
+app.get('/api/memoria/backup', _JG_NO_CACHE, _mem(async (req) => MemoriaSvc.backup(_memOwner(req))));
+app.post('/api/memoria/restore', _MEM_JSON, _mem(async (req) => MemoriaSvc.restore(req.body || {}, _memOwner(req))));
+
+/* =============== GAME STUDIO 2D · Criação/edição/teste/prévia de jogos (módulo isolado) =============== */
+const _GS_JSON = express.json({ limit: '6mb' });
+const _gsOwner = (req) => String((req.query && req.query.owner) || (req.body && req.body.owner) || '');
+const _gs = (fn) => async (req, res) => {
+  try {
+    const out = await fn(req);
+    if (out && out.ok === false && out.reason) return res.status(400).json(out);
+    res.json(out);
+  } catch (e) {
+    console.error('[GAMESTUDIO] erro:', String(e && e.message || e));
+    res.status(500).json({ ok: false, reason: 'Não foi possível concluir a operação agora.' });
+  }
+};
+
+app.get('/api/gamestudio/status', _JG_NO_CACHE, _gs(async () => GamestudioSvc.status()));
+app.get('/api/gamestudio/templates', _JG_NO_CACHE, _gs(async () => GamestudioSvc.templates()));
+app.get('/api/gamestudio/games', _JG_NO_CACHE, _gs(async (req) => GamestudioSvc.list(_gsOwner(req))));
+app.get('/api/gamestudio/game/:id', _JG_NO_CACHE, _gs(async (req) => GamestudioSvc.get(req.params.id, _gsOwner(req))));
+app.post('/api/gamestudio/create', _GS_JSON, _gs(async (req) => GamestudioSvc.create(req.body || {}, _gsOwner(req))));
+app.get('/api/gamestudio/game/:id/versions', _JG_NO_CACHE, _gs(async (req) => GamestudioSvc.versions(req.params.id, _gsOwner(req))));
+app.post('/api/gamestudio/game/:id/command', _GS_JSON, _gs(async (req) => GamestudioSvc.applyCommand(req.params.id, req.body || {}, _gsOwner(req))));
+app.post('/api/gamestudio/game/:id/preview', _GS_JSON, _gs(async (req) => GamestudioSvc.preview(req.params.id, _gsOwner(req))));
+app.post('/api/gamestudio/game/:id/test', _GS_JSON, _gs(async (req) => GamestudioSvc.test(req.params.id, _gsOwner(req))));
+app.post('/api/gamestudio/game/:id/restore', _GS_JSON, _gs(async (req) => GamestudioSvc.restoreVersion(req.params.id, req.body && req.body.versionId, _gsOwner(req))));
+app.post('/api/gamestudio/game/:id/build', _GS_JSON, _gs(async (req) => GamestudioSvc.build(req.params.id, _gsOwner(req))));
+app.post('/api/gamestudio/game/:id/publish', _GS_JSON, _gs(async (req) => GamestudioSvc.publish(req.params.id, req.body || {}, _gsOwner(req))));
+app.post('/api/gamestudio/game/:id/unpublish', _GS_JSON, _gs(async (req) => GamestudioSvc.unpublish(req.params.id, _gsOwner(req))));
+app.delete('/api/gamestudio/game/:id', _GS_JSON, _gs(async (req) => GamestudioSvc.remove(req.params.id, _gsOwner(req))));
+
+/* =============== PESQUISA AUTORIZADA · PIN + busca com cache + catálogo de recursos (módulo isolado) =============== */
+const _PSQ_JSON = express.json({ limit: '1mb' });
+const _psq = (fn) => async (req, res) => {
+  try {
+    const out = await fn(req);
+    if (out && out.ok === false && out.reason) return res.status(400).json(out);
+    res.json(out);
+  } catch (e) {
+    console.error('[PESQUISA] erro:', String(e && e.message || e));
+    res.status(500).json({ ok: false, reason: 'Não foi possível concluir a operação agora.' });
+  }
+};
+const _psqToken = (req) => String((req.body && req.body.token) || (req.query && req.query.token) || (req.get && req.get('x-pesquisa-token')) || '');
+
+app.get('/api/pesquisa/status', _JG_NO_CACHE, _psq(async () => PesquisaSvc.status()));
+app.get('/api/pesquisa/catalog', _JG_NO_CACHE, _psq(async () => PesquisaSvc.listCatalog()));
+app.get('/api/pesquisa/sources', _JG_NO_CACHE, _psq(async (req) => PesquisaSvc.listSources(req.query?.limit)));
+app.get('/api/pesquisa/sessions', _JG_NO_CACHE, _psq(async () => PesquisaSvc.listSessions()));
+app.post('/api/pesquisa/pin', _PSQ_JSON, _psq(async (req) => {
+  const b = req.body || {};
+  if (b.newPin) return PesquisaSvc.changePin(b.currentPin, b.newPin);
+  return PesquisaSvc.setupPin(b.pin);
+}));
+app.post('/api/pesquisa/authorize', _PSQ_JSON, _psq(async (req) => PesquisaSvc.authorize((req.body || {}).pin)));
+app.post('/api/pesquisa/check', _PSQ_JSON, _psq(async (req) => PesquisaSvc.checkSession((req.body || {}).token)));
+app.post('/api/pesquisa/revoke', _PSQ_JSON, _psq(async (req) => {
+  const b = req.body || {};
+  if (b.all) return PesquisaSvc.revokeAll();
+  return PesquisaSvc.revoke(b.token);
+}));
+app.post('/api/pesquisa/search', _PSQ_JSON, _psq(async (req) => PesquisaSvc.search((req.body || {}).query, { token: _psqToken(req), numResults: (req.body || {}).numResults })));
+app.post('/api/pesquisa/fetch', _PSQ_JSON, _psq(async (req) => PesquisaSvc.fetchPage((req.body || {}).url, { token: _psqToken(req) })));
+app.post('/api/pesquisa/catalog', _PSQ_JSON, _psq(async (req) => PesquisaSvc.catalogAdd((req.body || {}).resource || req.body || {}, { token: _psqToken(req) })));
+app.delete('/api/pesquisa/catalog/:id', _PSQ_JSON, _psq(async (req) => PesquisaSvc.removeCatalog(req.params.id)));
+app.post('/api/pesquisa/cache/clear', _PSQ_JSON, _psq(async () => PesquisaSvc.cacheClear()));
 
 /* =============== CURRÍCULOS · Módulo inteligente de currículos (módulo isolado) =============== */
 const _CV_JSON = express.json({ limit: '12mb' });

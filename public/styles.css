@@ -1679,6 +1679,9 @@ body.ti-keyboard-up .trae-chat-form {
 #editor-panels[data-active="jogos"]    [data-editor-panel="jogos"]    { display: flex; }
 #editor-panels[data-active="tigrinho"] [data-editor-panel="tigrinho"] { display: flex; }
 #editor-panels[data-active="curriculos"] [data-editor-panel="curriculos"] { display: flex; }
+#editor-panels[data-active="memoria"] [data-editor-panel="memoria"] { display: flex; }
+#editor-panels[data-active="gamestudio"] [data-editor-panel="gamestudio"] { display: flex; }
+#editor-panels[data-active="pesquisa"] [data-editor-panel="pesquisa"] { display: flex; }
 
 /* ---------- Editor Tabs (VSCode / TiAi style) ---------- */
 .editor-tab {
