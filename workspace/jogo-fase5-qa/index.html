@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="generator" content="Tiagente Game Studio" data-game-genre="tiro">
+<title>Fase5 QA</title>
+<style>html,body{margin:0;height:100%;background:#0b0f1a;overflow:hidden}#game-root{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:#0b0f1a}</style>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+<div id="game-root"></div>
+<script>
+(function () {
+  var CONTROLS = [{"action":"left","label":"Esquerda","group":"move","codes":["ArrowLeft"]},{"action":"right","label":"Direita","group":"move","codes":["ArrowRight"]},{"action":"shoot","label":"Atirar","group":"action","codes":["Space"]}];
+  var META = { engine: "phaser", genre: "tiro" };
+  var KEYCODE = {"ArrowLeft":37,"ArrowUp":38,"ArrowRight":39,"ArrowDown":40,"Space":32,"KeyW":87,"KeyA":65,"KeyS":83,"KeyD":68,"Enter":13,"Escape":27};
+  var KEYNAME = {"ArrowLeft":"ArrowLeft","ArrowUp":"ArrowUp","ArrowRight":"ArrowRight","ArrowDown":"ArrowDown","Space":" ","KeyW":"w","KeyA":"a","KeyS":"s","KeyD":"d","Enter":"Enter","Escape":"Escape"};
+  function makeEvent(type, code) {
+    var ev;
+    try { ev = new KeyboardEvent(type, { code: code, key: KEYNAME[code] || code, bubbles: true, cancelable: true }); }
+    catch (e) { ev = document.createEvent("Event"); ev.initEvent(type, true, true); }
+    var kc = KEYCODE[code] || 0;
+    try { Object.defineProperty(ev, "keyCode", { get: function () { return kc; } }); } catch (e) {}
+    try { Object.defineProperty(ev, "which", { get: function () { return kc; } }); } catch (e) {}
+    return ev;
+  }
+  function announce() {
+    try {
+      (window.parent || window).postMessage({
+        source: "tiagente-game", type: "ready", engine: META.engine, genre: META.genre, controls: CONTROLS
+      }, "*");
+    } catch (e) {}
+  }
+  window.addEventListener("message", function (e) {
+    var d = e.data;
+    if (!d || d.source !== "tiagente-os") return;
+    if (d.type === "hello") { announce(); return; }
+    if (d.type !== "control" || !d.codes) return;
+    var type = d.down ? "keydown" : "keyup";
+    for (var i = 0; i < d.codes.length; i++) {
+      try { window.dispatchEvent(makeEvent(type, d.codes[i])); } catch (err) {}
+    }
+  });
+  if (document.readyState === "complete") announce();
+  else window.addEventListener("load", announce);
+})();
+</script>
+<script src="game.js"></script>
+</body>
+</html>

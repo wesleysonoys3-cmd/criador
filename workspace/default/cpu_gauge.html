@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitor de Temperatura da CPU — MacBook Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.98); }
+    }
+    .glow-cyan { filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.6)); }
+    .glow-orange { filter: drop-shadow(0 0 12px rgba(249, 115, 22, 0.6)); }
+    .glow-red { filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.8)); }
+    .glass {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 font-sans selection:bg-cyan-500 selection:text-black">
+
+  <div class="max-w-4xl w-full space-y-6">
+    <!-- Header -->
+    <header class="text-center space-y-2">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-xs font-medium text-cyan-400">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        MacBook Pro (15-inch, 2019) · Intel Core i9 (8 Núcleos)
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">
+        Monitor Térmico da CPU
+      </h1>
+      <p class="text-slate-400 text-sm">Medidor analógico circular em tempo real com indicador de estado do sistema</p>
+    </header>
+
+    <!-- Main Dashboard Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+      
+      <!-- Relógio / Gauge de Temperatura (Col 1 e 2 em MD) -->
+      <div class="md:col-span-2 glass rounded-3xl p-6 relative flex flex-col items-center shadow-2xl overflow-hidden">
+        <div class="absolute top-4 left-4 text-xs font-mono text-slate-400">MEDIDOR ANALÓGICO SMC</div>
+        <div class="absolute top-4 right-4 text-xs font-mono text-emerald-400 font-semibold" id="thermalStatusText">NORMAL (60% nível)</div>
+
+        <!-- Gauge SVG Circular Estilo Relógio -->
+        <div class="relative w-72 h-72 sm:w-80 sm:h-80 my-4 flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+            <!-- Circuito Externo Decorativo -->
+            <circle cx="100" cy="100" r="92" stroke="rgba(255,255,255,0.05)" stroke-width="2" fill="none" stroke-dasharray="4 4" />
+            
+            <!-- Trilha de Fundo do Relógio (240 graus de arco) -->
+            <circle id="gaugeTrack" cx="100" cy="100" r="78" 
+                    stroke="rgba(30, 41, 59, 0.8)" stroke-width="14" fill="none" 
+                    stroke-linecap="round" stroke-dasharray="367.5 490" />
+            
+            <!-- Arco de Temperatura Gradiente -->
+            <circle id="gaugeProgress" cx="100" cy="100" r="78" 
+                    stroke="url(#tempGradient)" stroke-width="14" fill="none" 
+                    stroke-linecap="round" stroke-dasharray="0 490"
+                    class="transition-all duration-700 ease-out glow-cyan" />
+            
+            <!-- Gradiente SVG -->
+            <defs>
+              <linearGradient id="tempGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#06b6d4" />
+                <stop offset="50%" stop-color="#3b82f6" />
+                <stop offset="80%" stop-color="#f97316" />
+                <stop offset="100%" stop-color="#ef4444" />
+              </linearGradient>
+            </defs>
+
+            <!-- Marcas de Graduação do Relógio (Ticks) -->
+            <g id="clockTicks" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"></g>
+          </svg>
+
+          <!-- Conteúdo Central do Relógio -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <span class="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-1">Temperatura CPU</span>
+            <div class="flex items-baseline gap-1">
+              <span id="tempValue" class="text-5xl sm:text-6xl font-black tracking-tight text-white">48</span>
+              <span class="text-2xl font-bold text-cyan-400">°C</span>
+            </div>
+            <span id="tempStateBadge" class="mt-2 px-3 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+              Ideal · 48°C
+            </span>
+          </div>
+        </div>
+
+        <!-- Escala de Referência Térmica -->
+        <div class="w-full flex justify-between text-xs text-slate-400 font-mono pt-2 border-t border-slate-800">
+          <span>0°C (Frio)</span>
+          <span class="text-cyan-400">50°C (Normal)</span>
+          <span class="text-amber-400">75°C (Carga)</span>
+          <span class="text-red-500">100°C (Crítico)</span>
+        </div>
+      </div>
+
+      <!-- Painel Lateral de Informações -->
+      <div class="space-y-4">
+        <!-- Card 1: Núcleos & Frequência -->
+        <div class="glass rounded-2xl p-5 space-y-3">
+          <h3 class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Processador & Frequência</h3>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-300 text-sm">Intel Core i9</span>
+            <span class="text-cyan-400 font-mono font-bold">2.30 GHz</span>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs text-slate-400">
+              <span>Uso Médio dos Núcleos</span>
+              <span id="cpuUsageText" class="font-mono text-slate-200">24%</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div id="cpuUsageBar" class="bg-cyan-500 h-full w-[24%] transition-all duration-500"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Níveis Térmicos SMC -->
+        <div class="glass rounded-2xl p-5 space-y-3">
+          <h3 class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Níveis Térmicos XCPM</h3>
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">CPU Thermal Level:</span>
+              <span class="font-mono text-emerald-400 font-semibold">60 / 100</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">GPU Thermal Level:</span>
+              <span class="font-mono text-emerald-400 font-semibold">10 / 100</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">Limite de Frequência:</span>
+              <span class="font-mono text-cyan-400">100% (Sem Throttling)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Controles de Simulação -->
+        <div class="glass rounded-2xl p-5 space-y-3">
+          <h3 class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Simular Carga na CPU</h3>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="setTemp(42)" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 rounded text-xs text-cyan-400 font-medium transition">Repouso</button>
+            <button onclick="setTemp(68)" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 rounded text-xs text-amber-400 font-medium transition">Carga Média</button>
+            <button onclick="setTemp(92)" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 rounded text-xs text-red-400 font-medium transition">Stresstest</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico Histórico -->
+    <div class="glass rounded-3xl p-6 shadow-xl space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase text-slate-300 tracking-wider">Histórico de Temperatura (Últimos 30 segundos)</h2>
+        <span class="text-xs text-slate-500 font-mono">Atualização: 1.5s</span>
+      </div>
+      <div class="h-40 w-full">
+        <canvas id="tempHistoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Inicialização do Gráfico de Ticks no SVG
+    const clockTicksG = document.getElementById('clockTicks');
+    const totalTicks = 30;
+    for (let i = 0; i <= totalTicks; i++) {
+      const angle = -150 + (i / totalTicks) * 300; // 300 graus de arco total
+      const rad = (angle * Math.PI) / 180;
+      const r1 = 86;
+      const r2 = i % 5 === 0 ? 92 : 89;
+      const x1 = 100 + r1 * Math.cos(rad);
+      const y1 = 100 + r1 * Math.sin(rad);
+      const x2 = 100 + r2 * Math.cos(rad);
+      const y2 = 100 + r2 * Math.sin(rad);
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1);
+      line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2);
+      line.setAttribute('y2', y2);
+      line.setAttribute('stroke', i % 5 === 0 ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)');
+      line.setAttribute('stroke-width', i % 5 === 0 ? '2' : '1');
+      clockTicksG.appendChild(line);
+    }
+
+    // Gerenciamento da Temperatura
+    let currentTemp = 48;
+    const maxTemp = 100;
+    const circumference = 2 * Math.PI * 78 * (300 / 360); // 300 deg arc stroke len
+
+    const tempValEl = document.getElementById('tempValue');
+    const tempStateBadge = document.getElementById('tempStateBadge');
+    const gaugeProgress = document.getElementById('gaugeProgress');
+    const thermalStatusText = document.getElementById('thermalStatusText');
+    const cpuUsageText = document.getElementById('cpuUsageText');
+    const cpuUsageBar = document.getElementById('cpuUsageBar');
+
+    function updateGauge(temp) {
+      currentTemp = temp;
+      tempValEl.textContent = Math.round(temp);
+
+      // Calcular porcentagem para o arco (0°C a 100°C)
+      const ratio = Math.min(Math.max(temp / maxTemp, 0), 1);
+      const strokeDash = ratio * 367.5; // max arc length
+      gaugeProgress.setAttribute('stroke-dasharray', `${strokeDash} 490`);
+
+      // Atualizar Estado & Cores
+      if (temp < 55) {
+        tempStateBadge.textContent = `Normal · ${Math.round(temp)}°C`;
+        tempStateBadge.className = 'mt-2 px-3 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30';
+        gaugeProgress.setAttribute('class', 'transition-all duration-700 ease-out glow-cyan');
+        thermalStatusText.textContent = 'ESTÁVEL (NORMAL)';
+        thermalStatusText.className = 'absolute top-4 right-4 text-xs font-mono text-cyan-400 font-semibold';
+      } else if (temp < 78) {
+        tempStateBadge.textContent = `Aqueceu · ${Math.round(temp)}°C`;
+        tempStateBadge.className = 'mt-2 px-3 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30';
+        gaugeProgress.setAttribute('class', 'transition-all duration-700 ease-out glow-orange');
+        thermalStatusText.textContent = 'CARGA MÉDIA';
+        thermalStatusText.className = 'absolute top-4 right-4 text-xs font-mono text-amber-400 font-semibold';
+      } else {
+        tempStateBadge.textContent = `ALTA TEMPERATURA · ${Math.round(temp)}°C`;
+        tempStateBadge.className = 'mt-2 px-3 py-0.5 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse';
+        gaugeProgress.setAttribute('class', 'transition-all duration-700 ease-out glow-red');
+        thermalStatusText.textContent = 'ATENÇÃO (ALTO USO)';
+        thermalStatusText.className = 'absolute top-4 right-4 text-xs font-mono text-red-500 font-semibold';
+      }
+
+      // Atualizar simulado de uso da CPU
+      const estimatedUsage = Math.min(Math.round((temp / 100) * 85 + (Math.random() * 10 - 5)), 100);
+      cpuUsageText.textContent = `${estimatedUsage}%`;
+      cpuUsageBar.style.width = `${estimatedUsage}%`;
+    }
+
+    function setTemp(target) {
+      updateGauge(target);
+      addChartData(target);
+    }
+
+    // Chart.js Histórico
+    const ctx = document.getElementById('tempHistoryChart').getContext('2d');
+    const initialLabels = Array.from({length: 20}, (_, i) => `${(20 - i) * 1.5}s atrás`);
+    const initialData = Array.from({length: 20}, () => 45 + Math.random() * 6);
+
+    const historyChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: initialLabels,
+        datasets: [{
+          label: 'Temperatura (°C)',
+          data: initialData,
+          borderColor: '#06b6d4',
+          borderWidth: 2,
+          backgroundColor: 'rgba(6, 182, 212, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 2,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { display: false },
+          y: {
+            min: 30,
+            max: 100,
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { color: '#64748b', font: { size: 10 } }
+          }
+        }
+      }
+    });
+
+    function addChartData(val) {
+      historyChart.data.datasets[0].data.shift();
+      historyChart.data.datasets[0].data.push(val);
+      historyChart.update();
+    }
+
+    // Auto-update simulado suave com variação real
+    setInterval(() => {
+      // Flutuação leve de +/- 1.5°C
+      const delta = (Math.random() - 0.48) * 2;
+      let nextTemp = currentTemp + delta;
+      nextTemp = Math.max(38, Math.min(nextTemp, 98));
+      updateGauge(nextTemp);
+      addChartData(nextTemp);
+    }, 1500);
+
+    // Fetch API backend se disponível
+    async function fetchRealTemp() {
+      try {
+        const res = await fetch('/api/cpu-temp');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.tempCelsius) {
+            updateGauge(data.tempCelsius);
+          }
+        }
+      } catch (e) {}
+    }
+    fetchRealTemp();
+    setInterval(fetchRealTemp, 3000);
+  </script>
+</body>
+</html>
