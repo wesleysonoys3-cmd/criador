@@ -1,0 +1,323 @@
+{
+  "id": "ac_mwbf5mb0_dc66d8",
+  "schema": "autoclips_v1",
+  "owner": "local",
+  "title": "f10-qa autorizado",
+  "description": "",
+  "sources": [],
+  "transcript": [
+    {
+      "start": 0,
+      "end": 8,
+      "text": "Neste trecho explico o objetivo principal do projeto e por que ele importa.",
+      "speaker": "",
+      "energy": null
+    },
+    {
+      "start": 8,
+      "end": 16,
+      "text": "Aqui apresento o passo a passo e um exemplo prático de uso.",
+      "speaker": "",
+      "energy": null
+    },
+    {
+      "start": 16,
+      "end": 26,
+      "text": "Por fim, resumo os resultados e o que aprendemos com o experimento.",
+      "speaker": "",
+      "energy": null
+    }
+  ],
+  "profileKey": "podcast",
+  "profile": {
+    "key": "podcast",
+    "label": "Podcast",
+    "description": "Trechos de conversa longa com ideias fortes e frases completas.",
+    "criteria": {
+      "hook": 1.2,
+      "emotion": 0.8,
+      "laugh": 0.4,
+      "insight": 1.4,
+      "question": 0.8,
+      "keyword": 1,
+      "energy": 0.6,
+      "completeness": 1.2
+    },
+    "keywords": [
+      "segredo",
+      "história",
+      "importante",
+      "aprendi",
+      "na prática",
+      "conselho",
+      "carreira"
+    ],
+    "minScore": 0,
+    "maxCuts": 5,
+    "minDuration": 5,
+    "maxDuration": 120,
+    "minSpacing": 20,
+    "aspect": "9:16",
+    "captions": {
+      "enabled": true,
+      "style": "podcast"
+    },
+    "tone": "conversa"
+  },
+  "rights": {
+    "rights": {
+      "access": "PERMITIDO",
+      "reproduce": "PERMITIDO",
+      "edit": "PERMITIDO",
+      "derivative": "PERMITIDO",
+      "publish": "PERMITIDO",
+      "commercial": "PERMITIDO"
+    },
+    "evidence": [],
+    "status": "PERMITIDO",
+    "source": "autorização do autor (teste)",
+    "responsible": "QA FASE 10",
+    "notes": "",
+    "canProcess": true,
+    "canPublish": true,
+    "missingForProcess": [],
+    "missingForPublish": [],
+    "denied": [],
+    "verifiedAt": "2026-11-11T01:07:09.233Z"
+  },
+  "analysis": {
+    "totalAnalyzed": 3,
+    "candidatesCount": 3,
+    "averageScore": 27,
+    "minScore": 0,
+    "profile": "podcast",
+    "moments": [
+      {
+        "start": 0,
+        "end": 8,
+        "duration": 8,
+        "score": 27,
+        "breakdown": {
+          "hook": 0,
+          "emotion": 0,
+          "laugh": 0,
+          "insight": 0,
+          "question": 100,
+          "keyword": 0,
+          "energy": 0,
+          "completeness": 100
+        },
+        "text": "Neste trecho explico o objetivo principal do projeto e por que ele importa."
+      }
+    ]
+  },
+  "plan": {
+    "profile": "podcast",
+    "profileLabel": "Podcast",
+    "aspect": "9:16",
+    "captionsEnabled": true,
+    "captionStyle": "podcast",
+    "order": "score",
+    "cuts": [
+      {
+        "index": 1,
+        "start": 0,
+        "end": 8,
+        "duration": 8,
+        "score": 27,
+        "breakdown": {
+          "hook": 0,
+          "emotion": 0,
+          "laugh": 0,
+          "insight": 0,
+          "question": 100,
+          "keyword": 0,
+          "energy": 0,
+          "completeness": 100
+        },
+        "title": "Neste trecho explico o objetivo principal do projeto",
+        "reason": "Pontuação 27 (destaques: pergunta 100%, frase completa 100%)",
+        "text": "Neste trecho explico o objetivo principal do projeto e por que ele importa.",
+        "captions": [
+          {
+            "start": 0,
+            "end": 4,
+            "text": "Neste trecho explico o objetivo principal",
+            "speaker": ""
+          },
+          {
+            "start": 4,
+            "end": 8,
+            "text": "do projeto e por que ele importa.",
+            "speaker": ""
+          }
+        ],
+        "captionsCount": 2
+      }
+    ],
+    "cutsCount": 1,
+    "totalDuration": 8,
+    "averageScore": 27,
+    "createdAt": "2026-11-11T01:07:09.241Z"
+  },
+  "metadata": {
+    "title": "Neste trecho explico o objetivo principal do projeto — Segredo · HistÓRia · Importante",
+    "description": "Neste trecho explico o objetivo principal do projeto.\n\nNeste vídeo (Podcast):\n00:00  Neste trecho explico o objetivo principal do projeto\n\nGerado com AutoClips AI.",
+    "tags": [
+      "segredo",
+      "história",
+      "importante",
+      "aprendi",
+      "na prática",
+      "conselho",
+      "carreira",
+      "neste",
+      "trecho",
+      "explico",
+      "objetivo",
+      "principal",
+      "projeto",
+      "importa"
+    ],
+    "hashtags": [
+      "#segredo",
+      "#história",
+      "#importante",
+      "#aprendi",
+      "#naprática",
+      "#shorts",
+      "#autoclips"
+    ],
+    "chapters": [
+      {
+        "at": 0,
+        "time": "00:00",
+        "title": "Neste trecho explico o objetivo principal do projeto"
+      }
+    ],
+    "thumbnailText": "Neste trecho explico o",
+    "language": "pt-BR",
+    "aspect": "9:16",
+    "cutsCount": 1,
+    "totalDuration": 8,
+    "profile": "podcast",
+    "generatedAt": "2026-11-11T01:07:09.245Z"
+  },
+  "qa": {
+    "ok": true,
+    "passed": 13,
+    "failed": 0,
+    "score": 100,
+    "checks": [
+      {
+        "name": "Direitos verificados para processar",
+        "ok": true,
+        "detail": "OK"
+      },
+      {
+        "name": "Direitos verificados para publicar",
+        "ok": true,
+        "detail": "OK"
+      },
+      {
+        "name": "Existe pelo menos um corte",
+        "ok": true,
+        "detail": "1 corte(s)"
+      },
+      {
+        "name": "Todos os cortes dentro da duração do perfil",
+        "ok": true,
+        "detail": "OK"
+      },
+      {
+        "name": "Todos os cortes acima da pontuação mínima",
+        "ok": true,
+        "detail": "OK"
+      },
+      {
+        "name": "Cortes ordenados sem sobreposição",
+        "ok": true,
+        "detail": "OK"
+      },
+      {
+        "name": "Espaçamento entre cortes respeitado",
+        "ok": true,
+        "detail": "OK"
+      },
+      {
+        "name": "Legendas geradas para os cortes",
+        "ok": true,
+        "detail": "1/1 corte(s) com legendas"
+      },
+      {
+        "name": "Legendas com tempos válidos",
+        "ok": true,
+        "detail": "OK"
+      },
+      {
+        "name": "Título preenchido",
+        "ok": true,
+        "detail": "Neste trecho explico o objetivo principal do projeto — Segredo · HistÓRia · Importante"
+      },
+      {
+        "name": "Descrição preenchida",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "name": "Tags preenchidas",
+        "ok": true,
+        "detail": "14 tag(s)"
+      },
+      {
+        "name": "Capítulos gerados",
+        "ok": true,
+        "detail": "1 capítulo(s)"
+      }
+    ],
+    "blockers": [],
+    "checkedAt": "2026-11-11T01:07:09.248Z"
+  },
+  "render": null,
+  "status": "concluido",
+  "progress": 90,
+  "stage": "qa",
+  "stageLabel": "Controle de qualidade",
+  "attempts": 0,
+  "errors": [],
+  "log": [
+    {
+      "at": "2026-11-11T01:07:09.228Z",
+      "stage": "criacao",
+      "message": "Tarefa criada com 0 fonte(s) e 3 segmento(s)."
+    },
+    {
+      "at": "2026-11-11T01:07:09.233Z",
+      "stage": "direitos",
+      "message": "Direitos avaliados: PERMITIDO (pode processar)"
+    },
+    {
+      "at": "2026-11-11T01:07:09.237Z",
+      "stage": "analise",
+      "message": "1 momento(s) encontrado(s), média 27."
+    },
+    {
+      "at": "2026-11-11T01:07:09.241Z",
+      "stage": "edicao",
+      "message": "1 corte(s) no plano · 8s."
+    },
+    {
+      "at": "2026-11-11T01:07:09.245Z",
+      "stage": "metadados",
+      "message": "Metadados gerados: \"Neste trecho explico o objetivo principal do projeto — Segredo · HistÓRia · Importante\"."
+    },
+    {
+      "at": "2026-11-11T01:07:09.248Z",
+      "stage": "qa",
+      "message": "13/13 verificações aprovadas (nota 100)."
+    }
+  ],
+  "memoryId": "mem_mwbf5mb2_55151b",
+  "createdAt": "2026-11-11T01:07:09.228Z",
+  "updatedAt": "2026-11-11T01:07:09.248Z"
+}

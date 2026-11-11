@@ -5,6 +5,7 @@
   var APP_LIST = [
     { id: "browser", name: "Navegador" },
     { id: "studio", name: "Estúdio" },
+    { id: "projetos", name: "Projetos" },
     { id: "files", name: "Arquivos" },
     { id: "email", name: "E-mail" },
     { id: "terminal", name: "Terminal" },
@@ -19,6 +20,9 @@
     { id: "curriculos", name: "Currículos" },
     { id: "memoria", name: "Memória" },
     { id: "pesquisa", name: "Pesquisa" },
+    { id: "autoclips", name: "AutoClips" },
+    { id: "youtube", name: "YouTube" },
+    { id: "historico", name: "Histórico" },
     { id: "btc", name: "BTC Market" },
     { id: "quantfury", name: "Quantfury" }
   ];
@@ -31,31 +35,35 @@
     curriculos: "Currículos",
     memoria: "Memória",
     pesquisa: "Pesquisa",
+    autoclips: "AutoClips",
+    youtube: "YouTube",
+    historico: "Histórico",
     btc: "BTC Market",
     quantfury: "Quantfury"
   };
   // Categorias da central de aplicativos (FASE 2).
   var APP_CATEGORIES = [
     { id: "inteligencia", name: "Inteligência", apps: ["agent", "memoria", "pesquisa", "curriculos"] },
-    { id: "criacao", name: "Criação", apps: ["gamestudio", "jogos", "tigrinho", "studio", "gallery"] },
-    { id: "desenvolvimento", name: "Desenvolvimento", apps: ["browser", "files", "terminal"] },
-    { id: "gerenciamento", name: "Gerenciamento", apps: ["launcher", "settings", "calculator", "email", "btc", "quantfury"] }
+    { id: "criacao", name: "Criação", apps: ["autoclips", "gamestudio", "jogos", "tigrinho", "studio", "gallery"] },
+    { id: "desenvolvimento", name: "Desenvolvimento", apps: ["projetos", "browser", "files", "terminal"] },
+    { id: "gerenciamento", name: "Gerenciamento", apps: ["launcher", "settings", "calculator", "email", "youtube", "historico", "btc", "quantfury"] }
   ];
   var DEFAULTS = {
     theme: "dark",
     accent: "violet",
     wallpaper: "",
     labels: {},
-    order: ["launcher", "browser", "studio", "files", "email", "terminal", "agent", "settings", "gallery", "calculator", "gamestudio", "jogos", "tigrinho", "curriculos", "memoria", "pesquisa", "btc", "quantfury"],
+    order: ["launcher", "projetos", "browser", "studio", "files", "email", "terminal", "agent", "settings", "gallery", "calculator", "gamestudio", "autoclips", "youtube", "historico", "jogos", "tigrinho", "curriculos", "memoria", "pesquisa", "btc", "quantfury"],
     // Ícones exibidos na área de trabalho (conjunto enxuto; o restante fica na central de aplicativos).
-    desktop: ["agent", "browser", "studio", "files", "gamestudio", "settings"],
-    dock: ["launcher", "browser", "studio", "files", "email", "agent", "settings", "calculator", "gallery", "terminal"],
+    desktop: ["agent", "browser", "projetos", "studio", "gamestudio", "files", "settings"],
+    dock: ["launcher", "projetos", "browser", "studio", "files", "email", "agent", "settings", "calculator", "gallery", "terminal"],
     taskHistory: [],
     favorites: [],
     browserHistory: [],
     agentSession: "",
     project: "default",
-    projectSource: "inherit"
+    projectSource: "inherit",
+    gameControls: {}
   };
   var settings = loadSettings();
   var windows = [];
@@ -69,6 +77,7 @@
   var agentCurrentTask = null;
   var agentCurrentText = "";
   var agentWantsCode = false;
+  var agentVoiceRec = null;
   var dragState = null;
   var fileFolderCache = {};
   var fileFolderCacheOrder = [];
@@ -148,9 +157,13 @@
       curriculos: '<rect width="64" height="64" rx="14" fill="#2f7de1"/><rect x="15" y="12" width="30" height="40" rx="5" fill="#fff"/><rect x="21" y="19" width="18" height="3.4" rx="1.7" fill="#9dc1f2"/><rect x="21" y="27" width="18" height="3.4" rx="1.7" fill="#9dc1f2"/><rect x="21" y="35" width="12" height="3.4" rx="1.7" fill="#9dc1f2"/><circle cx="44" cy="44" r="11" fill="#1e40af"/><circle cx="44" cy="41" r="3.4" fill="#dbeafe"/><path d="M37 51c1.4-3.4 5.6-5 7-5s5.6 1.6 7 5z" fill="#dbeafe"/>',
       memoria: '<rect width="64" height="64" rx="14" fill="#7c3aed"/><rect x="18" y="18" width="28" height="28" rx="7" fill="#e9d5ff"/><rect x="25" y="25" width="14" height="14" rx="3" fill="#7c3aed"/><g stroke="#e9d5ff" stroke-width="3" stroke-linecap="round"><path d="M32 8v6M32 50v6M8 32h6M50 32h6M15 15l4 4M49 49l-4-4M49 15l-4 4M15 49l4-4"/></g>',
       pesquisa: '<rect width="64" height="64" rx="14" fill="#0ea5e9"/><circle cx="27" cy="27" r="14" fill="#e0f2fe"/><circle cx="27" cy="27" r="14" fill="none" stroke="#0369a1" stroke-width="3"/><rect x="37" y="37" width="9" height="19" rx="4.5" fill="#0369a1" transform="rotate(-45 41.5 46.5)"/>',
+      autoclips: '<rect width="64" height="64" rx="14" fill="#a21caf"/><rect x="12" y="18" width="30" height="28" rx="6" fill="#faf5ff"/><rect x="17" y="23" width="9" height="18" rx="2" fill="#c026d3"/><path d="M26 27l11 5-11 5z" fill="#7e22ce"/><path d="M46 24l8-4v24l-8-4z" fill="#f0abfc"/>',
+      youtube: '<rect width="64" height="64" rx="14" fill="#dc2626"/><rect x="9" y="17" width="46" height="30" rx="9" fill="#fff"/><path d="M27 25l14 7-14 7z" fill="#dc2626"/>',
+      historico: '<rect width="64" height="64" rx="14" fill="#0369a1"/><g fill="none" stroke="#e0f2fe" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 32a12 12 0 1 0 4-9"/><path d="M20 18v6h6"/><path d="M32 25v8l6 4"/></g>',
       btc: '<circle cx="32" cy="32" r="25" fill="#f7931a"/><g fill="none" stroke="#fff" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"><path d="M27 16h7a7 7 0 0 1 0 14h-7zM27 30h9a7 7 0 0 1 0 14h-9z"/><path d="M23 16h4M23 44h4M30 12v6M30 42v6"/></g>',
       quantfury: '<rect width="64" height="64" rx="14" fill="#0b1220"/><path d="M14 44l11-13 10 6 15-19" fill="none" stroke="#22d3ee" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="50" cy="18" r="4.5" fill="#34d399"/>',
-      launcher: '<rect width="64" height="64" rx="14" fill="#4c1d95"/><g fill="#fff"><rect x="13" y="13" width="16" height="16" rx="5"/><rect x="35" y="13" width="16" height="16" rx="5"/><rect x="13" y="35" width="16" height="16" rx="5"/><rect x="35" y="35" width="16" height="16" rx="5"/></g><circle cx="42" cy="42" r="4" fill="#f97316"/>'
+      launcher: '<rect width="64" height="64" rx="14" fill="#4c1d95"/><g fill="#fff"><rect x="13" y="13" width="16" height="16" rx="5"/><rect x="35" y="13" width="16" height="16" rx="5"/><rect x="13" y="35" width="16" height="16" rx="5"/><rect x="35" y="35" width="16" height="16" rx="5"/></g><circle cx="42" cy="42" r="4" fill="#f97316"/>',
+      projetos: '<rect width="64" height="64" rx="14" fill="#7c3aed"/><path d="M12 22h14l5 5h21a4 4 0 0 1 4 4v17a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V26a4 4 0 0 1 4-4z" fill="#fff"/><path d="M8 34h48" stroke="#7c3aed" stroke-width="2"/>'
     };
     return '<svg viewBox="0 0 64 64" aria-hidden="true">' + (icons[id] || icons.agent) + "</svg>";
   }
@@ -292,6 +305,7 @@
     positionWindow(win, pos);
     focusWindow(win);
     renderApp(win);
+    if (appId === "agent") { applyWindowClasses(win); applyAgentWindowLayout(win); updateAgentChrome(win); }
     return win;
   }
 
@@ -357,6 +371,7 @@
     else if (win.appId === "calculator") renderCalculator(win);
     else if (win.appId === "settings") renderSettings(win);
     else if (win.appId === "launcher") renderLauncher(win);
+    else if (win.appId === "projetos") renderProjetos(win);
     else if (Object.prototype.hasOwnProperty.call(MODULE_APPS, win.appId)) renderModuleApp(win, win.appId);
   }
 
@@ -367,13 +382,15 @@
       item = settings.taskHistory[i];
       historyHtml += '<button type="button" class="history-item" data-history="' + i + '">' + escapeHtml(shortText(item.prompt, 68)) + "</button>";
     }
-    win.content.innerHTML = '<div class="agent-app">'
+    win.content.innerHTML = '<div class="agent-app' + (isAgentCompact(win) ? " compact" : "") + '">'
       + '<div class="agent-hero"><span class="agent-avatar"><img src="icon.svg" alt=""></span>'
       + '<div class="agent-heading"><h1>TIAgente</h1><p>Seu assistente inteligente, sempre ao seu lado!</p>'
-      + '<span class="agent-state" id="agent-state-' + win.id + '">Pronto para conectar</span></div></div>'
+      + '<div class="agent-heading-actions"><span class="agent-state" id="agent-state-' + win.id + '">Pronto para conectar</span>'
+      + '<button type="button" class="agent-expand" data-agent-action="expand">Expandir</button></div></div></div>'
       + '<div class="agent-grid"><div class="agent-main">'
       + '<form class="task-composer" data-agent-form="' + win.id + '">'
       + '<textarea name="prompt" aria-label="Sua solicitação" placeholder="Digite o que você deseja fazer..." maxlength="4000"></textarea>'
+      + '<button class="agent-voice" type="button" data-agent-action="voice" aria-label="Entrada por voz">Voz</button>'
       + '<button class="send-task" type="submit" aria-label="Enviar solicitação">&#10148;</button></form>'
       + '<h2 class="agent-section-title">Exemplos do que você pode pedir:</h2>'
       + '<div class="agent-shortcuts">'
@@ -382,9 +399,12 @@
       + '<button class="agent-shortcut" type="button" data-prompt="Organize os arquivos do projeto atual">▰ &nbsp; Organizar arquivos</button>'
       + '<button class="agent-shortcut" type="button" data-prompt="Explique o que posso fazer neste projeto">◫ &nbsp; Explorar projeto</button>'
       + '<button class="agent-shortcut" type="button" data-prompt="Crie uma página web simples para">◎ &nbsp; Criar uma página</button>'
+      + '<button class="agent-shortcut" type="button" data-app="projetos">▤ &nbsp; Meus projetos</button>'
       + '<button class="agent-shortcut" type="button" data-app="settings">⚙ &nbsp; Configurar o sistema</button>'
       + '</div><div class="agent-output" id="agent-output-' + win.id + '" aria-live="polite"></div>'
-      + '<div class="agent-history"><h2>Tarefas recentes</h2><div id="agent-history-' + win.id + '">'
+      + '<div class="agent-history"><div class="agent-history-head"><h2>Tarefas recentes</h2>'
+      + '<button type="button" class="agent-new" data-agent-action="new-conversation">Nova conversa</button></div>'
+      + '<div id="agent-history-' + win.id + '">'
       + (historyHtml || '<p class="muted">Suas tarefas concluídas aparecerão aqui.</p>') + '</div></div></div>'
       + '<aside class="agent-side"><div class="agent-card"><h2>✓ &nbsp; Recursos</h2>'
       + '<div class="resource-line"><span class="resource-icon">◎</span>Navegação na web</div>'
@@ -422,23 +442,251 @@
   function renderStudio(win) {
     var slug = settings.project || "default";
     win.content.innerHTML = '<div class="studio-app">'
-      + '<div class="studio-head"><h2>Estúdio de visualização</h2>'
-      + '<p>O Tiagente abre aqui os sistemas que criar, sem você escolher um aplicativo.</p></div>'
+      + '<div class="studio-head"><h2>Ambiente de testes</h2>'
+      + '<p>Abra, execute e teste aqui os sistemas que o Tiagente criar.</p></div>'
       + '<div class="studio-toolbar">'
       + '<input class="text-field" id="' + win.id + '-studio-project" type="text" value="' + escapeHtml(slug) + '" aria-label="Nome do projeto">'
       + '<button class="action-button" type="button" data-studio-action="load">Abrir prévia</button>'
+      + '<button class="action-button" type="button" data-studio-action="run">Executar</button>'
+      + '<button class="action-button" type="button" data-studio-action="stop">Parar</button>'
       + '<button class="action-button" type="button" data-studio-action="reload">Atualizar</button>'
       + '<button class="action-button" type="button" data-studio-action="fullscreen">Tela cheia</button>'
       + '<button class="action-button" type="button" data-studio-action="reopen">Reabrir projeto</button>'
       + '<button class="action-button primary" type="button" data-studio-action="publish">Publicar</button></div>'
+      + '<div class="studio-devices" role="group" aria-label="Tamanho de visualização"><span class="browser-recent-label">Visualizar em:</span>'
+      + '<button class="studio-device active" type="button" data-studio-action="device" data-device="desktop" aria-pressed="true">Computador</button>'
+      + '<button class="studio-device" type="button" data-studio-action="device" data-device="tablet" aria-pressed="false">Tablet</button>'
+      + '<button class="studio-device" type="button" data-studio-action="device" data-device="mobile" aria-pressed="false">Celular</button></div>'
       + '<div class="studio-meta"><span class="studio-badge" id="' + win.id + '-studio-kind"></span>'
       + '<span class="studio-path" id="' + win.id + '-studio-path"></span></div>'
       + '<div class="studio-url" id="' + win.id + '-studio-url"></div>'
       + '<input class="text-field studio-publish-field hidden" id="' + win.id + '-studio-publish" type="text" readonly aria-label="Link público">'
       + '<div class="studio-status" id="' + win.id + '-studio-status" role="status"></div>'
-      + '<div class="studio-frame-wrap"><iframe class="browser-frame" id="' + win.id + '-studio-frame" title="Prévia do projeto" sandbox="allow-forms allow-scripts" src="about:blank"></iframe>'
-      + '<div class="browser-empty" id="' + win.id + '-studio-note">A prévia aparece aqui. Toque em “Abrir prévia”.</div></div></div>';
+      + '<div class="studio-frame-wrap device-desktop" id="' + win.id + '-studio-frame-wrap"><iframe class="browser-frame" id="' + win.id + '-studio-frame" title="Prévia do projeto" sandbox="allow-forms allow-scripts allow-pointer-lock" src="about:blank"></iframe>'
+      + '<div class="browser-empty" id="' + win.id + '-studio-note">A prévia aparece aqui. Toque em “Abrir prévia”.</div></div>'
+      + '<div class="studio-controls" id="' + win.id + '-studio-controls"></div>'
+      + '<div class="studio-log" id="' + win.id + '-studio-log" role="log" aria-label="Registro de atividades"></div></div>';
+    win.studioDevice = "desktop";
+    win.studioSlug = "";
+    win.gameManifest = null;
+    win.gameCapture = false;
+    win.gameCaptureAction = null;
+    var frame = studioEl(win, "-studio-frame");
+    if (frame) frame.onload = function () { studioRequestGameHello(win); };
+    renderStudioControls(win);
+    studioLog(win, "Ambiente de testes pronto.");
     setStatusLine(win, "Estúdio pronto");
+  }
+
+  function studioLog(win, text) {
+    var log = studioEl(win, "-studio-log");
+    if (!log) return;
+    var d = new Date();
+    var pad = function (v) { return (v < 10 ? "0" : "") + v; };
+    var line = document.createElement("div");
+    line.className = "studio-log-line";
+    line.textContent = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()) + "  " + text;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+    while (log.childNodes.length > 60) log.removeChild(log.firstChild);
+  }
+
+  function studioSetDevice(win, device) {
+    var name = device === "mobile" || device === "tablet" ? device : "desktop";
+    win.studioDevice = name;
+    var wrap = studioEl(win, "-studio-frame-wrap");
+    if (wrap) wrap.className = "studio-frame-wrap device-" + name;
+    var buttons = win.content.getElementsByClassName("studio-device");
+    var i, on;
+    for (i = 0; i < buttons.length; i++) {
+      on = buttons[i].getAttribute("data-device") === name;
+      buttons[i].className = "studio-device" + (on ? " active" : "");
+      buttons[i].setAttribute("aria-pressed", on ? "true" : "false");
+    }
+    studioLog(win, "Visualização: " + (name === "mobile" ? "Celular" : name === "tablet" ? "Tablet" : "Computador"));
+  }
+
+  function studioRun(win, slug) {
+    var value = String(slug == null ? "" : slug).replace(/^\s+|\s+$/g, "");
+    if (!value) { showNotice("Informe o nome do projeto."); return; }
+    studioSetStatus(win, "Executando…", false);
+    studioLog(win, "Executando “" + value + "”…");
+    setStatusLine(win, "Executando…");
+    request("POST", "/api/projects/" + encodeURIComponent(value) + "/dev/start", {}, function (err, dev) {
+      if (err || !dev || dev.ok === false || !dev.url) {
+        var msg = (dev && dev.error) || (err && err.message) || "Não foi possível executar o projeto.";
+        studioLog(win, "Falha ao executar: " + msg);
+        studioShowError(win, msg);
+        return;
+      }
+      studioLoadFrame(win, dev.url, "Em execução.");
+      studioLog(win, "Servidor ativo em " + dev.url);
+    }, 30000);
+  }
+
+  function studioStop(win, slug) {
+    var value = String(slug == null ? "" : slug).replace(/^\s+|\s+$/g, "");
+    if (!value) { showNotice("Informe o nome do projeto."); return; }
+    request("POST", "/api/projects/" + encodeURIComponent(value) + "/dev/stop", {}, function (err) {
+      if (err) { studioLog(win, "Falha ao parar: " + err.message); studioSetStatus(win, "Falha ao parar.", true); return; }
+      var frame = studioEl(win, "-studio-frame");
+      if (frame) frame.src = "about:blank";
+      studioSetNote(win, "Execução parada.");
+      studioSetStatus(win, "Parado.", false);
+      studioLog(win, "Execução parada.");
+      setStatusLine(win, "Parado");
+    }, 20000);
+  }
+
+  // FASE 5 — Controles do jogo. O jogo (executado no iframe isolado) declara
+  // seus comandos por postMessage; o OS mostra só o que ele implementa e
+  // devolve os comandos como eventos de teclado reais. Sem jogo detectado,
+  // informa o motivo em vez de exibir botões decorativos.
+  function studioRequestGameHello(win) {
+    var frame = studioEl(win, "-studio-frame");
+    if (!frame || !frame.contentWindow) return;
+    try { frame.contentWindow.postMessage({ source: "tiagente-os", type: "hello" }, "*"); } catch (e) {}
+  }
+
+  function gameControlEntry(manifest, action) {
+    var i;
+    for (i = 0; i < manifest.controls.length; i++) {
+      if (manifest.controls[i].action === action) return manifest.controls[i];
+    }
+    return null;
+  }
+
+  function gameKeyLabel(code) {
+    var map = { ArrowLeft: "←", ArrowRight: "→", ArrowUp: "↑", ArrowDown: "↓", Space: "Espaço", Enter: "Enter", Escape: "Esc" };
+    if (map[code]) return map[code];
+    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+    return code || "";
+  }
+
+  function gameControlCodes(win, entry) {
+    var slug = win.studioSlug || "";
+    var saved = slug && settings.gameControls ? settings.gameControls[slug] : null;
+    var override = saved && saved[entry.action];
+    if (override && override.length) return override.slice(0);
+    return (entry.codes || []).slice(0);
+  }
+
+  function captureStudioWin() {
+    var i, win;
+    for (i = 0; i < windows.length; i++) {
+      win = windows[i];
+      if (win.appId === "studio" && win.gameCapture) return win;
+    }
+    return null;
+  }
+
+  function studioControlSend(win, action, down) {
+    var frame = studioEl(win, "-studio-frame");
+    var manifest = win.gameManifest;
+    if (!frame || !frame.contentWindow || !manifest) return;
+    var entry = gameControlEntry(manifest, action);
+    if (!entry) return;
+    try {
+      frame.contentWindow.postMessage({
+        source: "tiagente-os", type: "control", action: action,
+        codes: gameControlCodes(win, entry), down: !!down
+      }, "*");
+    } catch (e) {}
+  }
+
+  function bindGameControl(win, button) {
+    var action = button.getAttribute("data-game-control");
+    var held = false;
+    function press(ev) {
+      if (ev && ev.preventDefault) ev.preventDefault();
+      if (win.gameCapture) { win.gameCaptureAction = action; renderStudioControls(win); return; }
+      if (held) return;
+      held = true;
+      studioControlSend(win, action, true);
+    }
+    function release() { if (held) { held = false; studioControlSend(win, action, false); } }
+    button.addEventListener("mousedown", press, false);
+    button.addEventListener("mouseup", release, false);
+    button.addEventListener("mouseleave", release, false);
+    button.addEventListener("touchstart", press, false);
+    button.addEventListener("touchend", release, false);
+    button.addEventListener("touchcancel", release, false);
+  }
+
+  function gameControlButton(win, entry, saved) {
+    var override = saved && saved[entry.action];
+    var codes = (override && override.length) ? override : (entry.codes || []);
+    var label = entry.label || entry.action;
+    var active = win.gameCaptureAction === entry.action ? " active" : "";
+    return '<button type="button" class="game-control ' + (entry.group === "action" ? "action" : "move") + active + '"'
+      + ' data-game-control="' + escapeHtml(entry.action) + '" aria-label="' + escapeHtml(label) + '">'
+      + '<span class="game-control-label">' + escapeHtml(label) + "</span>"
+      + '<span class="game-control-key">' + escapeHtml(gameKeyLabel(codes[0])) + "</span></button>";
+  }
+
+  function renderStudioControls(win) {
+    var host = studioEl(win, "-studio-controls");
+    if (!host) return;
+    var manifest = win.gameManifest;
+    if (!manifest || !manifest.controls || !manifest.controls.length) {
+      host.className = "studio-controls";
+      host.innerHTML = '<p class="game-controls-hint">Os controles aparecem aqui quando a prévia é um jogo criado no Game Studio que declara seus comandos.</p>';
+      return;
+    }
+    var kind = manifest.engine === "threejs" || manifest.engine === "3d" ? "Jogo 3D" : "Jogo 2D";
+    var slug = win.studioSlug || "";
+    var saved = slug && settings.gameControls ? settings.gameControls[slug] : null;
+    var moves = [];
+    var actions = [];
+    var i, entry;
+    for (i = 0; i < manifest.controls.length; i++) {
+      entry = manifest.controls[i];
+      if (entry.group === "action") actions.push(entry); else moves.push(entry);
+    }
+    var html = '<div class="game-controls' + (win.gameCapture ? " capturing" : "") + '">'
+      + '<div class="game-controls-head"><strong>Controles do jogo</strong>'
+      + '<span class="game-controls-genre">' + escapeHtml(kind + (manifest.genre ? " · " + manifest.genre : "")) + "</span>"
+      + '<button type="button" class="action-button" data-studio-action="controls-config">' + (win.gameCapture ? "Concluir" : "Configurar") + "</button>"
+      + '<button type="button" class="action-button" data-studio-action="controls-reset">Restaurar padrão</button></div>';
+    if (win.gameCapture) {
+      var capEntry = win.gameCaptureAction ? gameControlEntry(manifest, win.gameCaptureAction) : null;
+      html += '<p class="game-controls-hint">' + (capEntry
+        ? "Pressione a tecla que deve substituir “" + escapeHtml(capEntry.label) + "”. Esc cancela."
+        : "Toque num controle para trocar a tecla dele. Esc cancela.") + "</p>";
+    }
+    html += '<div class="game-controls-pad"><div class="game-dpad">';
+    for (i = 0; i < moves.length; i++) html += gameControlButton(win, moves[i], saved);
+    html += "</div>";
+    if (actions.length) {
+      html += '<div class="game-actions">';
+      for (i = 0; i < actions.length; i++) html += gameControlButton(win, actions[i], saved);
+      html += "</div>";
+    }
+    html += "</div></div>";
+    host.className = "studio-controls visible";
+    host.innerHTML = html;
+    var buttons = host.getElementsByClassName("game-control");
+    for (i = 0; i < buttons.length; i++) bindGameControl(win, buttons[i]);
+  }
+
+  function handleGameMessage(event) {
+    var data = event.data;
+    if (!data || data.source !== "tiagente-game" || data.type !== "ready") return;
+    var i, win, frame;
+    for (i = 0; i < windows.length; i++) {
+      win = windows[i];
+      if (win.appId !== "studio") continue;
+      frame = document.getElementById(win.id + "-studio-frame");
+      if (frame && frame.contentWindow === event.source) {
+        win.gameManifest = data;
+        win.gameCapture = false;
+        win.gameCaptureAction = null;
+        renderStudioControls(win);
+        studioLog(win, "Jogo detectado: " + (data.genre || "jogo") + " (" + (data.engine || "html5") + ") · " + ((data.controls && data.controls.length) || 0) + " controle(s).");
+        return;
+      }
+    }
   }
 
   // Apps de módulo: reaproveitam a tela da SPA num iframe via rota "/?tab=<id>".
@@ -499,6 +747,10 @@
   }
 
   function studioLoadFrame(win, url, okMessage) {
+    win.gameManifest = null;
+    win.gameCapture = false;
+    win.gameCaptureAction = null;
+    renderStudioControls(win);
     var frame = studioEl(win, "-studio-frame");
     if (frame) frame.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + "t=" + new Date().getTime();
     studioSetNote(win, "");
@@ -511,6 +763,7 @@
     if (!value) { showNotice("Informe o nome do projeto."); return; }
     settings.project = value;
     saveSettings();
+    win.studioSlug = value;
     var urlLabel = studioEl(win, "-studio-url");
     var kindLabel = studioEl(win, "-studio-kind");
     var pathLabel = studioEl(win, "-studio-path");
@@ -688,6 +941,169 @@
     win.content.innerHTML = '<div class="app-panel"><h2>Calculadora</h2><div class="calculator">'
       + '<input id="' + win.id + '-calc-display" class="calculator-display" type="text" value="0" readonly aria-label="Visor">'
       + '<div class="calculator-keys">' + html + "</div></div></div>";
+  }
+
+  // Central de projetos (FASE 3): reúne jogos, sites e agentes num só lugar.
+  var PROJETOS = { loaded: false, loading: false, error: null, items: [], filter: "todos", query: "" };
+
+  function projetosDate(ms) {
+    var n = Number(ms);
+    if (!n || isNaN(n)) return "sem data";
+    var d = new Date(n);
+    var pad = function (v) { return (v < 10 ? "0" : "") + v; };
+    return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + String(d.getFullYear()).slice(2) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function mergeProjetos(sites, games) {
+    var items = [];
+    var i, p, g;
+    for (i = 0; i < sites.length; i++) {
+      p = sites[i];
+      items.push({
+        kind: p.type === "agent" ? "agente" : "site",
+        kindLabel: p.type === "agent" ? "Agente" : "Site",
+        name: p.displayName || p.name,
+        sub: p.mounted ? "Pasta externa" : "Projeto interno",
+        updatedAt: p.modifiedAt || p.createdAt || 0,
+        app: "studio",
+        slug: p.name,
+        url: p.previewUrl || null
+      });
+    }
+    for (i = 0; i < games.length; i++) {
+      g = games[i];
+      items.push({
+        kind: "jogo",
+        kindLabel: g.type === "3d" ? "Jogo 3D" : "Jogo 2D",
+        name: g.name,
+        sub: (g.genreLabel || g.genre || "Jogo") + (g.status ? " · " + g.status : ""),
+        updatedAt: g.updatedAt ? Date.parse(g.updatedAt) : 0,
+        app: "studio",
+        slug: g.slug,
+        url: g.previewUrl || null
+      });
+    }
+    items.sort(function (a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); });
+    return items;
+  }
+
+  function setProjetosState(win, message, mode) {
+    var el = document.getElementById(win.id + "-projetos-state");
+    if (!el) return;
+    if (!message) { el.className = "projetos-state"; el.innerHTML = ""; return; }
+    var retry = mode === "retry" ? ' <button type="button" class="action-button" data-projetos-act="refresh">Tentar novamente</button>' : "";
+    el.className = "projetos-state visible";
+    el.innerHTML = "<span>" + escapeHtml(message) + "</span>" + retry;
+  }
+
+  function loadProjetos(win) {
+    if (PROJETOS.loading || !win) return;
+    PROJETOS.loading = true;
+    PROJETOS.error = null;
+    setProjetosState(win, "Carregando projetos…", null);
+    var pending = 2;
+    var sites = null;
+    var games = null;
+    var failed = null;
+    var done = function () {
+      pending--;
+      if (pending > 0) return;
+      PROJETOS.loading = false;
+      if (failed) {
+        PROJETOS.error = failed;
+        setProjetosState(win, "Não foi possível carregar os projetos.", "retry");
+        return;
+      }
+      PROJETOS.items = mergeProjetos(sites || [], games || []);
+      PROJETOS.loaded = true;
+      setProjetosState(win, null, null);
+      renderProjetosList(win);
+    };
+    getJSON("/api/projects", function (err, data) {
+      if (err) failed = err.message || "Falha ao carregar projetos.";
+      else sites = (data && data.projects) || [];
+      done();
+    });
+    getJSON("/api/gamestudio/games", function (err, data) {
+      if (err) failed = err.message || "Falha ao carregar jogos.";
+      else games = (data && (data.items || data.games)) || [];
+      done();
+    });
+  }
+
+  function projetosCardHtml(it) {
+    var actions = '<button type="button" class="action-button" data-projetos-act="open" data-projetos-app="' + it.app + '"'
+      + (it.slug ? ' data-projetos-slug="' + escapeHtml(it.slug) + '"' : "") + ">"
+      + (it.kind === "jogo" ? "Testar" : "Abrir") + "</button>";
+    if (it.kind === "jogo") actions += '<button type="button" class="action-button" data-projetos-act="open" data-projetos-app="gamestudio">Editar</button>';
+    if (it.url) actions += '<button type="button" class="action-button" data-projetos-act="preview" data-projetos-url="' + escapeHtml(it.url) + '">Ver</button>';
+    return '<article class="projetos-card">'
+      + '<div class="projetos-card-body"><span class="projetos-kind kind-' + it.kind + '">' + escapeHtml(it.kindLabel) + "</span>"
+      + '<strong class="projetos-name">' + escapeHtml(it.name) + "</strong>"
+      + '<span class="projetos-sub">' + escapeHtml(it.sub) + "</span>"
+      + '<span class="projetos-date">' + escapeHtml(projetosDate(it.updatedAt)) + "</span></div>"
+      + '<div class="projetos-card-actions">' + actions + "</div></article>";
+  }
+
+  function renderProjetosList(win) {
+    var list = document.getElementById(win.id + "-projetos-list");
+    var countEl = document.getElementById(win.id + "-projetos-count");
+    if (!list) return;
+    var q = String(PROJETOS.query || "").replace(/^\s+|\s+$/g, "").toLowerCase();
+    var visible = [];
+    var i, it;
+    for (i = 0; i < PROJETOS.items.length; i++) {
+      it = PROJETOS.items[i];
+      if (PROJETOS.filter !== "todos" && it.kind !== PROJETOS.filter) continue;
+      if (q && String(it.name).toLowerCase().indexOf(q) < 0) continue;
+      visible.push(it);
+    }
+    var html = "";
+    for (i = 0; i < visible.length; i++) html += projetosCardHtml(visible[i]);
+    list.innerHTML = html;
+    if (countEl) countEl.textContent = visible.length + (visible.length === 1 ? " projeto" : " projetos");
+    if (!visible.length) {
+      setProjetosState(win, PROJETOS.items.length ? "Nenhum projeto corresponde ao filtro." : "Nenhum projeto ainda. Crie um jogo no Game Studio ou um site no Estúdio.", null);
+    } else {
+      setProjetosState(win, null, null);
+    }
+  }
+
+  function renderProjetos(win) {
+    var filters = [["todos", "Todos"], ["jogo", "Jogos"], ["site", "Sites"], ["agente", "Agentes"]];
+    var fhtml = "";
+    var i;
+    for (i = 0; i < filters.length; i++) {
+      var on = PROJETOS.filter === filters[i][0];
+      fhtml += '<button type="button" class="projetos-filter' + (on ? " active" : "") + '" data-projetos-act="filter" data-projetos-filter="' + filters[i][0] + '" aria-pressed="' + (on ? "true" : "false") + '">' + filters[i][1] + "</button>";
+    }
+    win.content.innerHTML = '<div class="app-panel projetos">'
+      + '<div class="projetos-head"><h2>Projetos</h2>'
+      + '<button type="button" class="action-button" data-projetos-act="refresh">Atualizar</button></div>'
+      + '<p class="projetos-hint">Tudo que você criou — jogos, sites e agentes — em um só lugar.</p>'
+      + '<div class="projetos-toolbar"><input class="text-field" id="' + win.id + '-projetos-search" type="text" placeholder="Pesquisar por nome" aria-label="Pesquisar projetos" value="' + escapeHtml(PROJETOS.query) + '" autocomplete="off">'
+      + '<div class="projetos-filters" role="group" aria-label="Filtrar por tipo">' + fhtml + "</div></div>"
+      + '<div class="projetos-count" id="' + win.id + '-projetos-count"></div>'
+      + '<div class="projetos-state" id="' + win.id + '-projetos-state" role="status"></div>'
+      + '<div class="projetos-list" id="' + win.id + '-projetos-list"></div></div>';
+    if (!PROJETOS.loaded && !PROJETOS.loading) loadProjetos(win);
+    else if (PROJETOS.loaded) renderProjetosList(win);
+    setStatusLine(win, "Central de projetos");
+  }
+
+  function handleProjetosAction(btn) {
+    var act = btn.getAttribute("data-projetos-act");
+    var win = findWindow("projetos");
+    if (act === "refresh") { PROJETOS.loaded = false; PROJETOS.error = null; loadProjetos(win); return; }
+    if (act === "filter") { PROJETOS.filter = btn.getAttribute("data-projetos-filter") || "todos"; if (win) renderProjetos(win); return; }
+    if (act === "open") {
+      var app = btn.getAttribute("data-projetos-app") || "studio";
+      var slug = btn.getAttribute("data-projetos-slug");
+      var target = openApp(app);
+      if (slug && target && app === "studio") loadStudioPreview(target, slug);
+      return;
+    }
+    if (act === "preview") { var url = btn.getAttribute("data-projetos-url"); if (url) navigateBrowser(openApp("browser"), url); return; }
   }
 
   // Central de aplicativos: agrupa tudo por categoria e permite pesquisar.
@@ -1317,6 +1733,118 @@
     agentCurrentTask = null;
     agentQueuedPrompt = null;
     agentCurrentText = "";
+    stopAgentVoice();
+  }
+
+  /* ---------------- FASE 6 — Assistente central ---------------- */
+  /* A janela do assistente abre compacta (painel de conversa) para não
+   * cobrir a área de trabalho; pode ser expandida e voltar ao normal. */
+  function isAgentCompact(win) {
+    return !win || win.agentCompact !== false;
+  }
+
+  function applyWindowClasses(win) {
+    if (!win || !win.el) return;
+    var active = win.el.className.indexOf("active") >= 0;
+    var cls = "app-window";
+    if (win.appId === "agent") cls += " agent-window" + (isAgentCompact(win) ? " compact" : " expanded");
+    if (win.maximized) cls += " maximized";
+    if (active) cls += " active";
+    win.el.className = cls;
+  }
+
+  function applyAgentWindowLayout(win) {
+    if (!win || !win.el || win.maximized) return;
+    if (!isAgentCompact(win)) { positionWindow(win, 0); return; }
+    var viewW = window.innerWidth || document.documentElement.clientWidth;
+    var viewH = window.innerHeight || document.documentElement.clientHeight;
+    var w = Math.min(400, viewW - 24);
+    var h = Math.max(280, Math.min(580, viewH - 160));
+    win.el.style.width = w + "px";
+    win.el.style.height = h + "px";
+    win.el.style.left = Math.max(12, viewW - w - 20) + "px";
+    win.el.style.top = Math.max(68, viewH - h - 104) + "px";
+  }
+
+  function updateAgentChrome(win) {
+    if (!win || !win.content) return;
+    var compact = isAgentCompact(win);
+    var toggle = win.content.querySelector('[data-agent-action="expand"]');
+    if (toggle) toggle.textContent = compact ? "Expandir" : "Compactar";
+    var app = win.content.querySelector(".agent-app");
+    if (app) app.className = compact ? "agent-app compact" : "agent-app";
+  }
+
+  function toggleAgentWindowMode(win) {
+    win.agentCompact = !isAgentCompact(win);
+    applyWindowClasses(win);
+    applyAgentWindowLayout(win);
+    updateAgentChrome(win);
+  }
+
+  /* Entrada por voz (Web Speech API) — degrada com aviso quando indisponível. */
+  function toggleAgentVoice(win) {
+    var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var button = win && win.content ? win.content.querySelector('[data-agent-action="voice"]') : null;
+    if (agentVoiceRec) { stopAgentVoice(); showNotice("Ditado por voz encerrado."); return; }
+    if (!SpeechRec) { showNotice("Reconhecimento de voz não é suportado neste navegador."); return; }
+    var rec;
+    try { rec = new SpeechRec(); } catch (e) { showNotice("Não foi possível iniciar o reconhecimento de voz."); return; }
+    rec.lang = "pt-BR";
+    rec.interimResults = false;
+    rec.continuous = false;
+    rec.onresult = function (event) {
+      var text = "", i;
+      for (i = event.resultIndex; i < event.results.length; i++) text += event.results[i][0].transcript;
+      text = text.replace(/^\s+|\s+$/g, "");
+      var field = win.content.querySelector("textarea[name=prompt]");
+      if (field && text) {
+        field.value = field.value ? field.value.replace(/\s+$/, "") + " " + text : text;
+        field.focus();
+      }
+      setStatusLine(win, "Voz capturada");
+    };
+    rec.onerror = function () { showNotice("Não foi possível capturar a voz."); };
+    rec.onend = function () {
+      if (agentVoiceRec === rec) agentVoiceRec = null;
+      if (button) { button.className = "agent-voice"; button.textContent = "Voz"; }
+    };
+    try { rec.start(); } catch (e) { showNotice("Não foi possível iniciar o microfone."); return; }
+    agentVoiceRec = rec;
+    if (button) { button.className = "agent-voice listening"; button.textContent = "Ouvindo"; }
+    showNotice("Fale agora — o texto será inserido no campo.");
+  }
+
+  function stopAgentVoice() {
+    if (!agentVoiceRec) return;
+    var rec = agentVoiceRec;
+    agentVoiceRec = null;
+    rec.onend = null;
+    try { rec.stop(); } catch (e) {}
+  }
+
+  function startNewAgentConversation(win) {
+    if (!win) return;
+    if (agentCurrentTask) { showNotice("Aguarde a tarefa atual terminar."); return; }
+    settings.agentSession = "";
+    saveSettings();
+    var output = document.getElementById("agent-output-" + win.id);
+    if (output) output.textContent = "";
+    var field = win.content.querySelector("textarea[name=prompt]");
+    if (field) { field.value = ""; field.focus(); }
+    var state = document.getElementById("agent-state-" + win.id);
+    if (state) { state.textContent = "Nova conversa"; state.className = "agent-state"; }
+    setStatusLine(win, "Nova conversa iniciada");
+    showNotice("Nova conversa iniciada.");
+  }
+
+  function handleAgentAction(button) {
+    var win = findWindow("agent");
+    if (!win) return;
+    var action = button.getAttribute("data-agent-action");
+    if (action === "expand") toggleAgentWindowMode(win);
+    else if (action === "voice") toggleAgentVoice(win);
+    else if (action === "new-conversation") startNewAgentConversation(win);
   }
 
   function navigateBrowser(win, value, fromHistory) {
@@ -1447,6 +1975,8 @@
     var terminalAction = closestAttribute(target, "data-terminal-action");
     var studioAction = closestAttribute(target, "data-studio-action");
     var moduleAction = closestAttribute(target, "data-module-action");
+    var projetosAction = closestAttribute(target, "data-projetos-act");
+    var agentAction = closestAttribute(target, "data-agent-action");
     var appWindow;
     if (appButton) {
       menuPopover.hidden = true;
@@ -1459,6 +1989,8 @@
     if (actionButton && actionButton.getAttribute("data-action") === "menu") { renderMenu("main", actionButton); return; }
     if (actionButton && actionButton.getAttribute("data-action") === "global-search") { menuPopover.hidden = true; openLauncherSearch(); return; }
     if (menuAction) { handleMenuAction(menuAction.getAttribute("data-menu-action")); return; }
+    if (projetosAction) { handleProjetosAction(projetosAction); return; }
+    if (agentAction) { handleAgentAction(agentAction); return; }
     if (winAction) {
       var id = winAction.getAttribute("data-window");
       var action = winAction.getAttribute("data-window-action");
@@ -1536,7 +2068,8 @@
   function toggleMaximize(win) {
     if (!win) return;
     win.maximized = !win.maximized;
-    win.el.className = win.maximized ? "app-window maximized active" : "app-window active";
+    applyWindowClasses(win);
+    if (!win.maximized) applyAgentWindowLayout(win);
     focusWindow(win);
   }
 
@@ -1603,6 +2136,23 @@
     var input = document.getElementById(win.id + "-studio-project");
     var slug = input ? input.value.replace(/^\s+|\s+$/g, "") : settings.project;
     if (action === "load" || action === "reload" || action === "reopen") loadStudioPreview(win, slug);
+    else if (action === "run") studioRun(win, slug);
+    else if (action === "stop") studioStop(win, slug);
+    else if (action === "device") studioSetDevice(win, button.getAttribute("data-device"));
+    else if (action === "controls-config") {
+      win.gameCapture = !win.gameCapture;
+      win.gameCaptureAction = null;
+      renderStudioControls(win);
+    } else if (action === "controls-reset") {
+      var key = win.studioSlug || "";
+      if (key && settings.gameControls && settings.gameControls[key]) {
+        delete settings.gameControls[key];
+        saveSettings();
+      }
+      win.gameCaptureAction = null;
+      renderStudioControls(win);
+      studioLog(win, "Controles restaurados ao padrão.");
+    }
     else if (action === "publish") publishStudio(win);
     else if (action === "fullscreen") toggleMaximize(win);
   }
@@ -1790,7 +2340,13 @@
 
   function handleInput(event) {
     var target = event.target;
-    if (target && target.id && /-launcher-search$/.test(target.id)) handleLauncherInput(target);
+    if (!target || !target.id) return;
+    if (/-launcher-search$/.test(target.id)) { handleLauncherInput(target); return; }
+    if (/-projetos-search$/.test(target.id)) {
+      PROJETOS.query = target.value;
+      var win = findWindow("projetos");
+      if (win) renderProjetosList(win);
+    }
   }
 
   function handleSubmit(event) {
@@ -1802,6 +2358,30 @@
   }
 
   function handleKeydown(event) {
+    var capWin = captureStudioWin();
+    if (capWin) {
+      if (event.keyCode === 27) {
+        capWin.gameCapture = false;
+        capWin.gameCaptureAction = null;
+        renderStudioControls(capWin);
+        event.preventDefault();
+        return;
+      }
+      if (capWin.gameCaptureAction && event.code) {
+        var capSlug = capWin.studioSlug || "";
+        if (capSlug) {
+          if (!settings.gameControls) settings.gameControls = {};
+          if (!settings.gameControls[capSlug]) settings.gameControls[capSlug] = {};
+          settings.gameControls[capSlug][capWin.gameCaptureAction] = [event.code];
+          saveSettings();
+          studioLog(capWin, "Tecla de “" + capWin.gameCaptureAction + "” agora é " + event.code + ".");
+        }
+        capWin.gameCaptureAction = null;
+        renderStudioControls(capWin);
+        event.preventDefault();
+        return;
+      }
+    }
     if (event.keyCode === 13 && event.target && event.target.id && /-address$/.test(event.target.id)) {
       event.preventDefault();
       var win = findWindow("browser");
@@ -1875,6 +2455,7 @@
     document.addEventListener("input", handleInput, false);
     document.addEventListener("submit", handleSubmit, false);
     document.addEventListener("keydown", handleKeydown, false);
+    window.addEventListener("message", handleGameMessage, false);
     windowsHost.addEventListener("mousedown", startDrag, false);
     windowsHost.addEventListener("touchstart", startDrag, false);
     document.addEventListener("mousemove", moveDrag, false);

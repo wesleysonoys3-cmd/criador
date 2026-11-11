@@ -1,0 +1,82 @@
+{
+  "id": "ac_mwbf5maq_6a0440",
+  "schema": "autoclips_v1",
+  "owner": "local",
+  "title": "f10-qa sem direitos",
+  "description": "",
+  "sources": [],
+  "transcript": [
+    {
+      "start": 0,
+      "end": 6,
+      "text": "Trecho de teste para validação de direitos.",
+      "speaker": "",
+      "energy": null
+    },
+    {
+      "start": 6,
+      "end": 12,
+      "text": "Segundo trecho do mesmo material autorizado.",
+      "speaker": "",
+      "energy": null
+    }
+  ],
+  "profileKey": "podcast",
+  "profile": {
+    "key": "podcast",
+    "label": "Podcast",
+    "description": "Trechos de conversa longa com ideias fortes e frases completas.",
+    "criteria": {
+      "hook": 1.2,
+      "emotion": 0.8,
+      "laugh": 0.4,
+      "insight": 1.4,
+      "question": 0.8,
+      "keyword": 1,
+      "energy": 0.6,
+      "completeness": 1.2
+    },
+    "keywords": [
+      "segredo",
+      "história",
+      "importante",
+      "aprendi",
+      "na prática",
+      "conselho",
+      "carreira"
+    ],
+    "minScore": 55,
+    "maxCuts": 6,
+    "minDuration": 35,
+    "maxDuration": 90,
+    "minSpacing": 20,
+    "aspect": "9:16",
+    "captions": {
+      "enabled": true,
+      "style": "podcast"
+    },
+    "tone": "conversa"
+  },
+  "rights": null,
+  "analysis": null,
+  "plan": null,
+  "metadata": null,
+  "qa": null,
+  "render": null,
+  "status": "bloqueado",
+  "progress": 0,
+  "stage": null,
+  "stageLabel": null,
+  "attempts": 0,
+  "errors": [],
+  "log": [
+    {
+      "at": "2026-11-11T01:07:09.219Z",
+      "stage": "criacao",
+      "message": "Tarefa criada com 0 fonte(s) e 2 segmento(s)."
+    }
+  ],
+  "memoryId": "mem_mwbf5mas_37886a",
+  "createdAt": "2026-11-11T01:07:09.219Z",
+  "updatedAt": "2026-11-11T01:07:09.225Z"
+}

@@ -1843,7 +1843,7 @@ function switchEditorPanel(name) {
     els.app?.classList.add('right-open');
     try { els.agentInput?.focus(); } catch {}
   }
-  const allowed = ['code','preview','console','terminal','ia-config','btc','quantfury','jogos','tigrinho','curriculos','memoria','gamestudio','pesquisa'];
+  const allowed = ['code','preview','console','terminal','ia-config','btc','quantfury','jogos','tigrinho','curriculos','memoria','gamestudio','pesquisa','autoclips','youtube','historico'];
   if (allowed.includes(activeKey) || n.startsWith('code:')) {
     if (previousActive === 'jogos' && activeKey !== 'jogos') {
       if (typeof window.__jogosOnTabClose === 'function') try { window.__jogosOnTabClose(); } catch(_) {}
@@ -1862,6 +1862,15 @@ function switchEditorPanel(name) {
     }
     if (previousActive === 'pesquisa' && activeKey !== 'pesquisa') {
       if (typeof window.__pesquisaOnTabClose === 'function') try { window.__pesquisaOnTabClose(); } catch(_) {}
+    }
+    if (previousActive === 'autoclips' && activeKey !== 'autoclips') {
+      if (typeof window.__autoclipsOnTabClose === 'function') try { window.__autoclipsOnTabClose(); } catch(_) {}
+    }
+    if (previousActive === 'youtube' && activeKey !== 'youtube') {
+      if (typeof window.__youtubeOnTabClose === 'function') try { window.__youtubeOnTabClose(); } catch(_) {}
+    }
+    if (previousActive === 'historico' && activeKey !== 'historico') {
+      if (typeof window.__historicoOnTabClose === 'function') try { window.__historicoOnTabClose(); } catch(_) {}
     }
     if (els.editorPanels) els.editorPanels.dataset.active = activeKey;
     if (activeKey === 'btc') _btcLoadStatusIfMissing();
@@ -1882,6 +1891,15 @@ function switchEditorPanel(name) {
     }
     if (activeKey === 'pesquisa') {
       if (typeof window.__pesquisaOnTabOpen === 'function') try { window.__pesquisaOnTabOpen(); } catch(_) {}
+    }
+    if (activeKey === 'autoclips') {
+      if (typeof window.__autoclipsOnTabOpen === 'function') try { window.__autoclipsOnTabOpen(); } catch(_) {}
+    }
+    if (activeKey === 'youtube') {
+      if (typeof window.__youtubeOnTabOpen === 'function') try { window.__youtubeOnTabOpen(); } catch(_) {}
+    }
+    if (activeKey === 'historico') {
+      if (typeof window.__historicoOnTabOpen === 'function') try { window.__historicoOnTabOpen(); } catch(_) {}
     }
     if (activeKey === 'quantfury') {
       if (typeof window.__editorTabHandler === 'function') try { window.__editorTabHandler('quantfury'); } catch(_) {}
@@ -3594,7 +3612,7 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
     else if (!t.dataset.codeFile) t.classList.remove('active');
   });
   // Listeners das 4 abas fixas (Chat removido do centro — foi pro painel direito TiAi)
-  const specials = ['preview','console','terminal','code','ia-config','btc','quantfury','jogos','tigrinho','curriculos','memoria','gamestudio','pesquisa'];
+  const specials = ['preview','console','terminal','code','ia-config','btc','quantfury','jogos','tigrinho','curriculos','memoria','gamestudio','pesquisa','autoclips','youtube','historico'];
   specials.forEach(key => {
     const tab = els.editorTabs?.querySelector(`[data-editor-tab="${key}"]`);
     if (tab && !tab.__attSp) {
@@ -3628,7 +3646,7 @@ if (els.lightboxClose && !els.lightboxClose.__lb2att) {
 /* switchTab LEGADA (rotas antigas chamam switchTab('preview')) — redireciona para switchEditorPanel moderno */
 const _origSwitchTab = switchTab;
 switchTab = function(name) {
-  if (['preview','console','terminal','chat','code','ia-config','btc','quantfury','jogos','tigrinho','curriculos','memoria','gamestudio','pesquisa'].includes(String(name))) {
+  if (['preview','console','terminal','chat','code','ia-config','btc','quantfury','jogos','tigrinho','curriculos','memoria','gamestudio','pesquisa','autoclips','youtube','historico'].includes(String(name))) {
     switchEditorPanel(String(name));
   } else if (_origSwitchTab) {
     return _origSwitchTab(name);

@@ -1,0 +1,67 @@
+{
+  "id": "gs_mwbf5mac_6c3e43",
+  "owner": "local",
+  "slug": "jogo-f10-qa-three-6c3e43",
+  "name": "f10-qa Three",
+  "genre": "corrida3d",
+  "type": "3d",
+  "technology": "Three.js 0.149.0",
+  "description": "Conduza pelo cenário 3D, desvie dos obstáculos e colete os itens.",
+  "status": "pronto",
+  "config": {
+    "title": "f10-qa Three",
+    "background": "#0b0f1a",
+    "playerColor": 5209343,
+    "enemyColor": 16734810,
+    "itemColor": 16765286,
+    "speed": 340,
+    "difficulty": "normal",
+    "extraEnemies": 0
+  },
+  "files": [
+    "index.html",
+    "game.js",
+    "README.md"
+  ],
+  "resources": [
+    {
+      "name": "Three.js",
+      "version": "0.149.0",
+      "license": "MIT",
+      "source": "https://threejs.org",
+      "url": "https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js",
+      "type": "engine-3d"
+    }
+  ],
+  "versions": [
+    {
+      "id": "v_mwbf5mae_8zvp",
+      "at": "2026-11-11T01:07:09.206Z",
+      "label": "Criação",
+      "genre": "corrida3d",
+      "config": {
+        "title": "f10-qa Three",
+        "background": "#0b0f1a",
+        "playerColor": 5209343,
+        "enemyColor": 16734810,
+        "itemColor": 16765286,
+        "speed": 340,
+        "difficulty": "normal",
+        "extraEnemies": 0
+      },
+      "status": "pronto",
+      "files": {
+        "index.html": "<!doctype html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no\">\n<meta name=\"generator\" content=\"Tiagente Game Studio\" data-game-genre=\"corrida3d\" data-game-engine=\"threejs\">\n<title>f10-qa Three</title>\n<style>html,body{margin:0;height:100%;background:#0b0f1a;overflow:hidden}#game-root{position:relative;width:100vw;height:100vh;background:#0b0f1a}canvas{display:block}</style>\n<script src=\"https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js\"></script>\n</head>\n<body>\n<div id=\"game-root\"></div>\n<script>\n(function () {\n  var CONTROLS = [{\"action\":\"left\",\"label\":\"Esquerda\",\"group\":\"move\",\"codes\":[\"ArrowLeft\",\"KeyA\"]},{\"action\":\"right\",\"label\":\"Direita\",\"group\":\"move\",\"codes\":[\"ArrowRight\",\"KeyD\"]},{\"action\":\"up\",\"label\":\"Frente\",\"group\":\"move\",\"codes\":[\"ArrowUp\",\"KeyW\"]},{\"action\":\"down\",\"label\":\"Trás\",\"group\":\"move\",\"codes\":[\"ArrowDown\",\"KeyS\"]},{\"action\":\"jump\",\"label\":\"Pular\",\"group\":\"action\",\"codes\":[\"Space\"]}];\n  var META = { engine: \"threejs\", genre: \"corrida3d\" };\n  var KEYCODE = {\"ArrowLeft\":37,\"ArrowUp\":38,\"ArrowRight\":39,\"ArrowDown\":40,\"Space\":32,\"KeyW\":87,\"KeyA\":65,\"KeyS\":83,\"KeyD\":68,\"Enter\":13,\"Escape\":27};\n  var KEYNAME = {\"ArrowLeft\":\"ArrowLeft\",\"ArrowUp\":\"ArrowUp\",\"ArrowRight\":\"ArrowRight\",\"ArrowDown\":\"ArrowDown\",\"Space\":\" \",\"KeyW\":\"w\",\"KeyA\":\"a\",\"KeyS\":\"s\",\"KeyD\":\"d\",\"Enter\":\"Enter\",\"Escape\":\"Escape\"};\n  function makeEvent(type, code) {\n    var ev;\n    try { ev = new KeyboardEvent(type, { code: code, key: KEYNAME[code] || code, bubbles: true, cancelable: true }); }\n    catch (e) { ev = document.createEvent(\"Event\"); ev.initEvent(type, true, true); }\n    var kc = KEYCODE[code] || 0;\n    try { Object.defineProperty(ev, \"keyCode\", { get: function () { return kc; } }); } catch (e) {}\n    try { Object.defineProperty(ev, \"which\", { get: function () { return kc; } }); } catch (e) {}\n    return ev;\n  }\n  function announce() {\n    try {\n      (window.parent || window).postMessage({\n        source: \"tiagente-game\", type: \"ready\", engine: META.engine, genre: META.genre, controls: CONTROLS\n      }, \"*\");\n    } catch (e) {}\n  }\n  window.addEventListener(\"message\", function (e) {\n    var d = e.data;\n    if (!d || d.source !== \"tiagente-os\") return;\n    if (d.type === \"hello\") { announce(); return; }\n    if (d.type !== \"control\" || !d.codes) return;\n    var type = d.down ? \"keydown\" : \"keyup\";\n    for (var i = 0; i < d.codes.length; i++) {\n      try { window.dispatchEvent(makeEvent(type, d.codes[i])); } catch (err) {}\n    }\n  });\n  if (document.readyState === \"complete\") announce();\n  else window.addEventListener(\"load\", announce);\n})();\n</script>\n<script src=\"game.js\"></script>\n</body>\n</html>\n",
+        "game.js": "/* Gerado pelo Game Studio (Three.js 0.149.0). Edite pelo proprio Game Studio para manter o historico. */\nconst GAME_CONFIG = {\"title\":\"f10-qa Three\",\"background\":\"#0b0f1a\",\"playerColor\":5209343,\"enemyColor\":16734810,\"itemColor\":16765286,\"speed\":340,\"difficulty\":\"normal\",\"extraEnemies\":0};\n(function () {\n  var CFG = GAME_CONFIG;\n  var container = document.getElementById('game-root');\n  var scene, camera, renderer, clock;\n  var player, items, enemies;\n  var keys = {};\n  var score = 0, lives = 3, done = false, totalItems = 0;\n  var vy = 0, onGround = true, loopId = 0, bound = false;\n  var BOUND = 26, GRAVITY = 26, JUMP = 8.6, PLAYER_Y = 0.9;\n\n  function W() { return container.clientWidth || 800; }\n  function H() { return container.clientHeight || 600; }\n  function rand(a, b) { return a + Math.random() * (b - a); }\n  function dist2(a, b) { var dx = a.x - b.x, dz = a.z - b.z; return dx * dx + dz * dz; }\n\n  function hud() {\n    var el = document.getElementById('gs3d-hud');\n    if (!el) {\n      el = document.createElement('div');\n      el.id = 'gs3d-hud';\n      el.style.cssText = 'position:absolute;left:12px;top:10px;font:13px/1.5 monospace;color:#e2e8f0;text-shadow:0 1px 2px #000;z-index:10;pointer-events:none';\n      container.appendChild(el);\n    }\n    return el;\n  }\n  function setHud(extra) {\n    var el = hud();\n    var base = 'Pontos: ' + score + '   Vidas: ' + lives + '   Itens: ' + (totalItems - (items ? items.length : 0)) + '/' + totalItems;\n    el.innerHTML = (extra ? ('<b>' + extra + '</b><br>') : '') + base + '<br><span style=\"color:#94a3b8\">WASD/setas mover · ESPACO pular</span>';\n  }\n\n  function onResize() {\n    if (!renderer || !camera) return;\n    camera.aspect = W() / H();\n    camera.updateProjectionMatrix();\n    renderer.setSize(W(), H());\n  }\n\n  function build() {\n    scene = new THREE.Scene();\n    scene.background = new THREE.Color(CFG.background);\n    scene.fog = new THREE.Fog(CFG.background, 45, 95);\n\n    camera = new THREE.PerspectiveCamera(60, W() / H(), 0.1, 600);\n    camera.position.set(0, 9, 15);\n    camera.lookAt(0, 1, 0);\n\n    renderer = new THREE.WebGLRenderer({ antialias: true });\n    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));\n    renderer.setSize(W(), H());\n    container.appendChild(renderer.domElement);\n\n    scene.add(new THREE.AmbientLight(0xffffff, 0.55));\n    var dir = new THREE.DirectionalLight(0xffffff, 0.9);\n    dir.position.set(14, 22, 10);\n    scene.add(dir);\n    scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x223044, 0.5));\n\n    var ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshLambertMaterial({ color: 0x1f2a44 }));\n    ground.rotation.x = -Math.PI / 2;\n    scene.add(ground);\n    var grid = new THREE.GridHelper(100, 50, 0x3b4b6b, 0x243247);\n    grid.position.y = 0.02;\n    scene.add(grid);\n\n    player = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.8, 1.6), new THREE.MeshLambertMaterial({ color: CFG.playerColor }));\n    player.position.set(0, PLAYER_Y, 0);\n    scene.add(player);\n\n    items = [];\n    enemies = [];\n    for (var i = 0; i < 8; i++) {\n      var it = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), new THREE.MeshLambertMaterial({ color: CFG.itemColor }));\n      it.position.set(rand(-BOUND, BOUND), 0.6, rand(-BOUND, BOUND));\n      scene.add(it); items.push(it);\n    }\n    totalItems = items.length;\n\n    var d = CFG.difficulty;\n    var spd = (d === 'dificil' ? 1.6 : (d === 'facil' ? 0.7 : 1.1)) * (CFG.speed / 220);\n    var nEnemies = 4 + CFG.extraEnemies;\n    for (var e = 0; e < nEnemies; e++) {\n      var en = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.3, 1.3), new THREE.MeshLambertMaterial({ color: CFG.enemyColor }));\n      en.position.set(rand(-BOUND, BOUND), 0.7, rand(-BOUND, BOUND));\n      en.userData.vx = rand(-1, 1) * spd;\n      en.userData.vz = rand(-1, 1) * spd;\n      scene.add(en); enemies.push(en);\n    }\n\n    if (!bound) {\n      bound = true;\n      window.addEventListener('keydown', function (ev) {\n        keys[ev.code] = true;\n        if (ev.code === 'Space' || ev.code === 'ArrowUp' || ev.code === 'ArrowDown') ev.preventDefault();\n      });\n      window.addEventListener('keyup', function (ev) { keys[ev.code] = false; });\n      window.addEventListener('resize', onResize);\n      container.addEventListener('click', function () { if (done) restart(); });\n    }\n    setHud(null);\n  }\n\n  function step(dt) {\n    if (!player) return;\n    var v = (CFG.speed / 220) * 11;\n    var mx = 0, mz = 0;\n    if (keys['KeyA'] || keys['ArrowLeft']) mx -= 1;\n    if (keys['KeyD'] || keys['ArrowRight']) mx += 1;\n    if (keys['KeyW'] || keys['ArrowUp']) mz -= 1;\n    if (keys['KeyS'] || keys['ArrowDown']) mz += 1;\n    player.position.x = Math.max(-BOUND, Math.min(BOUND, player.position.x + mx * v * dt));\n    player.position.z = Math.max(-BOUND, Math.min(BOUND, player.position.z + mz * v * dt));\n\n    if (keys['Space'] && onGround) { vy = JUMP; onGround = false; }\n    vy -= GRAVITY * dt;\n    player.position.y += vy * dt;\n    if (player.position.y <= PLAYER_Y) { player.position.y = PLAYER_Y; vy = 0; onGround = true; }\n    if (mx !== 0) player.rotation.y += mx * 2.4 * dt;\n\n    for (var i = 0; i < enemies.length; i++) {\n      var en = enemies[i];\n      en.position.x += en.userData.vx * dt;\n      en.position.z += en.userData.vz * dt;\n      if (en.position.x > BOUND || en.position.x < -BOUND) en.userData.vx *= -1;\n      if (en.position.z > BOUND || en.position.z < -BOUND) en.userData.vz *= -1;\n    }\n\n    for (var j = items.length - 1; j >= 0; j--) {\n      var it = items[j];\n      if (dist2(player.position, it.position) < 1.8) {\n        scene.remove(it);\n        it.geometry.dispose(); it.material.dispose();\n        items.splice(j, 1);\n        score += 10;\n      }\n    }\n    if (items.length === 0) { done = true; setHud('VOCE VENCEU! Pontos: ' + score + ' — clique para jogar de novo'); return; }\n\n    for (var k = 0; k < enemies.length; k++) {\n      if (dist2(player.position, enemies[k].position) < 2.4) {\n        lives--;\n        player.position.set(0, PLAYER_Y, 0); vy = 0;\n        if (lives <= 0) { done = true; setHud('FIM! Clique para tentar de novo'); return; }\n        break;\n      }\n    }\n\n    camera.position.set(player.position.x * 0.55, 9, player.position.z + 15);\n    camera.lookAt(player.position.x * 0.55, 1, player.position.z);\n    setHud(null);\n  }\n\n  function loop(myId) {\n    if (myId !== loopId) return;\n    var dt = Math.min(0.05, clock.getDelta());\n    if (!done) step(dt);\n    renderer.render(scene, camera);\n    requestAnimationFrame(function () { loop(myId); });\n  }\n\n  function restart() {\n    loopId++;\n    try { if (renderer) renderer.dispose(); } catch (e) {}\n    container.innerHTML = '';\n    keys = {};\n    score = 0; lives = 3; done = false; vy = 0; onGround = true;\n    build();\n    clock = new THREE.Clock();\n    loop(loopId);\n  }\n\n  build();\n  clock = new THREE.Clock();\n  loopId++;\n  loop(loopId);\n})();\n",
+        "README.md": "# f10-qa Three\n\nJogo 3D (corrida3d) gerado pelo **Game Studio** do Tiagente usando Three.js.\n\n## Como executar\n- Abra `index.html` no navegador, ou\n- Use o botao **Pre-visualizar** no Game Studio.\n\n## Controles\n- WASD ou setas para mover; ESPACO para pular. Clique na tela para reiniciar apos o fim.\n\n## Tecnologia\n- Three.js 0.149.0 (licenca MIT) — https://threejs.org\n- Geometrias/materiais gerados em tempo de execucao: nenhum recurso externo de imagem/som.\n"
+      }
+    }
+  ],
+  "tests": [],
+  "commandLog": [],
+  "memoryId": "mem_mwbf5maf_db86f3",
+  "previewUrl": "/preview/jogo-f10-qa-three-6c3e43/",
+  "createdAt": "2026-11-11T01:07:09.206Z",
+  "updatedAt": "2026-11-11T01:07:09.212Z",
+  "lastPreviewAt": "2026-11-11T01:07:09.212Z"
+}

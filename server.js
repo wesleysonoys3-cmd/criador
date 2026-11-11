@@ -49,12 +49,18 @@ import * as CurriculosSvc from './curriculos/service.js';
 import * as MemoriaSvc from './memoria/service.js';
 import * as GamestudioSvc from './gamestudio/service.js';
 import * as PesquisaSvc from './pesquisa/service.js';
+import * as AutoclipsSvc from './autoclips/service.js';
+import * as YouTubeSvc from './youtube/service.js';
+import * as AnalyticsSvc from './analytics/service.js';
 const BTC_MI_DATA_DIR = path.resolve(process.cwd(), 'btc_market/data');
 const JOGOS_DATA_DIR = path.resolve(process.cwd(), 'jogos/data');
 const CURRICULOS_DATA_DIR = path.resolve(process.cwd(), 'curriculos/data');
 const MEMORIA_DATA_DIR = path.resolve(process.cwd(), 'memoria/data');
 const GAMESTUDIO_DATA_DIR = path.resolve(process.cwd(), 'gamestudio/data');
 const PESQUISA_DATA_DIR = path.resolve(process.cwd(), 'pesquisa/data');
+const AUTOCLIPS_DATA_DIR = path.resolve(process.cwd(), 'autoclips/data');
+const YOUTUBE_DATA_DIR = path.resolve(process.cwd(), 'youtube/data');
+const ANALYTICS_DATA_DIR = path.resolve(process.cwd(), 'analytics/data');
 const BTC_MI_INTERVAL_MS = Number(process.env.BTC_MI_INTERVAL_MS || 60000) || 60000;
 
 const execAsync = promisify(exec);
@@ -1134,6 +1140,27 @@ try {
   console.log(`🔎 Pesquisa: módulo iniciado · dataDir=${PESQUISA_DATA_DIR} · PIN=${_psqInit.hasPin ? 'definido' : 'não configurado (aguardando setup seguro)'}`);
 } catch (e) {
   console.warn('[PESQUISA] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
+}
+// AutoClips AI · Produção automática de vídeos (direitos + análise + edição + metadados + QA; render via ffmpeg)
+try {
+  const _acInit = AutoclipsSvc.init({ dataDir: AUTOCLIPS_DATA_DIR, memorySvc: MemoriaSvc });
+  console.log(`🎬 AutoClips: módulo iniciado · dataDir=${AUTOCLIPS_DATA_DIR} · tarefas=${_acInit.jobs} · perfis=${_acInit.profiles}`);
+} catch (e) {
+  console.warn('[AUTOCLIPS] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
+}
+// YouTube · Conexão do canal (OAuth 2.0) + publicação automática autorizada (tokens criptografados)
+try {
+  const _ytInit = YouTubeSvc.init({ dataDir: YOUTUBE_DATA_DIR, autoclipsSvc: AutoclipsSvc });
+  console.log(`📺 YouTube: módulo iniciado · dataDir=${YOUTUBE_DATA_DIR} · credenciais=${_ytInit.configured ? 'ok' : 'ausentes (defina YT_CLIENT_ID/YT_CLIENT_SECRET)'} · conexão=${_ytInit.connected ? 'conectado' : 'nenhuma'}`);
+} catch (e) {
+  console.warn('[YOUTUBE] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
+}
+// Histórico e Analytics · reúne AutoClips + publicações do YouTube + métricas oficiais (PARTE 9)
+try {
+  const _anInit = AnalyticsSvc.init({ dataDir: ANALYTICS_DATA_DIR, autoclipsSvc: AutoclipsSvc, youtubeSvc: YouTubeSvc });
+  console.log(`📊 Histórico/Analytics: módulo iniciado · dataDir=${_anInit.dataDir}`);
+} catch (e) {
+  console.warn('[ANALYTICS] init warning (ignorado, servidor principal continua):', String(e && e.message || e));
 }
 const RC27_SAVE_EVERY_N_TOOL_CALLS = Math.max(1, parseInt(process.env.RC27_SAVE_EVERY_N_TOOL_CALLS || '3', 10));
 
@@ -7837,6 +7864,100 @@ app.post('/api/pesquisa/fetch', _PSQ_JSON, _psq(async (req) => PesquisaSvc.fetch
 app.post('/api/pesquisa/catalog', _PSQ_JSON, _psq(async (req) => PesquisaSvc.catalogAdd((req.body || {}).resource || req.body || {}, { token: _psqToken(req) })));
 app.delete('/api/pesquisa/catalog/:id', _PSQ_JSON, _psq(async (req) => PesquisaSvc.removeCatalog(req.params.id)));
 app.post('/api/pesquisa/cache/clear', _PSQ_JSON, _psq(async () => PesquisaSvc.cacheClear()));
+
+/* =============== AUTOCLIPS AI · Produção automática de vídeos (módulo isolado) =============== */
+const _AC_JSON = express.json({ limit: '12mb' });
+const _acOwner = (req) => String((req.query && req.query.owner) || (req.body && req.body.owner) || '');
+const _ac = (fn) => async (req, res) => {
+  try {
+    const out = await fn(req);
+    if (out && out.ok === false && out.reason) return res.status(400).json(out);
+    res.json(out);
+  } catch (e) {
+    console.error('[AUTOCLIPS] erro:', String(e && e.message || e));
+    res.status(500).json({ ok: false, reason: 'Não foi possível concluir a operação agora.' });
+  }
+};
+
+app.get('/api/autoclips/status', _JG_NO_CACHE, _ac(async () => AutoclipsSvc.status()));
+app.get('/api/autoclips/profiles', _JG_NO_CACHE, _ac(async () => AutoclipsSvc.profiles()));
+app.get('/api/autoclips/jobs', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.list(_acOwner(req))));
+app.post('/api/autoclips/create', _AC_JSON, _ac(async (req) => AutoclipsSvc.create(req.body || {}, _acOwner(req))));
+app.get('/api/autoclips/job/:id', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.get(req.params.id, _acOwner(req))));
+app.put('/api/autoclips/job/:id/rights', _AC_JSON, _ac(async (req) => AutoclipsSvc.setRights(req.params.id, req.body || {}, _acOwner(req))));
+app.post('/api/autoclips/job/:id/analyze', _AC_JSON, _ac(async (req) => AutoclipsSvc.analyze(req.params.id, req.body || {}, _acOwner(req))));
+app.post('/api/autoclips/job/:id/edit', _AC_JSON, _ac(async (req) => AutoclipsSvc.edit(req.params.id, req.body || {}, _acOwner(req))));
+app.post('/api/autoclips/job/:id/metadata', _AC_JSON, _ac(async (req) => AutoclipsSvc.buildMetadataForJob(req.params.id, req.body || {}, _acOwner(req))));
+app.post('/api/autoclips/job/:id/qa', _AC_JSON, _ac(async (req) => AutoclipsSvc.qualityCheck(req.params.id, _acOwner(req))));
+app.post('/api/autoclips/job/:id/process', _AC_JSON, _ac(async (req) => AutoclipsSvc.startJob(req.params.id, _acOwner(req))));
+app.post('/api/autoclips/job/:id/cancel', _AC_JSON, _ac(async (req) => AutoclipsSvc.cancel(req.params.id, _acOwner(req))));
+app.get('/api/autoclips/job/:id/report', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.report(req.params.id, _acOwner(req))));
+app.delete('/api/autoclips/job/:id', _AC_JSON, _ac(async (req) => AutoclipsSvc.remove(req.params.id, _acOwner(req))));
+
+/* =============== YOUTUBE · Conexão do canal (OAuth 2.0) + publicação autorizada (módulo isolado) =============== */
+const _YT_JSON = express.json({ limit: '2mb' });
+const _ytOwner = (req) => String((req.query && req.query.owner) || (req.body && req.body.owner) || '');
+const _yt = (fn) => async (req, res) => {
+  try {
+    const out = await fn(req);
+    if (out && out.ok === false && out.reason) return res.status(400).json(out);
+    res.json(out);
+  } catch (e) {
+    console.error('[YOUTUBE] erro:', String(e && e.message || e));
+    res.status(500).json({ ok: false, reason: 'Não foi possível concluir a operação agora.' });
+  }
+};
+
+app.get('/api/youtube/status', _JG_NO_CACHE, _yt(async () => YouTubeSvc.status()));
+app.get('/api/youtube/config', _JG_NO_CACHE, _yt(async () => ({ ok: true, config: YouTubeSvc.getConfig() })));
+app.put('/api/youtube/config', _YT_JSON, _yt(async (req) => YouTubeSvc.saveConfig(req.body || {})));
+app.post('/api/youtube/emergency', _YT_JSON, _yt(async (req) => YouTubeSvc.setEmergencyStop((req.body || {}).on)));
+app.post('/api/youtube/connect', _YT_JSON, _yt(async (req) => {
+  const hostBase = (req.body && req.body.hostBase) || (req.get('origin')) || (req.protocol + '://' + req.get('host'));
+  return YouTubeSvc.authUrl(hostBase);
+}));
+// O Google redireciona o navegador para cá após a autorização (GET com ?code&state).
+app.get('/api/youtube/oauth/callback', async (req, res) => {
+  const page = (title, msg, ok) => `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b0f17;color:#e6e9ef;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}main{max-width:520px;padding:32px;border-radius:16px;background:#141b26;border:1px solid #232d3d;text-align:center}h1{font-size:20px;margin:0 0 12px;color:${ok ? '#4ade80' : '#f87171'}}p{color:#9aa6b8;line-height:1.5;margin:0 0 20px}a{display:inline-block;padding:10px 18px;border-radius:10px;background:#a21caf;color:#fff;text-decoration:none;font-weight:600}</style></head><body><main><h1>${title}</h1><p>${msg}</p><a href="/">Voltar ao TIAgente OS</a></main></body></html>`;
+  try {
+    const r = await YouTubeSvc.handleCallback({ code: req.query.code, state: req.query.state, error: req.query.error });
+    if (!r.ok) return res.status(400).send(page('Não foi possível conectar', String(r.reason || 'Falha na autorização.'), false));
+    const ch = r.connection && r.connection.channel ? r.connection.channel.title : 'canal';
+    return res.send(page('Canal conectado!', 'O canal "' + ch + '" foi conectado com sucesso. Você já pode publicar pelo TIAgente OS.', true));
+  } catch (e) {
+    console.error('[YOUTUBE] callback erro:', String(e && e.message || e));
+    return res.status(500).send(page('Erro na conexão', 'Ocorreu um erro ao concluir a autorização. Tente novamente.', false));
+  }
+});
+app.post('/api/youtube/refresh', _YT_JSON, _yt(async () => YouTubeSvc.refreshConnection()));
+app.post('/api/youtube/disconnect', _YT_JSON, _yt(async () => YouTubeSvc.disconnect()));
+app.post('/api/youtube/publish', _YT_JSON, _yt(async (req) => YouTubeSvc.publish(req.body || {}, _ytOwner(req))));
+app.get('/api/youtube/publications', _JG_NO_CACHE, _yt(async (req) => YouTubeSvc.listPublications(_ytOwner(req))));
+app.post('/api/youtube/publication/:id/republish', _YT_JSON, _yt(async (req) => YouTubeSvc.republish(req.params.id, (req.body || {}).visibility, _ytOwner(req))));
+app.delete('/api/youtube/publication/:id', _YT_JSON, _yt(async (req) => YouTubeSvc.removePublication(req.params.id, _ytOwner(req))));
+app.get('/api/youtube/activity', _JG_NO_CACHE, _yt(async (req) => YouTubeSvc.activity(req.query && req.query.limit)));
+app.post('/api/youtube/auto/run', _YT_JSON, _yt(async () => YouTubeSvc.autoPublishOnce()));
+
+/* =============== HISTÓRICO E ANALYTICS · AutoClips + YouTube (módulo isolado, PARTE 9) =============== */
+const _an = (fn) => async (req, res) => {
+  try {
+    const out = await fn(req);
+    if (out && out.ok === false && out.reason) return res.status(400).json(out);
+    res.json(out);
+  } catch (e) {
+    console.error('[ANALYTICS] erro:', String(e && e.message || e));
+    res.status(500).json({ ok: false, reason: 'Não foi possível concluir a operação agora.' });
+  }
+};
+
+app.get('/api/analytics/status', _JG_NO_CACHE, _an(async () => AnalyticsSvc.status()));
+app.get('/api/analytics/overview', _JG_NO_CACHE, _an(async (req) => AnalyticsSvc.overview(_ytOwner(req))));
+app.get('/api/analytics/history', _JG_NO_CACHE, _an(async (req) => AnalyticsSvc.history(_ytOwner(req), Number((req.query && req.query.limit) || 100))));
+app.get('/api/analytics/calendar', _JG_NO_CACHE, _an(async (req) => AnalyticsSvc.calendar({ month: req.query && req.query.month, owner: _ytOwner(req) })));
+app.get('/api/analytics/queue', _JG_NO_CACHE, _an(async (req) => AnalyticsSvc.queueState(_ytOwner(req))));
+app.get('/api/analytics/metrics', _JG_NO_CACHE, _an(async (req) => AnalyticsSvc.metrics(_ytOwner(req), { refresh: false })));
+app.post('/api/analytics/metrics/refresh', _YT_JSON, _an(async (req) => AnalyticsSvc.metrics(_ytOwner(req), { refresh: true })));
+app.get('/api/analytics/recommendations', _JG_NO_CACHE, _an(async (req) => AnalyticsSvc.recommendations(_ytOwner(req))));
 
 /* =============== CURRÍCULOS · Módulo inteligente de currículos (módulo isolado) =============== */
 const _CV_JSON = express.json({ limit: '12mb' });

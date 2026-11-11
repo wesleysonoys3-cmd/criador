@@ -19,6 +19,100 @@ export const GAME_RESOURCES = [
   { name: 'Phaser 3', version: PHASER_VERSION, license: 'MIT', source: 'https://phaser.io', url: PHASER_CDN, type: 'engine-2d' },
 ];
 
+/* =========================================================
+ * FASE 5 — Controles do jogo (declarados e controláveis)
+ * ---------------------------------------------------------
+ * Cada jogo gerado declara os comandos que REALMENTE implementa
+ * e aceita comandos virtuais vindos do Tiagente OS via postMessage
+ * (a prévia roda isolada, em iframe com sandbox). Assim o OS só
+ * mostra botões que executam ações reais; se o jogo não declarar
+ * controles, o OS informa isso em vez de exibir botões falsos.
+ * =======================================================*/
+const GAME_KEYCODES = {
+  ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40,
+  Space: 32, KeyW: 87, KeyA: 65, KeyS: 83, KeyD: 68, Enter: 13, Escape: 27,
+};
+const GAME_KEYNAMES = {
+  ArrowLeft: 'ArrowLeft', ArrowUp: 'ArrowUp', ArrowRight: 'ArrowRight', ArrowDown: 'ArrowDown',
+  Space: ' ', KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd', Enter: 'Enter', Escape: 'Escape',
+};
+
+/* Comandos por gênero (espelham exatamente o que cada template lê). */
+const GAME_CONTROLS_2D = {
+  plataforma: [
+    { action: 'left', label: 'Esquerda', group: 'move', codes: ['ArrowLeft', 'KeyA'] },
+    { action: 'right', label: 'Direita', group: 'move', codes: ['ArrowRight', 'KeyD'] },
+    { action: 'jump', label: 'Pular', group: 'action', codes: ['Space', 'ArrowUp', 'KeyW'] },
+  ],
+  corrida: [
+    { action: 'jump', label: 'Pular', group: 'action', codes: ['Space', 'ArrowUp'] },
+  ],
+  tiro: [
+    { action: 'left', label: 'Esquerda', group: 'move', codes: ['ArrowLeft'] },
+    { action: 'right', label: 'Direita', group: 'move', codes: ['ArrowRight'] },
+    { action: 'shoot', label: 'Atirar', group: 'action', codes: ['Space'] },
+  ],
+  coleta: [
+    { action: 'left', label: 'Esquerda', group: 'move', codes: ['ArrowLeft'] },
+    { action: 'right', label: 'Direita', group: 'move', codes: ['ArrowRight'] },
+  ],
+};
+const GAME_CONTROLS_3D = [
+  { action: 'left', label: 'Esquerda', group: 'move', codes: ['ArrowLeft', 'KeyA'] },
+  { action: 'right', label: 'Direita', group: 'move', codes: ['ArrowRight', 'KeyD'] },
+  { action: 'up', label: 'Frente', group: 'move', codes: ['ArrowUp', 'KeyW'] },
+  { action: 'down', label: 'Trás', group: 'move', codes: ['ArrowDown', 'KeyS'] },
+  { action: 'jump', label: 'Pular', group: 'action', codes: ['Space'] },
+];
+
+export function controlsForGenre(genre, type) {
+  if (type === '3d') return GAME_CONTROLS_3D.slice();
+  return (GAME_CONTROLS_2D[genre] || GAME_CONTROLS_2D.plataforma).slice();
+}
+
+/* Ponte injetada no jogo: anuncia os controles e reproduz, como eventos
+ * de teclado reais, os comandos recebidos da janela do Tiagente OS. */
+export function gameControlBridge(genre, type) {
+  const engine = type === '3d' ? 'threejs' : 'phaser';
+  const controls = controlsForGenre(genre, type);
+  return '<script>\n' +
+    '(function () {\n' +
+    '  var CONTROLS = ' + JSON.stringify(controls) + ';\n' +
+    '  var META = { engine: ' + JSON.stringify(engine) + ', genre: ' + JSON.stringify(genre) + ' };\n' +
+    '  var KEYCODE = ' + JSON.stringify(GAME_KEYCODES) + ';\n' +
+    '  var KEYNAME = ' + JSON.stringify(GAME_KEYNAMES) + ';\n' +
+    '  function makeEvent(type, code) {\n' +
+    '    var ev;\n' +
+    '    try { ev = new KeyboardEvent(type, { code: code, key: KEYNAME[code] || code, bubbles: true, cancelable: true }); }\n' +
+    '    catch (e) { ev = document.createEvent("Event"); ev.initEvent(type, true, true); }\n' +
+    '    var kc = KEYCODE[code] || 0;\n' +
+    '    try { Object.defineProperty(ev, "keyCode", { get: function () { return kc; } }); } catch (e) {}\n' +
+    '    try { Object.defineProperty(ev, "which", { get: function () { return kc; } }); } catch (e) {}\n' +
+    '    return ev;\n' +
+    '  }\n' +
+    '  function announce() {\n' +
+    '    try {\n' +
+    '      (window.parent || window).postMessage({\n' +
+    '        source: "tiagente-game", type: "ready", engine: META.engine, genre: META.genre, controls: CONTROLS\n' +
+    '      }, "*");\n' +
+    '    } catch (e) {}\n' +
+    '  }\n' +
+    '  window.addEventListener("message", function (e) {\n' +
+    '    var d = e.data;\n' +
+    '    if (!d || d.source !== "tiagente-os") return;\n' +
+    '    if (d.type === "hello") { announce(); return; }\n' +
+    '    if (d.type !== "control" || !d.codes) return;\n' +
+    '    var type = d.down ? "keydown" : "keyup";\n' +
+    '    for (var i = 0; i < d.codes.length; i++) {\n' +
+    '      try { window.dispatchEvent(makeEvent(type, d.codes[i])); } catch (err) {}\n' +
+    '    }\n' +
+    '  });\n' +
+    '  if (document.readyState === "complete") announce();\n' +
+    '  else window.addEventListener("load", announce);\n' +
+    '})();\n' +
+    '</script>\n';
+}
+
 export const TEMPLATES = [
   { key: 'plataforma', label: 'Plataforma 2D', genre: 'plataforma', description: 'Pule entre plataformas, colete todas as moedas e evite os espinhos.' },
   { key: 'corrida', label: 'Corrida infinita 2D', genre: 'corrida', description: 'Corra sem parar, pule os obstáculos e sobreviva o máximo possível.' },
@@ -191,8 +285,10 @@ const BODY_PLATAFORMA = `(function () {
       this.cameras.main.startFollow(this.player, true, 0.15, 0.15);
       this.refreshLabel();
     },
-    refreshLabel: function () {
-      this.label.setText('Moedas: ' + this.score + ' / ' + this.total);
+    extend: {
+      refreshLabel: function () {
+        this.label.setText('Moedas: ' + this.score + ' / ' + this.total);
+      }
     },
     update: function () {
       if (!this.player || this.done) return;
@@ -336,8 +432,10 @@ const BODY_TIRO = `(function () {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.refresh();
     },
-    refresh: function () {
-      this.label.setText('Pontos: ' + this.score + '   Vidas: ' + this.lives);
+    extend: {
+      refresh: function () {
+        this.label.setText('Pontos: ' + this.score + '   Vidas: ' + this.lives);
+      }
     },
     update: function () {
       if (!this.player || this.done) return;
@@ -421,8 +519,10 @@ const BODY_COLETA = `(function () {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.refresh();
     },
-    refresh: function () {
-      this.label.setText('Pontos: ' + this.score + '   Vidas: ' + this.lives);
+    extend: {
+      refresh: function () {
+        this.label.setText('Pontos: ' + this.score + '   Vidas: ' + this.lives);
+      }
     },
     update: function (time, delta) {
       if (!this.player || this.done) return;
@@ -492,6 +592,7 @@ function htmlDoc(title, genre) {
     '</head>\n' +
     '<body>\n' +
     '<div id="game-root"></div>\n' +
+    gameControlBridge(genre, '2d') +
     '<script src="game.js"></script>\n' +
     '</body>\n' +
     '</html>\n';
@@ -797,6 +898,7 @@ function htmlDoc3D(title, genre) {
     '</head>\n' +
     '<body>\n' +
     '<div id="game-root"></div>\n' +
+    gameControlBridge(genre, '3d') +
     '<script src="game.js"></script>\n' +
     '</body>\n' +
     '</html>\n';

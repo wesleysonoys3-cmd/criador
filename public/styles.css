@@ -1682,6 +1682,9 @@ body.ti-keyboard-up .trae-chat-form {
 #editor-panels[data-active="memoria"] [data-editor-panel="memoria"] { display: flex; }
 #editor-panels[data-active="gamestudio"] [data-editor-panel="gamestudio"] { display: flex; }
 #editor-panels[data-active="pesquisa"] [data-editor-panel="pesquisa"] { display: flex; }
+#editor-panels[data-active="autoclips"] [data-editor-panel="autoclips"] { display: flex; }
+#editor-panels[data-active="youtube"] [data-editor-panel="youtube"] { display: flex; }
+#editor-panels[data-active="historico"] [data-editor-panel="historico"] { display: flex; }
 
 /* ---------- Editor Tabs (VSCode / TiAi style) ---------- */
 .editor-tab {

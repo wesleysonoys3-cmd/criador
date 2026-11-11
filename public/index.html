@@ -276,6 +276,18 @@
             <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-sky-300 shrink-0"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             <span class="truncate font-medium">Pesquisa</span>
           </button>
+          <button class="editor-tab flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="autoclips" title="AutoClips AI · produção automática de vídeos: direitos, análise, cortes, metadados e QA">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-fuchsia-300 shrink-0"><rect x="2.5" y="5" width="13" height="14" rx="2.5"/><path d="m15.5 9.5 5-2.5v10l-5-2.5"/></svg>
+            <span class="truncate font-medium">AutoClips</span>
+          </button>
+          <button class="editor-tab flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="youtube" title="YouTube · conectar canal (OAuth 2.0) e publicar cortes com segurança">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-red-300 shrink-0"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="m10 9 5 3-5 3z"/></svg>
+            <span class="truncate font-medium">YouTube</span>
+          </button>
+          <button class="editor-tab flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="historico" title="Histórico · vídeos processados, cortes, publicações, calendário, fila e métricas">
+            <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-sky-300 shrink-0"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>
+            <span class="truncate font-medium">Histórico</span>
+          </button>
         </div>
         <!-- Ln/Col info (legível) -->
         <div class="ml-auto mr-2.5 flex items-center gap-2 text-[10.5px] text-slate-500 font-mono whitespace-nowrap pb-1">
@@ -922,6 +934,51 @@
           <div id="psq-body" class="flex-1 min-h-0 overflow-auto p-3 md:p-4 text-slate-200"></div>
           <div id="psq-toasts" class="pointer-events-none absolute right-3 bottom-3 z-30 flex flex-col gap-2 items-end max-w-[86%]"></div>
         </div>
+
+        <!-- ===== 🎬 AutoClips AI · direitos + análise + edição + metadados + QA (render via ffmpeg quando disponível) ===== -->
+        <div data-editor-panel="autoclips" class="editor-panel hidden flex-1 flex-col min-h-0 bg-[#060918] relative" id="ac-panel">
+          <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between gap-2 text-[10.5px]">
+            <div class="flex items-center gap-2 text-fuchsia-300 font-bold uppercase tracking-wider min-w-0">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="shrink-0"><rect x="2.5" y="5" width="13" height="14" rx="2.5"/><path d="m15.5 9.5 5-2.5v10l-5-2.5"/></svg>
+              <span class="truncate">AutoClips AI · produção automática de vídeos: direitos, análise, cortes, metadados e QA</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button data-ac-act="reload" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition" title="Recarregar dados do módulo">Recarregar</button>
+            </div>
+          </div>
+          <div id="ac-body" class="flex-1 min-h-0 overflow-auto p-3 md:p-4 text-slate-200"></div>
+          <div id="ac-toasts" class="pointer-events-none absolute right-3 bottom-3 z-30 flex flex-col gap-2 items-end max-w-[86%]"></div>
+        </div>
+
+        <!-- ===== 📺 YouTube · conectar canal (OAuth 2.0) + publicação autorizada ===== -->
+        <div data-editor-panel="youtube" class="editor-panel hidden flex-1 flex-col min-h-0 bg-[#060918] relative" id="yt-panel">
+          <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between gap-2 text-[10.5px]">
+            <div class="flex items-center gap-2 text-red-300 font-bold uppercase tracking-wider min-w-0">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="shrink-0"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="m10 9 5 3-5 3z"/></svg>
+              <span class="truncate">YouTube · conectar canal (OAuth 2.0) e publicar cortes com segurança</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button data-yt-act="reload" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition" title="Recarregar dados do módulo">Recarregar</button>
+            </div>
+          </div>
+          <div id="yt-body" class="flex-1 min-h-0 overflow-auto p-3 md:p-4 text-slate-200"></div>
+          <div id="yt-toasts" class="pointer-events-none absolute right-3 bottom-3 z-30 flex flex-col gap-2 items-end max-w-[86%]"></div>
+        </div>
+
+        <!-- ===== 📊 Histórico · vídeos, cortes, publicações, calendário, fila e métricas ===== -->
+        <div data-editor-panel="historico" class="editor-panel hidden flex-1 flex-col min-h-0 bg-[#060918] relative" id="hs-panel">
+          <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between gap-2 text-[10.5px]">
+            <div class="flex items-center gap-2 text-sky-300 font-bold uppercase tracking-wider min-w-0">
+              <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="shrink-0"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>
+              <span class="truncate">Histórico · vídeos processados, cortes, publicações, calendário, fila e métricas</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button data-hs-act="reload" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition" title="Recarregar histórico">Recarregar</button>
+            </div>
+          </div>
+          <div id="hs-body" class="flex-1 min-h-0 overflow-auto p-3 md:p-4 text-slate-200"></div>
+          <div id="hs-toasts" class="pointer-events-none absolute right-3 bottom-3 z-30 flex flex-col gap-2 items-end max-w-[86%]"></div>
+        </div>
       </div>
     </section>
 
@@ -1293,5 +1350,8 @@
 <script src="/memoria.js" type="module"></script>
 <script src="/gamestudio.js" type="module"></script>
 <script src="/pesquisa.js" type="module"></script>
+<script src="/autoclips.js" type="module"></script>
+<script src="/youtube.js" type="module"></script>
+<script src="/historico.js" type="module"></script>
 </body>
 </html>

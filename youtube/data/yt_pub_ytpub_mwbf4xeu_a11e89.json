@@ -1,0 +1,22 @@
+{
+  "id": "ytpub_mwbf4xeu_a11e89",
+  "owner": "local",
+  "jobId": null,
+  "filePath": "/tmp/nao-existe-f10.mp4",
+  "createdAt": "2026-11-11T01:06:36.966Z",
+  "visibility": "private",
+  "scheduledAt": null,
+  "dedupeKey": "-|/tmp/nao-existe-f10.mp4||",
+  "attempts": 0,
+  "status": "bloqueado",
+  "videoId": null,
+  "url": null,
+  "error": "Arquivo de vídeo não encontrado no servidor.",
+  "snippet": {
+    "title": "Corte de teste",
+    "description": "",
+    "tags": []
+  },
+  "note": "manual",
+  "code": "validacao"
+}

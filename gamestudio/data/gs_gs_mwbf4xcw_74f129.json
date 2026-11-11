@@ -1,0 +1,117 @@
+{
+  "id": "gs_mwbf4xcw_74f129",
+  "owner": "local",
+  "slug": "jogo-f10-qa-phaser-74f129",
+  "name": "f10-qa Phaser",
+  "genre": "plataforma",
+  "type": "2d",
+  "technology": "Phaser 3.80.1",
+  "description": "Pule entre plataformas, colete todas as moedas e evite os espinhos.",
+  "status": "testado",
+  "config": {
+    "title": "f10-qa Phaser",
+    "background": "#0b0f1a",
+    "playerColor": 5209343,
+    "enemyColor": 16734810,
+    "itemColor": 16765286,
+    "speed": 220,
+    "difficulty": "normal",
+    "extraEnemies": 0
+  },
+  "files": [
+    "index.html",
+    "game.js",
+    "README.md"
+  ],
+  "resources": [
+    {
+      "name": "Phaser 3",
+      "version": "3.80.1",
+      "license": "MIT",
+      "source": "https://phaser.io",
+      "url": "https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js",
+      "type": "engine-2d"
+    }
+  ],
+  "versions": [
+    {
+      "id": "v_mwbf4xcz_pfd2",
+      "at": "2026-11-11T01:06:36.899Z",
+      "label": "Criação",
+      "genre": "plataforma",
+      "config": {
+        "title": "f10-qa Phaser",
+        "background": "#0b0f1a",
+        "playerColor": 5209343,
+        "enemyColor": 16734810,
+        "itemColor": 16765286,
+        "speed": 220,
+        "difficulty": "normal",
+        "extraEnemies": 0
+      },
+      "status": "pronto",
+      "files": {
+        "index.html": "<!doctype html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no\">\n<meta name=\"generator\" content=\"Tiagente Game Studio\" data-game-genre=\"plataforma\">\n<title>f10-qa Phaser</title>\n<style>html,body{margin:0;height:100%;background:#0b0f1a;overflow:hidden}#game-root{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:#0b0f1a}</style>\n<script src=\"https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js\"></script>\n</head>\n<body>\n<div id=\"game-root\"></div>\n<script>\n(function () {\n  var CONTROLS = [{\"action\":\"left\",\"label\":\"Esquerda\",\"group\":\"move\",\"codes\":[\"ArrowLeft\",\"KeyA\"]},{\"action\":\"right\",\"label\":\"Direita\",\"group\":\"move\",\"codes\":[\"ArrowRight\",\"KeyD\"]},{\"action\":\"jump\",\"label\":\"Pular\",\"group\":\"action\",\"codes\":[\"Space\",\"ArrowUp\",\"KeyW\"]}];\n  var META = { engine: \"phaser\", genre: \"plataforma\" };\n  var KEYCODE = {\"ArrowLeft\":37,\"ArrowUp\":38,\"ArrowRight\":39,\"ArrowDown\":40,\"Space\":32,\"KeyW\":87,\"KeyA\":65,\"KeyS\":83,\"KeyD\":68,\"Enter\":13,\"Escape\":27};\n  var KEYNAME = {\"ArrowLeft\":\"ArrowLeft\",\"ArrowUp\":\"ArrowUp\",\"ArrowRight\":\"ArrowRight\",\"ArrowDown\":\"ArrowDown\",\"Space\":\" \",\"KeyW\":\"w\",\"KeyA\":\"a\",\"KeyS\":\"s\",\"KeyD\":\"d\",\"Enter\":\"Enter\",\"Escape\":\"Escape\"};\n  function makeEvent(type, code) {\n    var ev;\n    try { ev = new KeyboardEvent(type, { code: code, key: KEYNAME[code] || code, bubbles: true, cancelable: true }); }\n    catch (e) { ev = document.createEvent(\"Event\"); ev.initEvent(type, true, true); }\n    var kc = KEYCODE[code] || 0;\n    try { Object.defineProperty(ev, \"keyCode\", { get: function () { return kc; } }); } catch (e) {}\n    try { Object.defineProperty(ev, \"which\", { get: function () { return kc; } }); } catch (e) {}\n    return ev;\n  }\n  function announce() {\n    try {\n      (window.parent || window).postMessage({\n        source: \"tiagente-game\", type: \"ready\", engine: META.engine, genre: META.genre, controls: CONTROLS\n      }, \"*\");\n    } catch (e) {}\n  }\n  window.addEventListener(\"message\", function (e) {\n    var d = e.data;\n    if (!d || d.source !== \"tiagente-os\") return;\n    if (d.type === \"hello\") { announce(); return; }\n    if (d.type !== \"control\" || !d.codes) return;\n    var type = d.down ? \"keydown\" : \"keyup\";\n    for (var i = 0; i < d.codes.length; i++) {\n      try { window.dispatchEvent(makeEvent(type, d.codes[i])); } catch (err) {}\n    }\n  });\n  if (document.readyState === \"complete\") announce();\n  else window.addEventListener(\"load\", announce);\n})();\n</script>\n<script src=\"game.js\"></script>\n</body>\n</html>\n",
+        "game.js": "/* Gerado pelo Game Studio (Phaser 3.80.1). Edite pelo proprio Game Studio para manter o historico. */\nconst GAME_CONFIG = {\"title\":\"f10-qa Phaser\",\"background\":\"#0b0f1a\",\"playerColor\":5209343,\"enemyColor\":16734810,\"itemColor\":16765286,\"speed\":220,\"difficulty\":\"normal\",\"extraEnemies\":0};\n(function () {\n  var CFG = GAME_CONFIG;\n  var W = 800, H = 600, WORLD_W = 2400;\n  var scene = {\n    key: 'main',\n    create: function () {\n      var self = this;\n      this.cameras.main.setBackgroundColor(CFG.background);\n      function tex(key, color, w, h) {\n        var g = self.make.graphics({ add: false });\n        g.fillStyle(color, 1); g.fillRect(0, 0, w, h); g.generateTexture(key, w, h); g.destroy();\n      }\n      tex('player', CFG.playerColor, 26, 34);\n      tex('plat', 0x3b4b6b, 120, 20);\n      tex('coin', CFG.itemColor, 16, 16);\n      tex('spike', CFG.enemyColor, 24, 24);\n\n      this.physics.world.setBounds(0, 0, WORLD_W, H);\n      this.cameras.main.setBounds(0, 0, WORLD_W, H);\n\n      var platforms = this.physics.add.staticGroup();\n      var layout = [\n        [0, 560, 900, 40], [300, 460, 160, 20], [560, 370, 150, 20],\n        [840, 440, 170, 20], [1120, 350, 170, 20], [1400, 450, 160, 20],\n        [1680, 360, 180, 20], [1960, 470, 180, 20], [2200, 560, 200, 40]\n      ];\n      for (var i = 0; i < layout.length; i++) {\n        var L = layout[i];\n        var p = platforms.create(L[0] + L[2] / 2, L[1] + L[3] / 2, 'plat');\n        p.setDisplaySize(L[2], L[3]);\n        p.refreshBody();\n      }\n\n      this.player = this.physics.add.sprite(60, 460, 'player');\n      this.player.setCollideWorldBounds(true);\n      this.player.setMaxVelocity(CFG.speed + 80, 900);\n      this.physics.add.collider(this.player, platforms);\n\n      this.coins = this.physics.add.group({ allowGravity: false, immovable: true });\n      var cps = [[330, 420], [620, 330], [900, 400], [1180, 310], [1470, 410], [1750, 320], [2010, 430], [2280, 500]];\n      for (var c = 0; c < cps.length; c++) { this.coins.create(cps[c][0], cps[c][1], 'coin'); }\n      this.total = this.coins.getLength();\n\n      this.spikes = this.physics.add.staticGroup();\n      var nSpikes = 3 + CFG.extraEnemies;\n      for (var s = 0; s < nSpikes; s++) {\n        var sx = 470 + s * 250;\n        if (sx < WORLD_W - 80) {\n          var sp = this.spikes.create(sx, 546, 'spike');\n          sp.setDisplaySize(24, 28); sp.refreshBody();\n        }\n      }\n\n      this.score = 0; this.done = false;\n      this.label = this.add.text(12, 12, '', { fontFamily: 'monospace', fontSize: '16px', color: '#e2e8f0' });\n      this.label.setScrollFactor(0);\n      this.hint = this.add.text(12, 34, 'Setas / A D para mover  ·  ESPACO para pular', { fontFamily: 'monospace', fontSize: '13px', color: '#94a3b8' });\n      this.hint.setScrollFactor(0);\n\n      var coins = this.coins;\n      this.physics.add.overlap(this.player, coins, function (pl, coin) {\n        coin.destroy(); self.score++; self.refreshLabel();\n        if (coins.getLength() === 0 && !self.done) {\n          self.done = true; self.player.setTint(0x22c55e); self.physics.pause();\n          self.label.setText('VOCE VENCEU! Moedas: ' + self.score + ' - recarregue para jogar');\n        }\n      });\n      this.physics.add.collider(this.player, this.spikes, function () {\n        if (self.done) return;\n        self.done = true; self.player.setTint(CFG.enemyColor); self.physics.pause();\n        self.label.setText('FIM! Voce tocou em um perigo - recarregue para tentar');\n      });\n\n      this.cursors = this.input.keyboard.createCursorKeys();\n      this.keys = this.input.keyboard.addKeys('A,D,W,SPACE');\n      this.cameras.main.startFollow(this.player, true, 0.15, 0.15);\n      this.refreshLabel();\n    },\n    extend: {\n      refreshLabel: function () {\n        this.label.setText('Moedas: ' + this.score + ' / ' + this.total);\n      }\n    },\n    update: function () {\n      if (!this.player || this.done) return;\n      var onGround = this.player.body.blocked.down || this.player.body.touching.down;\n      var left = this.cursors.left.isDown || this.keys.A.isDown;\n      var right = this.cursors.right.isDown || this.keys.D.isDown;\n      var jump = this.cursors.up.isDown || this.keys.W.isDown || this.keys.SPACE.isDown;\n      if (left) this.player.setVelocityX(-CFG.speed);\n      else if (right) this.player.setVelocityX(CFG.speed);\n      else this.player.setVelocityX(0);\n      if (jump && onGround) this.player.setVelocityY(-520);\n    }\n  };\n  new Phaser.Game({\n    type: Phaser.AUTO, width: W, height: H, parent: 'game-root', backgroundColor: CFG.background,\n    physics: { default: 'arcade', arcade: { gravity: { y: 900 }, debug: false } },\n    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },\n    scene: [scene]\n  });\n})();\n",
+        "README.md": "# f10-qa Phaser\n\nJogo 2D (plataforma) gerado pelo **Game Studio** do Tiagente usando Phaser 3.\n\n## Como executar\n- Abra `index.html` no navegador, ou\n- Use o botao **Pre-visualizar** no Game Studio.\n\n## Controles\n- Setas (ou A/D) para mover; ESPACO (ou seta ↑) para pular/atirar conforme o genero.\n\n## Tecnologia\n- Phaser 3.80.1 (licenca MIT) — https://phaser.io\n- Texturas geradas em tempo de execucao: nenhum recurso externo de imagem/som.\n"
+      }
+    }
+  ],
+  "tests": [
+    {
+      "id": "t_mwbf4xdb",
+      "at": "2026-11-11T01:06:36.911Z",
+      "ok": true,
+      "passed": 8,
+      "failed": 0,
+      "checks": [
+        {
+          "name": "Arquivo index.html",
+          "ok": true,
+          "detail": "52 linhas"
+        },
+        {
+          "name": "Arquivo game.js",
+          "ok": true,
+          "detail": "105 linhas"
+        },
+        {
+          "name": "Arquivo README.md",
+          "ok": true,
+          "detail": "15 linhas"
+        },
+        {
+          "name": "HTML carrega o motor Phaser",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "name": "HTML carrega o jogo (game.js)",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "name": "HTML possui o contêiner #game-root",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "name": "game.js sem erros de sintaxe",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "name": "game.js define GAME_CONFIG válido",
+          "ok": true,
+          "detail": "gênero=plataforma"
+        }
+      ]
+    }
+  ],
+  "commandLog": [],
+  "memoryId": "mem_mwbf4xd1_ebfac4",
+  "previewUrl": "/preview/jogo-f10-qa-phaser-74f129/",
+  "createdAt": "2026-11-11T01:06:36.899Z",
+  "updatedAt": "2026-11-11T01:06:36.911Z",
+  "lastPreviewAt": "2026-11-11T01:06:36.907Z"
+}

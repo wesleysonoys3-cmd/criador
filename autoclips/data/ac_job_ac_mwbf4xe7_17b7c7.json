@@ -1,0 +1,131 @@
+{
+  "id": "ac_mwbf4xe7_17b7c7",
+  "schema": "autoclips_v1",
+  "owner": "local",
+  "title": "f10-qa autorizado",
+  "description": "",
+  "sources": [],
+  "transcript": [
+    {
+      "start": 0,
+      "end": 8,
+      "text": "Neste trecho explico o objetivo principal do projeto e por que ele importa.",
+      "speaker": "",
+      "energy": null
+    },
+    {
+      "start": 8,
+      "end": 16,
+      "text": "Aqui apresento o passo a passo e um exemplo prático de uso.",
+      "speaker": "",
+      "energy": null
+    },
+    {
+      "start": 16,
+      "end": 26,
+      "text": "Por fim, resumo os resultados e o que aprendemos com o experimento.",
+      "speaker": "",
+      "energy": null
+    }
+  ],
+  "profileKey": "podcast",
+  "profile": {
+    "key": "podcast",
+    "label": "Podcast",
+    "description": "Trechos de conversa longa com ideias fortes e frases completas.",
+    "criteria": {
+      "hook": 1.2,
+      "emotion": 0.8,
+      "laugh": 0.4,
+      "insight": 1.4,
+      "question": 0.8,
+      "keyword": 1,
+      "energy": 0.6,
+      "completeness": 1.2
+    },
+    "keywords": [
+      "segredo",
+      "história",
+      "importante",
+      "aprendi",
+      "na prática",
+      "conselho",
+      "carreira"
+    ],
+    "minScore": 55,
+    "maxCuts": 6,
+    "minDuration": 35,
+    "maxDuration": 90,
+    "minSpacing": 20,
+    "aspect": "9:16",
+    "captions": {
+      "enabled": true,
+      "style": "podcast"
+    },
+    "tone": "conversa"
+  },
+  "rights": {
+    "rights": {
+      "access": "PERMITIDO",
+      "reproduce": "PERMITIDO",
+      "edit": "PERMITIDO",
+      "derivative": "PERMITIDO",
+      "publish": "PERMITIDO",
+      "commercial": "PERMITIDO"
+    },
+    "evidence": [],
+    "status": "PERMITIDO",
+    "source": "autorização do autor (teste)",
+    "responsible": "QA FASE 10",
+    "notes": "",
+    "canProcess": true,
+    "canPublish": true,
+    "missingForProcess": [],
+    "missingForPublish": [],
+    "denied": [],
+    "verifiedAt": "2026-11-11T01:06:36.948Z"
+  },
+  "analysis": {
+    "totalAnalyzed": 3,
+    "candidatesCount": 0,
+    "averageScore": 0,
+    "minScore": 55,
+    "profile": "podcast",
+    "moments": []
+  },
+  "plan": null,
+  "metadata": null,
+  "qa": null,
+  "render": null,
+  "status": "analisado",
+  "progress": 40,
+  "stage": "analise",
+  "stageLabel": "Análise inteligente",
+  "attempts": 0,
+  "errors": [],
+  "log": [
+    {
+      "at": "2026-11-11T01:06:36.943Z",
+      "stage": "criacao",
+      "message": "Tarefa criada com 0 fonte(s) e 3 segmento(s)."
+    },
+    {
+      "at": "2026-11-11T01:06:36.948Z",
+      "stage": "direitos",
+      "message": "Direitos avaliados: PERMITIDO (pode processar)"
+    },
+    {
+      "at": "2026-11-11T01:06:36.952Z",
+      "stage": "analise",
+      "message": "0 momento(s) encontrado(s), média 0."
+    },
+    {
+      "at": "2026-11-11T01:06:36.954Z",
+      "stage": "analise",
+      "message": "0 momento(s) encontrado(s), média 0."
+    }
+  ],
+  "memoryId": "mem_mwbf4xe8_cef1ab",
+  "createdAt": "2026-11-11T01:06:36.943Z",
+  "updatedAt": "2026-11-11T01:06:36.954Z"
+}
