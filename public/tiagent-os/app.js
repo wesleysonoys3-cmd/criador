@@ -27,7 +27,7 @@
     { id: "quantfury", name: "Quantfury" }
   ];
   // Módulos da SPA principal exibidos como apps. Cada um abre a aba
-  // correspondente num iframe via rota "/?tab=<id>" (reaproveita as telas existentes).
+  // correspondente num iframe via rota "/index.html?tab=<id>" (reaproveita as telas existentes).
   var MODULE_APPS = {
     gamestudio: "Game Studio",
     jogos: "Jogos",
@@ -689,10 +689,10 @@
     }
   }
 
-  // Apps de módulo: reaproveitam a tela da SPA num iframe via rota "/?tab=<id>".
+  // Apps de módulo: reaproveitam a tela da SPA num iframe via rota "/index.html?tab=<id>".
   function renderModuleApp(win, appId) {
     var label = MODULE_APPS[appId] || labelFor(appId);
-    var url = "/?tab=" + encodeURIComponent(appId);
+    var url = "/index.html?tab=" + encodeURIComponent(appId) + "&embed=1";
     win.content.innerHTML = '<div class="toolbar">'
       + '<span class="browser-recent-label">' + escapeHtml(label) + '</span>'
       + '<button type="button" style="margin-left:auto" data-module-action="reload" data-window="' + win.id + '">Atualizar</button>'
@@ -712,7 +712,7 @@
     var frame = document.getElementById(win.id + "-module-frame");
     var note = document.getElementById(win.id + "-module-note");
     if (note) { note.textContent = "Atualizando…"; note.style.display = ""; }
-    if (frame) frame.src = "/?tab=" + encodeURIComponent(win.appId) + "&t=" + new Date().getTime();
+    if (frame) frame.src = "/index.html?tab=" + encodeURIComponent(win.appId) + "&embed=1&t=" + new Date().getTime();
     setStatusLine(win, "Atualizando…");
   }
 

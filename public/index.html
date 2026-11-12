@@ -61,6 +61,18 @@
   // Garante compatibilidade com app.js L6-L12 que procura window.hljsHtml.
   if (window.hljsXml) window.hljsHtml = window.hljsXml;
 </script>
+<script>
+  // Modo embutido: quando esta tela é aberta dentro de uma janela do TIAgente OS
+  // (?embed=1), sai a moldura de IDE (topbar, Explorer, abas, painel TiAi) e fica
+  // apenas a tela do módulo — o sistema é o TIAgente OS.
+  (function () {
+    try {
+      if (new URLSearchParams(location.search).get('embed') === '1') {
+        document.documentElement.className += ' os-embed';
+      }
+    } catch (e) {}
+  })();
+</script>
 </head>
 <body class="bg-sidebar text-slate-200 h-screen w-screen overflow-hidden font-sans antialiased selection:bg-brand-600/40">
 <div id="app" class="flex h-screen w-screen overflow-hidden flex-col">
@@ -197,7 +209,7 @@
     <!-- ============ COL 2 / CENTRO: EDITOR C/ 4 ABAS (Code · Preview · Console · Terminal) ============ -->
     <section id="editor-panel" data-mobile-panel="center" class="flex-1 min-w-0 flex flex-col bg-[#0a0f22] border-r border-surface-border">
       <!-- Preview Service Bar (URL + seletor) confortável -->
-      <div class="h-10 shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center gap-2">
+      <div id="preview-service-bar" class="h-10 shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center gap-2">
         <div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.04] border border-white/5 text-[11px] text-slate-400 shrink-0 whitespace-nowrap">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
           <span>Service</span>
@@ -222,7 +234,7 @@
       </div>
 
       <!-- Editor Tabs + Ln/Col (barra 40px) — RC15: 4 ABAS SÓ (Chat removido. Interação IA → painel direito TiAi) -->
-      <div class="h-10 shrink-0 bg-sidebar/70 border-b border-surface-border flex items-end gap-0 px-1 overflow-x-auto">
+      <div id="editor-tabs-bar" class="h-10 shrink-0 bg-sidebar/70 border-b border-surface-border flex items-end gap-0 px-1 overflow-x-auto">
         <div id="editor-tabs" class="flex items-end gap-0 h-full">
           <button class="editor-tab active flex items-center gap-1.5 h-full px-3 max-w-[170px] min-w-[85px] rounded-t-md text-[11.5px]" data-editor-tab="code">
             <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-slate-400 shrink-0"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>

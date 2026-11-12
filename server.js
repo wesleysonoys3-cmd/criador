@@ -1763,6 +1763,10 @@ app.use('/play', (req, res, next) => {
     });
   } catch (e) { next(e); }
 });
+/* Porta de entrada do sistema: o TIAgente OS (área de trabalho) é a primeira
+   tela. A SPA com as telas dos módulos continua acessível em /index.html e é
+   carregada dentro das janelas do próprio OS — deixou de ser a abertura. */
+app.get('/', (req, res) => res.redirect('/tiagent-os/'));
 app.use('/', express.static(path.join(__dirname, 'public')));
 
 function sanitizeForInternet(text) {

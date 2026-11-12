@@ -1992,3 +1992,45 @@ body.ti-keyboard-up .trae-chat-form {
   .rc27-step-dot { width: 7.2vw !important; height: 7.2vw !important; min-width: 28px; min-height: 28px; }
   .rc27-step-label { font-size: 8px !important; letter-spacing: 0.02em; }
 }
+
+/* =========================================================
+ * MODO EMBUTIDO · html.os-embed (TIAgente OS)
+ * ---------------------------------------------------------
+ * Esta tela é aberta dentro de uma janela do TIAgente OS
+ * (/index.html?tab=<módulo>&embed=1). Nesse contexto a moldura
+ * de IDE sai de cena (topbar, Explorer, abas, painel TiAi e
+ * resizers) e fica só a tela do módulo, ocupando a janela toda.
+ * =======================================================*/
+html.os-embed,
+html.os-embed body { background: #080c1c !important; }
+
+html.os-embed #app > header,
+html.os-embed #left-panel,
+html.os-embed #left-resizer,
+html.os-embed #trae-agent-panel,
+html.os-embed #right-resizer,
+html.os-embed #preview-service-bar,
+html.os-embed #editor-tabs-bar { display: none !important; }
+
+html.os-embed #editor-panel { border-right: 0 !important; }
+html.os-embed #editor-panels { border-top: 0 !important; }
+
+/* Sem a moldura, o conteúdo do módulo usa a janela inteira e não
+   precisa do respiro extra pensado para a IDE. */
+html.os-embed #editor-panels > .editor-panel { border-radius: 0 !important; }
+
+/* A janela do OS costuma ter ~1080px, o que ativa o layout mobile
+   (@media max-width:1080px) e esconde o painel central via
+   [data-mobile-panel]{display:none}. Aqui revertemos: o painel do
+   módulo é o único visível e ocupa a janela toda. */
+html.os-embed #mobile-tabbar { display: none !important; }
+html.os-embed #editor-panel,
+html.os-embed #editor-panel.mobile-panel-active {
+  display: flex !important;
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  position: relative !important;
+}
+
