@@ -1763,6 +1763,103 @@ app.use('/play', (req, res, next) => {
     });
   } catch (e) { next(e); }
 });
+/* ============================================================
+   TiNave — navegador próprio do TIAgente OS.
+   O OS pede a página ao servidor; o servidor busca o site e devolve
+   o HTML "destravado" (sem X-Frame-Options / CSP de enquadramento)
+   com <base href> e um interceptador de cliques que devolve a
+   navegação para o OS. Assim o TiNave abre sites reais que recusam
+   ser exibidos dentro de iframe.
+   Segurança: apenas http/https públicos (bloqueia rede interna via
+   isAllowedOutboundDomain), sem repassar cookies de sessão.
+   ============================================================ */
+const TINAVE_MAX_BYTES = 4 * 1024 * 1024;
+function tinaveEscape(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function tinavePage(title, message, extraHtml) {
+  return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width,initial-scale=1"><title>' + tinaveEscape(title) + '</title>'
+    + '<style>html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;background:#0f1030;color:#eceaff}'
+    + '.tn-wrap{height:100%;display:flex;align-items:center;justify-content:center;padding:26px}'
+    + '.tn-card{max-width:540px;padding:26px 28px;border-radius:16px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16)}'
+    + '.tn-brand{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9d95e8;margin:0 0 10px}'
+    + 'h1{margin:0 0 10px;font-size:19px}p{margin:0;color:#c6c2ea;font-size:13px;line-height:1.6}</style></head>'
+    + '<body><div class="tn-wrap"><div class="tn-card"><p class="tn-brand">TiNave</p><h1>' + tinaveEscape(title) + '</h1>'
+    + '<p>' + tinaveEscape(message) + '</p>' + (extraHtml || '') + '</div></div></body></html>';
+}
+function tinaveInject(html, baseUrl) {
+  // CSP por <meta> impede a exibição dentro do OS — removida.
+  var out = String(html || '').replace(/<meta[^>]+http-equiv\s*=\s*["']?content-security-policy["']?[^>]*>/gi, '');
+  var script = '<script>(function(){'
+    + 'function go(u){try{parent.postMessage({__tinave__:"navigate",url:String(u)},"*");}catch(e){}}'
+    + 'document.addEventListener("click",function(ev){var el=ev.target;while(el&&el!==document&&!(el.tagName&&el.tagName==="A")){el=el.parentNode;}'
+    + 'if(!el||!el.href)return;var h=el.getAttribute("href");if(!h||h.charAt(0)==="#")return;if(/^(mailto:|tel:|javascript:|blob:|about:)/i.test(h))return;'
+    + 'ev.preventDefault();go(el.href);},true);'
+    + 'document.addEventListener("submit",function(ev){var f=ev.target;if(!f||f.tagName!=="FORM")return;'
+    + 'if(String(f.method||"get").toLowerCase()!=="get")return;'
+    + 'try{var q=new URLSearchParams(new FormData(f)).toString();if(!q)return;var a=f.action||location.href;ev.preventDefault();go(a+(a.indexOf("?")>=0?"&":"?")+q);}catch(e){}'
+    + '},true);'
+    + 'window.open=function(u){go(u);return null;};'
+    + 'function report(){try{var t=document.body?String(document.body.innerText||""):"";'
+    + 'parent.postMessage({__tinave__:"ready",title:String(document.title||""),len:t.replace(/\\s+/g," ").trim().length},"*");}catch(e){}}'
+    + 'if(document.readyState==="complete")setTimeout(report,400);'
+    + 'else window.addEventListener("load",function(){setTimeout(report,700);});'
+    + '})();<\/script>';
+  var head = '<base href="' + tinaveEscape(baseUrl) + '">' + script;
+  if (/<head[^>]*>/i.test(out)) return out.replace(/<head[^>]*>/i, function (m) { return m + head; });
+  if (/<html[^>]*>/i.test(out)) return out.replace(/<html[^>]*>/i, function (m) { return m + '<head>' + head + '</head>'; });
+  return head + out;
+}
+app.get('/api/tinave/proxy', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  var raw = String((req.query && req.query.url) || '').trim();
+  if (!raw) return res.status(400).type('html').send(tinavePage('Endereço vazio', 'Informe um endereço, por exemplo: https://exemplo.com'));
+  var target;
+  try { target = new URL(raw); }
+  catch { return res.status(400).type('html').send(tinavePage('Endereço inválido', 'O TiNave não entendeu este endereço: ' + raw)); }
+  if (target.protocol !== 'http:' && target.protocol !== 'https:') {
+    return res.status(400).type('html').send(tinavePage('Endereço não permitido', 'O TiNave abre apenas endereços http e https.'));
+  }
+  const allow = isAllowedOutboundDomain(target.href);
+  if (!allow.ok) return res.status(403).type('html').send(tinavePage('Site bloqueado', allow.reason));
+  var upstream;
+  try {
+    upstream = await fetch(target.href, {
+      redirect: 'follow',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 TiNave/1.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
+      },
+      signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(25000) : undefined
+    });
+  } catch (e) {
+    var why = (e && e.name === 'TimeoutError') ? 'O site demorou demais para responder.' : ('Não foi possível conectar: ' + ((e && e.message) || e));
+    return res.status(502).type('html').send(tinavePage('Falha ao carregar', why));
+  }
+  if (!upstream.ok && upstream.status >= 400) {
+    return res.status(upstream.status).type('html').send(tinavePage('Site respondeu ' + upstream.status, 'O servidor do site recusou o pedido (' + target.href + ').'));
+  }
+  var ctype = String(upstream.headers.get('content-type') || '');
+  if (ctype && !/text\/html|application\/xhtml/i.test(ctype)) {
+    return res.status(415).type('html').send(tinavePage('Conteúdo não abrível', 'Este endereço não é uma página (' + ctype + ').'));
+  }
+  var html;
+  try {
+    var buf = Buffer.from(await upstream.arrayBuffer());
+    if (buf.length > TINAVE_MAX_BYTES) buf = buf.subarray(0, TINAVE_MAX_BYTES);
+    html = buf.toString('utf8');
+  } catch (e) {
+    return res.status(502).type('html').send(tinavePage('Falha ao ler a página', 'Não foi possível ler o conteúdo: ' + ((e && e.message) || e)));
+  }
+  const finalUrl = upstream.url || target.href;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('X-TiNave', '1');
+  return res.send(tinaveInject(html, finalUrl));
+});
 /* Porta de entrada do sistema: o TIAgente OS (área de trabalho) é a primeira
    tela. A SPA com as telas dos módulos continua acessível em /index.html e é
    carregada dentro das janelas do próprio OS — deixou de ser a abertura. */

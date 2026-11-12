@@ -3,7 +3,7 @@
 
   var STORAGE_KEY = "tiagente.os.v1";
   var APP_LIST = [
-    { id: "browser", name: "Navegador" },
+    { id: "browser", name: "TiNave" },
     { id: "studio", name: "Estúdio" },
     { id: "projetos", name: "Projetos" },
     { id: "files", name: "Arquivos" },
@@ -155,7 +155,7 @@
 
   function iconSvg(id) {
     var icons = {
-      browser: '<circle cx="32" cy="32" r="25" fill="#16a8ed"/><circle cx="32" cy="32" r="21" fill="none" stroke="#baf4ff" stroke-width="2"/><path d="M43 18L35 37 20 45l9-17z" fill="#fff"/><path d="M43 18L35 37l-6-9z" fill="#fa526f"/><circle cx="32" cy="32" r="2.5" fill="#fff"/>',
+      browser: '<circle cx="32" cy="32" r="25" fill="#6d28d9"/><circle cx="32" cy="32" r="20.5" fill="#3b1680"/><circle cx="32" cy="32" r="20.5" fill="none" stroke="#c4b5fd" stroke-width="2"/><text x="32" y="41" font-family="Helvetica,Arial,sans-serif" font-size="23" font-weight="700" fill="#ffffff" text-anchor="middle">T</text>',
       studio: '<rect x="7" y="12" width="50" height="34" rx="6" fill="#2b2540"/><rect x="11" y="16" width="42" height="26" rx="3" fill="#f6f5ff"/><path d="M13 18h10" stroke="#8f86c9" stroke-width="2"/><rect x="13" y="23" width="16" height="15" rx="2" fill="#6d4be0"/><path d="M33 25h18M33 30h18M33 35h12" stroke="#b9b2e8" stroke-width="2.4"/><path d="M24 50h16l-2 6H26z" fill="#3d3660"/>',
       files: '<path d="M8 18a5 5 0 0 1 5-5h13l5 5h20a5 5 0 0 1 5 5v20a5 5 0 0 1-5 5H13a5 5 0 0 1-5-5z" fill="#10b7ee"/><path d="M8 26h48l-5 20a4 4 0 0 1-4 3H12a4 4 0 0 1-4-4z" fill="#0786db"/>',
       email: '<rect x="8" y="15" width="48" height="34" rx="5" fill="#f4fbff"/><path d="M10 18l22 17 22-17" fill="none" stroke="#168de0" stroke-width="4" stroke-linejoin="round"/><path d="M10 46l15-13m29 13L39 33" fill="none" stroke="#6dcaf2" stroke-width="2"/>',
@@ -445,22 +445,102 @@
     return value.length > max ? value.slice(0, max - 1) + "…" : value;
   }
 
+  // TiNave · navegador próprio do TIAgente OS. A página é buscada pelo
+  // servidor (/api/tinave/proxy), que devolve o HTML já liberado para o
+  // iframe — assim sites que recusam ser exibidos em iframe abrem aqui.
+  var TINAVE_SHORTCUTS = [
+    ["Wikipédia", "https://pt.wikipedia.org"],
+    ["DuckDuckGo", "https://duckduckgo.com"],
+    ["YouTube", "https://www.youtube.com"],
+    ["GitHub", "https://github.com"],
+    ["Notícias", "https://g1.globo.com"]
+  ];
+
+  function tinaveStartHtml() {
+    var links = "";
+    var i;
+    for (i = 0; i < TINAVE_SHORTCUTS.length; i++) {
+      links += '<button type="button" class="tn-quick" data-url="' + escapeHtml(TINAVE_SHORTCUTS[i][1]) + '">' + escapeHtml(TINAVE_SHORTCUTS[i][0]) + "</button>";
+    }
+    return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'
+      + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+      + '<style>html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;'
+      + 'background:radial-gradient(circle at 22% 8%,#2b2470,#0d0e2a 72%);color:#f3f1ff}'
+      + '.tn-home{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:26px;text-align:center}'
+      + '.tn-logo{font-size:36px;font-weight:800;letter-spacing:-.6px}.tn-logo span{color:#a78bfa}'
+      + '.tn-sub{margin:0 0 14px;color:#bdb8ea;font-size:13px}'
+      + '.tn-search{display:flex;gap:8px;width:100%;max-width:560px}'
+      + '.tn-search input{flex:1;min-height:46px;padding:0 15px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.09);color:#fff;font-size:14px;outline:none}'
+      + '.tn-search button{min-height:46px;padding:0 20px;border:0;border-radius:12px;background:#7c4dff;color:#fff;font-weight:700;cursor:pointer}'
+      + '.tn-quicks{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:16px;max-width:640px}'
+      + '.tn-quick{padding:9px 15px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#ece9ff;font-size:12px;cursor:pointer}'
+      + '.tn-quick:hover{background:rgba(255,255,255,.16)}</style></head><body><div class="tn-home">'
+      + '<div class="tn-logo">Ti<span>Nave</span></div><p class="tn-sub">O navegador do TIAgente OS</p>'
+      + '<div class="tn-search"><input id="q" placeholder="Digite um endereço ou pesquise na internet" autocomplete="off" spellcheck="false"><button type="button" id="go">Ir</button></div>'
+      + '<div class="tn-quicks">' + links + "</div>"
+      + '</div><script>(function(){function go(u){try{parent.postMessage({__tinave__:"navigate",url:String(u)},"*");}catch(e){}}'
+      + 'function submit(){var v=document.getElementById("q").value;if(String(v||"").replace(/\\s+/g,""))go(v);}'
+      + 'document.getElementById("go").onclick=submit;'
+      + 'document.getElementById("q").addEventListener("keydown",function(e){if(e.keyCode===13){e.preventDefault();submit();}});'
+      + 'document.addEventListener("click",function(e){var el=e.target;while(el&&el!==document&&!(el.getAttribute&&el.getAttribute("data-url"))){el=el.parentNode;}'
+      + 'if(el&&el.getAttribute)go(el.getAttribute("data-url"));});'
+      + '})();<\/script></body></html>';
+  }
+
+  function tinaveEl(win, suffix) {
+    return document.getElementById(win.id + suffix);
+  }
+
+  function tinaveHome(win) {
+    var frame = tinaveEl(win, "-frame");
+    var note = tinaveEl(win, "-browser-note");
+    var input = tinaveEl(win, "-address");
+    win.currentUrl = "";
+    win.tinaveHome = true;
+    win.tinaveLoaded = true;
+    if (input) input.value = "";
+    if (note) { note.textContent = "Digite um endereço ou pesquise para começar."; note.classList.add("tinave-note-hidden"); }
+    var hint = tinaveEl(win, "-hint");
+    if (hint) hint.classList.add("tinave-note-hidden");
+    if (frame) {
+      frame.onload = null;
+      frame.removeAttribute("src");
+      frame.srcdoc = tinaveStartHtml();
+      frame.onload = function () { tinaveLoaded(win); };
+    }
+    setStatusLine(win, "TiNave pronto");
+  }
+
+  function tinaveLoaded(win) {
+    win.tinaveLoaded = true;
+    if (win.tinaveTimer) { clearTimeout(win.tinaveTimer); win.tinaveTimer = null; }
+    var note = tinaveEl(win, "-browser-note");
+    if (note) note.classList.add("tinave-note-hidden");
+    if (win.currentUrl) setStatusLine(win, "Página carregada");
+  }
+
   function renderBrowser(win) {
-    win.content.innerHTML = '<div class="toolbar">'
-      + '<button type="button" data-browser-action="back" aria-label="Voltar">&#8592;</button>'
-      + '<button type="button" data-browser-action="forward" aria-label="Avançar">&#8594;</button>'
-      + '<button type="button" data-browser-action="home" aria-label="Página inicial">⌂</button>'
-      + '<input type="text" id="' + win.id + '-address" placeholder="Digite um endereço ou pesquise" aria-label="Endereço ou pesquisa">'
-      + '<button type="button" data-browser-action="go">Ir</button>'
-      + '</div><div class="browser-actions"><button type="button" data-browser-action="favorite">☆ Favorito</button>'
-      + '<span class="browser-recent-label">Favoritos:</span><span id="' + win.id + '-favorites"></span>'
-      + '<span class="browser-recent-label">Histórico:</span><span id="' + win.id + '-history"></span></div>'
-      + '<div class="browser-frame-wrap"><iframe class="browser-frame" id="' + win.id + '-frame" title="Página web" sandbox="allow-forms allow-scripts" src="about:blank"></iframe>'
-      + '<div class="browser-empty" id="' + win.id + '-browser-note">Digite um endereço ou pesquise. As páginas serão abertas neste painel; alguns sites podem bloquear a incorporação.</div></div>';
+    win.content.innerHTML = '<div class="tinave">'
+      + '<div class="tinave-bar"><span class="tinave-brand">Ti<span>Nave</span></span>'
+      + '<button type="button" class="tinave-btn" data-browser-action="back" title="Voltar" aria-label="Voltar">&#8592;</button>'
+      + '<button type="button" class="tinave-btn" data-browser-action="forward" title="Avançar" aria-label="Avançar">&#8594;</button>'
+      + '<button type="button" class="tinave-btn" data-browser-action="reload" title="Recarregar" aria-label="Recarregar">&#8635;</button>'
+      + '<button type="button" class="tinave-btn" data-browser-action="home" title="Página inicial" aria-label="Página inicial">&#8962;</button>'
+      + '<input class="tinave-address" type="text" id="' + win.id + '-address" placeholder="Digite um endereço ou pesquise na internet" aria-label="Endereço ou pesquisa" autocomplete="off" spellcheck="false">'
+      + '<button type="button" class="tinave-go" data-browser-action="go">Ir</button>'
+      + '<button type="button" class="tinave-btn" data-browser-action="favorite" title="Favoritar" aria-label="Favoritar">☆</button>'
+      + '</div>'
+      + '<div class="tinave-strip"><span class="tinave-strip-label">Favoritos:</span><span id="' + win.id + '-favorites"></span>'
+      + '<span class="tinave-strip-label">Histórico:</span><span id="' + win.id + '-history"></span></div>'
+      + '<div class="tinave-view"><iframe class="tinave-frame" id="' + win.id + '-frame" title="Página do TiNave" sandbox="allow-forms allow-scripts allow-popups allow-popups-to-escape-sandbox" src="about:blank"></iframe>'
+      + '<div class="tinave-note tinave-note-hidden" id="' + win.id + '-browser-note"></div>'
+      + '<div class="tinave-hint tinave-note-hidden" id="' + win.id + '-hint"></div></div></div>';
     win.browserHistory = settings.browserHistory.slice(0);
     win.browserCursor = win.browserHistory.length - 1;
+    win.currentUrl = "";
     refreshBrowserFavorites(win);
     refreshBrowserHistory(win);
+    tinaveHome(win);
   }
 
   function renderStudio(win) {
@@ -1877,34 +1957,79 @@
     else if (action === "new-conversation") startNewAgentConversation(win);
   }
 
-  function navigateBrowser(win, value, fromHistory) {
-    var input = document.getElementById(win.id + "-address");
-    var frame = document.getElementById(win.id + "-frame");
-    var note = document.getElementById(win.id + "-browser-note");
+  // Endereço digitado → URL. O que não for endereço vira pesquisa no TiNave.
+  function tinaveResolveUrl(value) {
     var raw = String(value || "").replace(/^\s+|\s+$/g, "");
-    if (!raw) return;
-    var url;
-    if (/^https?:\/\//i.test(raw)) url = raw;
-    else if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?#].*)?$/i.test(raw)) url = "https://" + raw;
-    else url = "https://html.duckduckgo.com/html/?q=" + encodeURIComponent(raw);
+    if (!raw) return "";
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?([/?#].*)?$/i.test(raw)) return "https://" + raw;
+    return "https://html.duckduckgo.com/html/?q=" + encodeURIComponent(raw);
+  }
+
+  function navigateBrowser(win, value, fromHistory) {
+    if (!win) return;
+    var url = tinaveResolveUrl(value);
+    if (!url) return;
+    var input = tinaveEl(win, "-address");
+    var frame = tinaveEl(win, "-frame");
+    var note = tinaveEl(win, "-browser-note");
     if (input) input.value = url;
+    win.currentUrl = url;
+    win.tinaveHome = false;
     if (!fromHistory) {
-      settings.browserHistory.push(url);
-      if (settings.browserHistory.length > 30) settings.browserHistory.shift();
-      saveSettings();
+      if (settings.browserHistory[settings.browserHistory.length - 1] !== url) {
+        settings.browserHistory.push(url);
+        if (settings.browserHistory.length > 30) settings.browserHistory.shift();
+        saveSettings();
+      }
       win.browserHistory = settings.browserHistory.slice(0);
       win.browserCursor = win.browserHistory.length - 1;
       refreshBrowserHistory(win);
     }
-    if (navigator.userAgent.indexOf("TIAgenteOSNative/1.0") >= 0) {
-      if (note) note.textContent = "Abrindo a página no navegador interno do aplicativo.";
-      setStatusLine(win, "Abrindo navegador interno");
-      window.location.href = url;
+    win.tinaveLoaded = false;
+    if (win.tinaveTimer) clearTimeout(win.tinaveTimer);
+    win.tinaveTimer = setTimeout(function () {
+      if (!win.tinaveLoaded && note) note.textContent = "O site está demorando para responder. Verifique o endereço ou tente novamente.";
+    }, 15000);
+    if (note) {
+      note.textContent = "Abrindo " + shortText(url.replace(/^https?:\/\//, ""), 60) + "…";
+      note.classList.remove("tinave-note-hidden");
+    }
+    var clearHint = tinaveEl(win, "-hint");
+    if (clearHint) clearHint.classList.add("tinave-note-hidden");
+    if (frame) {
+      // A página inicial usa srcdoc; ele tem prioridade sobre src e precisa
+      // ser removido antes de navegar de verdade.
+      if (frame.hasAttribute("srcdoc")) frame.removeAttribute("srcdoc");
+      frame.src = "/api/tinave/proxy?url=" + encodeURIComponent(url);
+    }
+    setStatusLine(win, "Abrindo " + shortText(url.replace(/^https?:\/\//, ""), 38));
+  }
+
+  // Cliques/pesquisas feitos dentro de uma página do TiNave voltam para o OS.
+  function handleTiNaveMessage(event) {
+    var data = event && event.data;
+    if (!data || !data.__tinave__) return;
+    var win = findWindow("browser");
+    if (!win) return;
+    if (data.__tinave__ === "ready") {
+      tinaveLoaded(win);
+      var title = String(data.title || "").replace(/\s+/g, " ").trim();
+      var hint = tinaveEl(win, "-hint");
+      if (hint) {
+        // Sites muito dependentes de JavaScript (ex.: YouTube) chegam vazios
+        // porque o TiNave abre a página sem a sessão/cookies do site.
+        if (typeof data.len === "number" && data.len < 200) {
+          hint.textContent = "Esta página depende de JavaScript e pode não abrir 100% dentro do TiNave.";
+          hint.classList.remove("tinave-note-hidden");
+        } else {
+          hint.classList.add("tinave-note-hidden");
+        }
+      }
+      if (title) setStatusLine(win, "Página carregada — " + shortText(title, 42));
       return;
     }
-    if (frame) frame.src = url;
-    if (note) note.textContent = "Página solicitada neste painel. Se o site bloquear a incorporação, ele não poderá ser exibido aqui.";
-    setStatusLine(win, "Página solicitada");
+    if (data.__tinave__ === "navigate" && data.url) navigateBrowser(win, data.url);
   }
 
   function toggleFavorite(win) {
@@ -1918,7 +2043,7 @@
     if (settings.favorites.length > 12) settings.favorites.length = 12;
     saveSettings();
     var favoriteButton = win.content.querySelector('[data-browser-action="favorite"]');
-    if (favoriteButton) favoriteButton.textContent = found >= 0 ? "☆ Favorito" : "★ Favorito";
+    if (favoriteButton) { favoriteButton.textContent = found >= 0 ? "☆" : "★"; favoriteButton.title = found >= 0 ? "Favoritar" : "Remover dos favoritos"; }
     refreshBrowserFavorites(win);
     showNotice(found >= 0 ? "Favorito removido." : "Favorito salvo neste aparelho.");
   }
@@ -1931,6 +2056,7 @@
     for (i = 0; i < settings.favorites.length && i < 8; i++) {
       button = document.createElement("button");
       button.type = "button";
+      button.className = "tinave-chip";
       button.setAttribute("data-navigate", settings.favorites[i].url);
       button.textContent = shortText(settings.favorites[i].title || settings.favorites[i].url, 26);
       target.appendChild(button);
@@ -1945,6 +2071,7 @@
     for (i = settings.browserHistory.length - 1; i >= 0 && count < 5; i--, count++) {
       button = document.createElement("button");
       button.type = "button";
+      button.className = "tinave-chip";
       button.setAttribute("data-navigate", settings.browserHistory[i]);
       button.textContent = shortText(settings.browserHistory[i].replace(/^https?:\/\//, ""), 25);
       target.appendChild(button);
@@ -1954,7 +2081,7 @@
   function renderMenu(kind, anchor) {
     var items = [];
     if (kind === "arquivo" || kind === "main") {
-      items = [["TIAgente", "app:agent"], ["Navegador", "app:browser"], ["Arquivos", "app:files"], ["Configurações", "app:settings"], ["Aplicativos", "app:launcher"]];
+      items = [["TIAgente", "app:agent"], ["TiNave", "app:browser"], ["Arquivos", "app:files"], ["Configurações", "app:settings"], ["Aplicativos", "app:launcher"]];
     } else if (kind === "editar") {
       items = [["Calculadora", "app:calculator"], ["Galeria", "app:gallery"], ["E-mail", "app:email"]];
     } else if (kind === "visualizar") {
@@ -2068,7 +2195,11 @@
       return;
     }
     if (browserAction) { handleBrowserAction(browserAction); return; }
-    if (navigate) { navigateBrowser(findWindow("browser"), navigate.getAttribute("data-navigate")); return; }
+    if (navigate) {
+      var naveWin = findWindow("browser") || openApp("browser");
+      navigateBrowser(naveWin, navigate.getAttribute("data-navigate"));
+      return;
+    }
     if (email) {
       var browserWindow = openApp("browser");
       navigateBrowser(browserWindow, email.getAttribute("data-email-url"));
@@ -2130,10 +2261,13 @@
         navigateBrowser(win, win.browserHistory[win.browserCursor], true);
       }
     } else if (action === "home") {
-      var frame = document.getElementById(win.id + "-frame");
-      if (frame) frame.src = "about:blank";
-      var note = document.getElementById(win.id + "-browser-note");
-      if (note) note.textContent = "Digite um endereço ou pesquise. As páginas serão abertas neste painel; alguns sites podem bloquear a incorporação.";
+      tinaveHome(win);
+    } else if (action === "reload") {
+      if (win.currentUrl) {
+        var reloadFrame = tinaveEl(win, "-frame");
+        if (reloadFrame) reloadFrame.removeAttribute("src");
+        navigateBrowser(win, win.currentUrl, true);
+      } else tinaveHome(win);
     } else if (action === "favorite") toggleFavorite(win);
   }
 
@@ -2511,6 +2645,7 @@
     document.addEventListener("submit", handleSubmit, false);
     document.addEventListener("keydown", handleKeydown, false);
     window.addEventListener("message", handleGameMessage, false);
+    window.addEventListener("message", handleTiNaveMessage, false);
     windowsHost.addEventListener("mousedown", startDrag, false);
     windowsHost.addEventListener("touchstart", startDrag, false);
     document.addEventListener("mousemove", moveDrag, false);
