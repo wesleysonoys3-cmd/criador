@@ -1860,6 +1860,143 @@ app.get('/api/tinave/proxy', async (req, res) => {
   res.setHeader('X-TiNave', '1');
   return res.send(tinaveInject(html, finalUrl));
 });
+/* ---------- TiNave + IA: pesquisa na internet e responde com fontes ---------- */
+function tinaveStripTags(value) {
+  return String(value == null ? '' : value)
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'").replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+function tinaveDecodeDdg(href) {
+  try {
+    const raw = String(href || '');
+    if (/^https?:\/\//i.test(raw)) return raw;
+    const u = new URL(raw.startsWith('//') ? 'https:' + raw : raw, 'https://duckduckgo.com');
+    const uddg = u.searchParams.get('uddg');
+    return uddg ? decodeURIComponent(uddg) : u.href;
+  } catch { return String(href || ''); }
+}
+async function tinaveWebSearch(query, limit) {
+  const n = Math.max(1, Math.min(8, parseInt(limit || 5, 10) || 5));
+  const res = await fetch('https://duckduckgo.com/html/?q=' + encodeURIComponent(query), {
+    redirect: 'follow',
+    headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 TiNave/1.0' },
+    signal: AbortSignal.timeout(15000)
+  });
+  const txt = await res.text();
+  const titles = [];
+  const snips = [];
+  let m;
+  const reT = /class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
+  while ((m = reT.exec(txt)) !== null && titles.length < n) {
+    titles.push({ url: tinaveDecodeDdg(m[1]), title: tinaveStripTags(m[2]).slice(0, 200) });
+  }
+  const reS = /class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
+  while ((m = reS.exec(txt)) !== null && snips.length < n) snips.push(tinaveStripTags(m[1]).slice(0, 600));
+  return titles.map((t, i) => ({ rank: i + 1, title: t.title, url: t.url, snippet: snips[i] || '' }));
+}
+/* Baixa a página e devolve só o texto visível (para a IA ler). */
+async function tinaveReadPage(url, maxChars) {
+  const allow = isAllowedOutboundDomain(url);
+  if (!allow.ok) throw new Error(allow.reason);
+  const res = await fetch(url, {
+    redirect: 'follow',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 TiNave/1.0',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
+    },
+    signal: AbortSignal.timeout(12000)
+  });
+  if (!res.ok) throw new Error('o site respondeu ' + res.status);
+  const html = (await res.text()).slice(0, 900000);
+  const text = tinaveStripTags(
+    html
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+  );
+  return text.slice(0, maxChars || 6000);
+}
+async function tinaveAskModel(prompt) {
+  const key = GOOGLE_API_KEY;
+  if (!key) throw new Error('Nenhuma chave de IA configurada (GOOGLE_API_KEY).');
+  const models = [process.env.GOOGLE_MODEL || 'gemini-2.5-flash', 'gemini-2.5-flash'];
+  let lastError = '';
+  for (const model of models) {
+    try {
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.35, maxOutputTokens: 1400 }
+        }),
+        signal: AbortSignal.timeout(60000)
+      });
+      if (!res.ok) { lastError = 'modelo ' + model + ' respondeu ' + res.status; continue; }
+      const data = await res.json();
+      const cand = data && data.candidates && data.candidates[0];
+      const parts = (cand && cand.content && cand.content.parts) || [];
+      const text = parts.map(p => (p && p.text) || '').join('').trim();
+      if (text) return { text, model };
+      lastError = 'resposta vazia do modelo ' + model;
+    } catch (e) { lastError = String((e && e.message) || e); }
+  }
+  throw new Error(lastError || 'A IA não respondeu.');
+}
+app.post('/api/tinave/ai', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const mode = body.mode === 'page' ? 'page' : 'search';
+    const query = String(body.q == null ? '' : body.q).trim().slice(0, 500);
+    const pageUrl = String(body.url == null ? '' : body.url).trim();
+    const started = Date.now();
+
+    if (mode === 'page') {
+      if (!pageUrl) return res.status(400).json({ ok: false, error: 'Nenhuma página aberta para ler.' });
+      const question = query || 'Resuma esta página em português, em tópicos curtos.';
+      const text = await tinaveReadPage(pageUrl, 9000);
+      if (!text) return res.status(502).json({ ok: false, error: 'Não consegui ler o conteúdo desta página.' });
+      const answer = await tinaveAskModel(
+        'Você é a IA do navegador TiNave. Responda em português do Brasil, de forma direta e útil.\n'
+        + 'Página lida: ' + pageUrl + '\n\nConteúdo da página:\n' + sanitizeForInternet(text)
+        + '\n\nPergunta do usuário: ' + question
+      );
+      return res.json({ ok: true, mode, query: question, answer: answer.text, model: answer.model, url: pageUrl, sources: [], tookMs: Date.now() - started });
+    }
+
+    if (!query) return res.status(400).json({ ok: false, error: 'Escreva o que você quer pesquisar.' });
+    let results = [];
+    try { results = await tinaveWebSearch(query, 5); } catch (e) { results = []; }
+    // Lê as duas primeiras fontes em paralelo (mais rápido e com limite curto).
+    const lidas = await Promise.all(results.slice(0, 2).map(r =>
+      tinaveReadPage(r.url, 4500).then(text => ({ r, text })).catch(() => null)
+    ));
+    const trechos = lidas.filter(Boolean).map(x => '### Fonte [' + x.r.rank + '] ' + x.r.title + ' (' + x.r.url + ')\n' + x.text);
+    const lista = results.map(r => '[' + r.rank + '] ' + r.title + ' — ' + r.url + '\n' + (r.snippet || '(sem resumo)')).join('\n\n');
+    if (!results.length && !trechos.length) {
+      return res.status(502).json({ ok: false, error: 'A busca na internet não retornou resultados agora. Tente novamente.' });
+    }
+    const answer = await tinaveAskModel(
+      'Você é a IA do navegador TiNave (do TIAgente OS) e ajuda o usuário a pesquisar na internet.\n'
+      + 'Responda em português do Brasil, direto ao ponto, em tópicos curtos, citando as fontes pelo número, ex.: [1].\n'
+      + 'Não invente informações: use apenas o material abaixo. Se faltar dado, diga o que não foi possível confirmar.\n\n'
+      + 'Pesquisa do usuário: ' + sanitizeForInternet(query) + '\n\n'
+      + 'Resultados do buscador:\n' + sanitizeForInternet(lista) + '\n\n'
+      + (trechos.length ? 'Conteúdo das principais páginas:\n' + sanitizeForInternet(trechos.join('\n\n')) + '\n\n' : '')
+      + 'Formato: primeiro a resposta (até 8 tópicos), depois uma linha "Fontes:" com os números usados.'
+    );
+    return res.json({
+      ok: true, mode, query, answer: answer.text, model: answer.model,
+      sources: results.map(r => ({ rank: r.rank, title: r.title, url: r.url, snippet: r.snippet })),
+      tookMs: Date.now() - started
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: String((e && e.message) || e) });
+  }
+});
 /* Porta de entrada do sistema: o TIAgente OS (área de trabalho) é a primeira
    tela. A SPA com as telas dos módulos continua acessível em /index.html e é
    carregada dentro das janelas do próprio OS — deixou de ser a abertura. */

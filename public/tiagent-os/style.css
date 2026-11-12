@@ -914,8 +914,141 @@ button {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   background: #101132;
+}
+
+.tinave-col {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* IA do TiNave: trabalha ao lado do navegador, nas mesmas pesquisas */
+.tinave-ai {
+  display: flex;
+  flex: 0 0 330px;
+  flex-direction: column;
+  max-width: 44%;
+  background: linear-gradient(180deg, #17144a, #121038);
+  border-left: 1px solid rgba(255, 255, 255, .12);
+}
+
+.tinave-ai-hidden { display: none; }
+
+.tinave-ai-head {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+
+.tinave-ai-title {
+  margin-right: 8px;
+  color: #e9e5ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tinave-ai-state {
+  flex: 1 1 auto;
+  color: #a9a3d8;
+  font-size: 11px;
+}
+
+.tinave-ai-state.busy { color: #c4b5fd; }
+
+.tinave-ai-head .tinave-btn {
+  margin: 0;
+  min-width: 30px;
+  min-height: 28px;
+}
+
+.tinave-ai-log {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: 10px;
+  overflow: auto;
+}
+
+.tinave-ai-msg {
+  margin-bottom: 8px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.tinave-ai-user {
+  align-self: flex-end;
+  max-width: 92%;
+  color: #fff;
+  background: #7c4dff;
+  border-bottom-right-radius: 4px;
+}
+
+.tinave-ai-bot {
+  align-self: flex-start;
+  max-width: 100%;
+  color: #ece9ff;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-bottom-left-radius: 4px;
+}
+
+.tinave-ai-error {
+  align-self: stretch;
+  color: #ffd9e0;
+  background: rgba(244, 63, 94, .16);
+  border: 1px solid rgba(244, 63, 94, .4);
+}
+
+.tinave-ai-sources {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.tinave-ai-form {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-top: 1px solid rgba(255, 255, 255, .1);
+}
+
+.tinave-ai-form textarea {
+  margin-bottom: 8px;
+  padding: 9px 11px;
+  color: #fff;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 10px;
+  font-size: 12.5px;
+  outline: none;
+  resize: none;
+}
+
+.tinave-ai-form textarea::placeholder { color: #9d97cd; }
+
+.tinave-ai-actions { display: flex; }
+
+.tinave-ai-actions .tinave-btn,
+.tinave-ai-actions .tinave-go {
+  flex: 1 1 0;
+  margin: 0 6px 0 0;
+  font-size: 12px;
+}
+
+.tinave-ai-actions .tinave-btn:last-child { margin-right: 0; }
+
+.tinave-ai-toggle.active {
+  background: #7c4dff;
+  border-color: #7c4dff;
 }
 
 .tinave-bar {

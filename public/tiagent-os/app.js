@@ -73,6 +73,8 @@
     // Por padrão os apps ocupam a tela inteira do OS (sem janela pequena). O
     // usuário pode desligar em Configurações > Aparência.
     openMaximized: true,
+    // IA do TiNave aberta ao lado da página, pesquisando junto com o navegador.
+    tinaveAi: true,
     agentSession: "",
     project: "default",
     projectSource: "inherit",
@@ -521,6 +523,7 @@
 
   function renderBrowser(win) {
     win.content.innerHTML = '<div class="tinave">'
+      + '<div class="tinave-col">'
       + '<div class="tinave-bar"><span class="tinave-brand">Ti<span>Nave</span></span>'
       + '<button type="button" class="tinave-btn" data-browser-action="back" title="Voltar" aria-label="Voltar">&#8592;</button>'
       + '<button type="button" class="tinave-btn" data-browser-action="forward" title="Avançar" aria-label="Avançar">&#8594;</button>'
@@ -529,18 +532,151 @@
       + '<input class="tinave-address" type="text" id="' + win.id + '-address" placeholder="Digite um endereço ou pesquise na internet" aria-label="Endereço ou pesquisa" autocomplete="off" spellcheck="false">'
       + '<button type="button" class="tinave-go" data-browser-action="go">Ir</button>'
       + '<button type="button" class="tinave-btn" data-browser-action="favorite" title="Favoritar" aria-label="Favoritar">☆</button>'
+      + '<button type="button" class="tinave-btn tinave-ai-toggle" data-browser-action="ai-toggle" title="IA do TiNave" aria-label="Mostrar ou ocultar a IA">IA</button>'
       + '</div>'
       + '<div class="tinave-strip"><span class="tinave-strip-label">Favoritos:</span><span id="' + win.id + '-favorites"></span>'
       + '<span class="tinave-strip-label">Histórico:</span><span id="' + win.id + '-history"></span></div>'
       + '<div class="tinave-view"><iframe class="tinave-frame" id="' + win.id + '-frame" title="Página do TiNave" sandbox="allow-forms allow-scripts allow-popups allow-popups-to-escape-sandbox" src="about:blank"></iframe>'
       + '<div class="tinave-note tinave-note-hidden" id="' + win.id + '-browser-note"></div>'
-      + '<div class="tinave-hint tinave-note-hidden" id="' + win.id + '-hint"></div></div></div>';
+      + '<div class="tinave-hint tinave-note-hidden" id="' + win.id + '-hint"></div></div>'
+      + '</div>'
+      + '<aside class="tinave-ai" id="' + win.id + '-ai">'
+      + '<div class="tinave-ai-head"><span class="tinave-ai-title">IA do TiNave</span>'
+      + '<span class="tinave-ai-state" id="' + win.id + '-ai-state">pronta</span>'
+      + '<button type="button" class="tinave-btn" data-browser-action="ai-close" title="Ocultar a IA" aria-label="Ocultar a IA">&times;</button></div>'
+      + '<div class="tinave-ai-log" id="' + win.id + '-ai-log"></div>'
+      + '<div class="tinave-ai-form">'
+      + '<textarea id="' + win.id + '-ai-input" rows="2" placeholder="Pesquise na internet com a IA ou pergunte sobre esta página"></textarea>'
+      + '<div class="tinave-ai-actions">'
+      + '<button type="button" class="tinave-go" data-browser-action="ai-search">Pesquisar com IA</button>'
+      + '<button type="button" class="tinave-btn" data-browser-action="ai-page" title="A IA lê a página aberta e responde">Ler esta página</button>'
+      + '</div></div></aside>'
+      + '</div>';
     win.browserHistory = settings.browserHistory.slice(0);
     win.browserCursor = win.browserHistory.length - 1;
     win.currentUrl = "";
     refreshBrowserFavorites(win);
     refreshBrowserHistory(win);
+    tinaveApplyAi(win);
+    tinaveAiSay(win, "ai", "Olá! Peça uma pesquisa e eu procuro na internet enquanto a página abre aqui do lado. Você também pode pedir “resuma esta página”.");
     tinaveHome(win);
+  }
+
+  /* ---------------- IA do TiNave (navegador + IA juntos) ---------------- */
+  function tinaveApplyAi(win) {
+    var box = tinaveEl(win, "-ai");
+    var shell = win.content.querySelector(".tinave");
+    var visible = settings.tinaveAi !== false;
+    if (box) box.classList.toggle("tinave-ai-hidden", !visible);
+    if (shell) shell.classList.toggle("tinave-ai-off", !visible);
+    var toggle = win.content.querySelector('[data-browser-action="ai-toggle"]');
+    if (toggle) toggle.classList.toggle("active", visible);
+  }
+
+  function tinaveToggleAi(win) {
+    settings.tinaveAi = settings.tinaveAi === false;
+    saveSettings();
+    tinaveApplyAi(win);
+  }
+
+  function tinaveAiSay(win, role, text) {
+    var log = tinaveEl(win, "-ai-log");
+    if (!log) return null;
+    var bubble = document.createElement("div");
+    bubble.className = "tinave-ai-msg " + (role === "user" ? "tinave-ai-user" : (role === "error" ? "tinave-ai-error" : "tinave-ai-bot"));
+    bubble.textContent = text;
+    log.appendChild(bubble);
+    log.scrollTop = log.scrollHeight;
+    return bubble;
+  }
+
+  function tinaveAiState(win, text, busy) {
+    var state = tinaveEl(win, "-ai-state");
+    if (!state) return;
+    state.textContent = text;
+    state.classList.toggle("busy", !!busy);
+  }
+
+  function tinaveAiSources(win, sources) {
+    var log = tinaveEl(win, "-ai-log");
+    if (!log || !sources || !sources.length) return;
+    var wrap = document.createElement("div");
+    wrap.className = "tinave-ai-sources";
+    var i;
+    for (i = 0; i < sources.length; i++) {
+      var item = sources[i];
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "tinave-chip";
+      button.setAttribute("data-navigate", item.url);
+      button.title = item.url;
+      button.textContent = "[" + item.rank + "] " + shortText(item.title || item.url, 28);
+      wrap.appendChild(button);
+    }
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function tinaveAiStop(win) {
+    win.tinaveAiBusy = false;
+    if (win.tinaveAiTimer) { clearInterval(win.tinaveAiTimer); win.tinaveAiTimer = null; }
+  }
+
+  function tinaveAiAsk(win, mode) {
+    if (win.tinaveAiBusy) return;
+    var input = tinaveEl(win, "-ai-input");
+    var address = tinaveEl(win, "-address");
+    var question = input ? input.value.replace(/^\s+|\s+$/g, "") : "";
+    if (mode === "page" && !win.currentUrl) {
+      tinaveAiSay(win, "error", "Abra uma página primeiro — depois eu leio e respondo.");
+      return;
+    }
+    if (mode === "search" && !question) {
+      question = address ? address.value.replace(/^\s+|\s+$/g, "") : "";
+      if (!question) { tinaveAiSay(win, "error", "Escreva o que você quer pesquisar."); return; }
+    }
+    if (mode === "page") tinaveAiSay(win, "user", (question || "Resuma esta página") + " (sobre a página aberta)");
+    else tinaveAiSay(win, "user", question);
+    if (input) input.value = "";
+    var waiting = tinaveAiSay(win, "ai", mode === "page" ? "Lendo a página…" : "Pesquisando na internet e lendo os resultados…");
+    win.tinaveAiBusy = true;
+    var rotulo = mode === "page" ? "lendo" : "pesquisando";
+    var inicio = Date.now();
+    tinaveAiState(win, rotulo + "… 0s", true);
+    win.tinaveAiTimer = setInterval(function () {
+      if (!win.tinaveAiBusy) return;
+      tinaveAiState(win, rotulo + "… " + Math.round((Date.now() - inicio) / 1000) + "s", true);
+    }, 1000);
+    if (mode === "search") {
+      // Navegador e IA pesquisando juntos: a página de resultados abre ao lado.
+      navigateBrowser(win, "https://duckduckgo.com/html/?q=" + encodeURIComponent(question));
+    }
+    var body = { mode: mode, q: question, url: win.currentUrl };
+    var startedAt = Date.now();
+    fetch("/api/tinave/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    }).then(function (response) {
+      return response.json().catch(function () { return { ok: false, error: "A IA respondeu de forma inesperada." }; });
+    }).then(function (data) {
+      tinaveAiStop(win);
+      if (waiting && waiting.parentNode) waiting.parentNode.removeChild(waiting);
+      if (!data || !data.ok) {
+        tinaveAiState(win, "erro", false);
+        tinaveAiSay(win, "error", (data && data.error) || "Não foi possível concluir a pesquisa.");
+        return;
+      }
+      tinaveAiState(win, "pronta", false);
+      tinaveAiSay(win, "ai", data.answer || "(sem resposta)");
+      tinaveAiSources(win, data.sources);
+      setStatusLine(win, "IA respondeu em " + Math.max(1, Math.round((data.tookMs || (Date.now() - startedAt)) / 1000)) + "s");
+    }).catch(function (error) {
+      tinaveAiStop(win);
+      if (waiting && waiting.parentNode) waiting.parentNode.removeChild(waiting);
+      tinaveAiState(win, "erro", false);
+      tinaveAiSay(win, "error", "Falha ao falar com a IA: " + (error && error.message ? error.message : error));
+    });
   }
 
   function renderStudio(win) {
@@ -2268,6 +2404,16 @@
         if (reloadFrame) reloadFrame.removeAttribute("src");
         navigateBrowser(win, win.currentUrl, true);
       } else tinaveHome(win);
+    } else if (action === "ai-toggle") {
+      tinaveToggleAi(win);
+    } else if (action === "ai-close") {
+      settings.tinaveAi = false;
+      saveSettings();
+      tinaveApplyAi(win);
+    } else if (action === "ai-search") {
+      tinaveAiAsk(win, "search");
+    } else if (action === "ai-page") {
+      tinaveAiAsk(win, "page");
     } else if (action === "favorite") toggleFavorite(win);
   }
 
@@ -2575,6 +2721,11 @@
       event.preventDefault();
       var win = findWindow("browser");
       if (win) navigateBrowser(win, event.target.value);
+    }
+    if (event.keyCode === 13 && !event.shiftKey && event.target && event.target.id && /-ai-input$/.test(event.target.id)) {
+      event.preventDefault();
+      var nave = findWindow("browser");
+      if (nave) tinaveAiAsk(nave, "search");
     }
     if (event.keyCode === 13 && event.target && event.target.tagName === "TEXTAREA" && event.target.getAttribute("name") === "prompt" && (event.metaKey || event.ctrlKey)) {
       event.preventDefault();
