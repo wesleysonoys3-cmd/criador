@@ -689,31 +689,18 @@
     }
   }
 
-  // Apps de módulo: reaproveitam a tela da SPA num iframe via rota "/index.html?tab=<id>".
+  // Apps de módulo: reaproveitam a tela da SPA num iframe via rota "/index.html?tab=<id>&embed=1".
+  // A janela do OS já mostra o nome e o ícone do app, então não há barra de navegador:
+  // a tela do módulo ocupa a janela inteira e se comporta como um app nativo do OS.
   function renderModuleApp(win, appId) {
     var label = MODULE_APPS[appId] || labelFor(appId);
     var url = "/index.html?tab=" + encodeURIComponent(appId) + "&embed=1";
-    win.content.innerHTML = '<div class="toolbar">'
-      + '<span class="browser-recent-label">' + escapeHtml(label) + '</span>'
-      + '<button type="button" style="margin-left:auto" data-module-action="reload" data-window="' + win.id + '">Atualizar</button>'
-      + '</div><div class="browser-frame-wrap"><iframe class="browser-frame" id="' + win.id + '-module-frame" title="' + escapeHtml(label) + '" sandbox="allow-forms allow-scripts allow-same-origin allow-popups" src="' + url + '"></iframe>'
-      + '<div class="browser-empty" id="' + win.id + '-module-note">Carregando ' + escapeHtml(label) + '…</div></div>';
+    win.content.innerHTML = '<iframe class="module-frame" id="' + win.id + '-module-frame" title="' + escapeHtml(label) + '" sandbox="allow-forms allow-scripts allow-same-origin allow-popups" src="' + url + '"></iframe>'
+      + '<div class="module-loading" id="' + win.id + '-module-note">Abrindo ' + escapeHtml(label) + '…</div>';
     var frame = document.getElementById(win.id + "-module-frame");
     var note = document.getElementById(win.id + "-module-note");
     if (frame && note) frame.onload = function () { note.style.display = "none"; };
     setStatusLine(win, label + " pronto");
-  }
-
-  function handleModuleAction(button) {
-    var win = windowById(button.getAttribute("data-window"));
-    if (!win) return;
-    var action = button.getAttribute("data-module-action");
-    if (action !== "reload") return;
-    var frame = document.getElementById(win.id + "-module-frame");
-    var note = document.getElementById(win.id + "-module-note");
-    if (note) { note.textContent = "Atualizando…"; note.style.display = ""; }
-    if (frame) frame.src = "/index.html?tab=" + encodeURIComponent(win.appId) + "&embed=1&t=" + new Date().getTime();
-    setStatusLine(win, "Atualizando…");
   }
 
   function studioPreviewUrl(slug) {
@@ -1974,7 +1961,6 @@
     var fileAction = closestAttribute(target, "data-files-action");
     var terminalAction = closestAttribute(target, "data-terminal-action");
     var studioAction = closestAttribute(target, "data-studio-action");
-    var moduleAction = closestAttribute(target, "data-module-action");
     var projetosAction = closestAttribute(target, "data-projetos-act");
     var agentAction = closestAttribute(target, "data-agent-action");
     var appWindow;
@@ -2038,7 +2024,6 @@
     if (fileAction) { handleFilesAction(fileAction); return; }
     if (terminalAction) { handleTerminalAction(terminalAction); return; }
     if (studioAction) { handleStudioAction(studioAction); return; }
-    if (moduleAction) { handleModuleAction(moduleAction); return; }
     if (closestAttribute(target, "data-file-path")) { handleFileEntry(closestAttribute(target, "data-file-path")); return; }
     if (closestAttribute(target, "data-calc")) { handleCalculator(closestAttribute(target, "data-calc")); return; }
     if (closestAttribute(target, "data-settings-action")) { handleSettingsAction(closestAttribute(target, "data-settings-action")); return; }

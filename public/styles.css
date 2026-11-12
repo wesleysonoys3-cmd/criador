@@ -2019,6 +2019,11 @@ html.os-embed #editor-panels { border-top: 0 !important; }
    precisa do respiro extra pensado para a IDE. */
 html.os-embed #editor-panels > .editor-panel { border-radius: 0 !important; }
 
+/* A janela do TIAgente OS já mostra o nome e o ícone do app, então a
+   barra de título interna do módulo (estilo IDE) sai de cena — assim a
+   tela parece um app nativo do OS, sem "cara de tela de fora". */
+html.os-embed #editor-panels > .editor-panel > .shrink-0.border-b:first-child { display: none !important; }
+
 /* A janela do OS costuma ter ~1080px, o que ativa o layout mobile
    (@media max-width:1080px) e esconde o painel central via
    [data-mobile-panel]{display:none}. Aqui revertemos: o painel do
