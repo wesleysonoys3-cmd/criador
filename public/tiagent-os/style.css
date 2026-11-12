@@ -216,13 +216,13 @@ button {
   position: absolute;
   display: flex;
   flex-direction: column;
-  width: 78%;
-  max-width: 1080px;
+  width: 88%;
+  max-width: none;
   min-width: 310px;
-  height: 78%;
+  height: 84%;
   min-height: 260px;
   top: 8%;
-  left: 16%;
+  left: 6%;
   overflow: hidden;
   pointer-events: auto;
   color: #171934;
@@ -240,6 +240,8 @@ button {
   max-width: none;
   border-radius: 12px;
 }
+
+.app-window.maximized .resize-handle { display: none; }
 
 .window-titlebar {
   position: relative;
@@ -423,6 +425,17 @@ button {
   border-radius: 50%;
   background: #fff;
 }
+
+/* Barra de tarefas: realça o app em foco e esmaece os minimizados. */
+.dock-item.active { background: rgba(255, 255, 255, .18); }
+
+.dock-item.active .app-icon {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .85), 0 6px 17px rgba(14, 14, 50, .28);
+}
+
+.dock-item.minimized { opacity: .5; }
+
+.dock-item.minimized:after { background: rgba(255, 255, 255, .6); }
 
 .dock-separator {
   display: inline-block;
@@ -1413,6 +1426,32 @@ button {
   margin: 7px 0;
   background: center / cover no-repeat url("wallpaper.jpg");
   border-radius: 8px;
+}
+
+/* Galeria de papéis de parede prontos (aparência de SO). */
+.wallpaper-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 7px 0;
+}
+
+.wallpaper-preset {
+  width: 66px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, .14);
+  border-radius: 9px;
+  background-color: #dcdaea;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.wallpaper-preset.active {
+  outline: 2px solid #7c5cff;
+  outline-offset: 1px;
 }
 
 .theme-light .app-window { color: #242540; }

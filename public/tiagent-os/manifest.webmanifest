@@ -1,15 +1,26 @@
 {
   "name": "TIAgente OS",
   "short_name": "TIAgente OS",
+  "description": "Sistema operacional web do TIAgente: todos os projetos e apps em um só lugar.",
   "start_url": "/tiagent-os/",
+  "scope": "/tiagent-os/",
   "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
   "background_color": "#201b55",
   "theme_color": "#201b55",
   "icons": [
     {
+      "src": "/tiagent-os/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
       "src": "/tiagent-os/icon-152.png",
       "sizes": "152x152",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

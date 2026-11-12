@@ -48,6 +48,16 @@
     { id: "desenvolvimento", name: "Desenvolvimento", apps: ["projetos", "browser", "files", "terminal"] },
     { id: "gerenciamento", name: "Gerenciamento", apps: ["launcher", "settings", "calculator", "email", "youtube", "historico", "btc", "quantfury"] }
   ];
+  // Papéis de parede prontos (aparência de SO) — usados em Configurações.
+  var WALLPAPER_PRESETS = [
+    { id: "paisagem", name: "Paisagem original", css: "" },
+    { id: "violeta", name: "Violeta", css: "linear-gradient(135deg,#241d5e,#5b2fbf 55%,#b06ef0)" },
+    { id: "oceano", name: "Oceano", css: "linear-gradient(135deg,#062444,#0b6ea8 60%,#28c2d6)" },
+    { id: "floresta", name: "Floresta", css: "linear-gradient(135deg,#07231b,#0f7a4e 60%,#7fd98a)" },
+    { id: "aurora", name: "Aurora", css: "linear-gradient(135deg,#2b0b3f,#a21caf 55%,#f472b6)" },
+    { id: "amanhecer", name: "Amanhecer", css: "linear-gradient(135deg,#3b1d12,#d97823 55%,#ffd27a)" },
+    { id: "grafite", name: "Grafite", css: "linear-gradient(135deg,#141420,#2b2b3a 60%,#4b4b63)" }
+  ];
   var DEFAULTS = {
     theme: "dark",
     accent: "violet",
@@ -60,6 +70,9 @@
     taskHistory: [],
     favorites: [],
     browserHistory: [],
+    // Por padrão os apps ocupam a tela inteira do OS (sem janela pequena). O
+    // usuário pode desligar em Configurações > Aparência.
+    openMaximized: true,
     agentSession: "",
     project: "default",
     projectSource: "inherit",
@@ -222,7 +235,14 @@
   }
 
   function dockItemHtml(id) {
-    return '<button type="button" class="dock-item' + (findWindow(id) ? " opened" : "") + '" data-app="' + id + '" title="' + escapeHtml(labelFor(id)) + '" aria-label="Abrir ' + escapeHtml(labelFor(id)) + '">'
+    var win = findWindow(id);
+    var cls = "dock-item";
+    if (win) {
+      cls += " opened";
+      if (win.minimized) cls += " minimized";
+      else if (win.el && win.el.className.indexOf(" active") >= 0) cls += " active";
+    }
+    return '<button type="button" class="' + cls + '" data-app="' + id + '" title="' + escapeHtml(labelFor(id)) + '" aria-label="Abrir ' + escapeHtml(labelFor(id)) + '">'
       + iconMarkup(id, true) + "</button>";
   }
 
@@ -302,10 +322,14 @@
     win.content = document.getElementById(id + "-content");
     win.status = document.getElementById(id + "-status");
     windows.push(win);
+    // Tela cheia por padrão: os apps preenchem a área de trabalho do OS em vez
+    // de abrir numa janela pequena. O assistente é a exceção (painel compacto).
+    win.maximized = !!settings.openMaximized && appId !== "agent";
+    applyWindowClasses(win);
     positionWindow(win, pos);
     focusWindow(win);
     renderApp(win);
-    if (appId === "agent") { applyWindowClasses(win); applyAgentWindowLayout(win); updateAgentChrome(win); }
+    if (appId === "agent") { applyAgentWindowLayout(win); updateAgentChrome(win); }
     return win;
   }
 
@@ -1177,11 +1201,23 @@
         + '<label><input type="checkbox" data-dock-app="' + id + '"' + (settings.dock.indexOf(id) >= 0 ? " checked" : "") + '> Dock</label>'
         + '<label><input type="checkbox" data-desktop-app="' + id + '"' + (settings.desktop.indexOf(id) >= 0 ? " checked" : "") + '> Desktop</label></div>';
     }
+    var presetHtml = "";
+    for (i = 0; i < WALLPAPER_PRESETS.length; i++) {
+      var wp = WALLPAPER_PRESETS[i];
+      var wpOn = (settings.wallpaper || "") === wp.css;
+      presetHtml += '<button type="button" class="wallpaper-preset' + (wpOn ? " active" : "") + '"'
+        + ' data-settings-wallpaper="' + escapeHtml(wp.css) + '" title="' + escapeHtml(wp.name) + '"'
+        + ' aria-label="Papel de parede ' + escapeHtml(wp.name) + '"'
+        + ' style="background-image:' + (wp.css || "url(wallpaper.jpg)") + '"></button>';
+    }
     win.content.innerHTML = '<div class="app-panel"><h2>Configurações</h2>'
       + '<section class="settings-group"><strong>Aparência</strong>'
       + '<div class="settings-row"><span>Tema</span><select id="' + win.id + '-theme" class="select-field"><option value="dark">Escuro</option><option value="light">Claro</option></select></div>'
       + '<div class="settings-row"><span>Cor de destaque</span><select id="' + win.id + '-accent" class="select-field">'
       + '<option value="violet">Violeta</option><option value="blue">Azul</option><option value="teal">Verde-azulado</option><option value="orange">Laranja</option></select></div>'
+      + '<div class="settings-row"><span>Janelas</span><label><input type="checkbox" data-settings-maximized' + (settings.openMaximized ? " checked" : "") + '> Abrir aplicativos em tela cheia</label></div>'
+      + '<div class="settings-row"><span>Papel de parede</span></div>'
+      + '<div class="wallpaper-presets">' + presetHtml + '</div>'
       + '<div class="wallpaper-preview" id="' + win.id + '-wallpaper-preview"></div>'
       + '<label class="action-button" for="' + win.id + '-wallpaper-file">Escolher imagem de fundo</label>'
       + '<input class="hidden" type="file" accept="image/*" id="' + win.id + '-wallpaper-file">'
@@ -1199,13 +1235,20 @@
 
   function updateWallpaperPreview(win) {
     var preview = document.getElementById(win.id + "-wallpaper-preview");
-    if (preview && settings.wallpaper) preview.style.backgroundImage = 'url("' + settings.wallpaper + '")';
+    if (preview) preview.style.backgroundImage = wallpaperCss();
+  }
+
+  // Converte a preferência salva em valor CSS: vazio usa a paisagem padrão.
+  function wallpaperCss() {
+    var value = settings.wallpaper || "";
+    if (!value) return 'url("wallpaper.jpg")';
+    if (/^url\(|gradient\(/i.test(value)) return value;
+    return 'url("' + value + '")';
   }
 
   function applySettings() {
     root.className = "os theme-" + (settings.theme === "light" ? "light" : "dark") + " accent-" + settings.accent;
-    if (settings.wallpaper) root.style.backgroundImage = 'url("' + settings.wallpaper + '")';
-    else root.style.backgroundImage = "";
+    root.style.backgroundImage = settings.wallpaper ? wallpaperCss() : "";
   }
 
   function request(method, url, body, callback, timeout) {
@@ -1966,9 +2009,19 @@
     var appWindow;
     if (appButton) {
       menuPopover.hidden = true;
-      if (appButton.getAttribute("data-app") === "settings" && appButton.hasAttribute("data-prompt")) {
+      var appId = appButton.getAttribute("data-app");
+      // Barra de tarefas: clicar no app já ativo e visível minimiza; caso
+      // contrário abre ou traz para a frente.
+      if (appButton.className && String(appButton.className).indexOf("dock-item") >= 0) {
+        var taskWin = findWindow(appId);
+        if (taskWin && !taskWin.minimized && taskWin.el.className.indexOf(" active") >= 0) {
+          minimizeWindow(taskWin.id);
+          return;
+        }
+      }
+      if (appId === "settings" && appButton.hasAttribute("data-prompt")) {
         openApp("settings");
-      } else openApp(appButton.getAttribute("data-app"));
+      } else openApp(appId);
       return;
     }
     if (menuButton) { renderMenu(menuButton.getAttribute("data-menu"), menuButton); return; }
@@ -2026,6 +2079,7 @@
     if (studioAction) { handleStudioAction(studioAction); return; }
     if (closestAttribute(target, "data-file-path")) { handleFileEntry(closestAttribute(target, "data-file-path")); return; }
     if (closestAttribute(target, "data-calc")) { handleCalculator(closestAttribute(target, "data-calc")); return; }
+    if (closestAttribute(target, "data-settings-wallpaper")) { handleSettingsWallpaper(closestAttribute(target, "data-settings-wallpaper").getAttribute("data-settings-wallpaper")); return; }
     if (closestAttribute(target, "data-settings-action")) { handleSettingsAction(closestAttribute(target, "data-settings-action")); return; }
     if (closestAttribute(target, "data-order-move")) { moveApp(closestAttribute(target, "data-order-move")); return; }
     if (target && target.className && String(target.className).indexOf("app-window") >= 0) focusWindow(windowById(target.id));
@@ -2162,6 +2216,16 @@
     }
   }
 
+  // Papel de parede escolhido na galeria de opções (aparência do SO).
+  function handleSettingsWallpaper(css) {
+    settings.wallpaper = css || "";
+    saveSettings();
+    applySettings();
+    var win = findWindow("settings");
+    if (win) renderSettings(win);
+    showNotice(css ? "Papel de parede atualizado." : "Paisagem original restaurada.");
+  }
+
   function moveApp(button) {
     var id = button.getAttribute("data-app-id");
     var delta = parseInt(button.getAttribute("data-order-move"), 10);
@@ -2288,6 +2352,12 @@
       if (!target.checked && deskIndex >= 0) settings.desktop.splice(deskIndex, 1);
       saveSettings();
       renderDesktopIcons();
+      return;
+    }
+    if (target.hasAttribute && target.hasAttribute("data-settings-maximized")) {
+      settings.openMaximized = !!target.checked;
+      saveSettings();
+      showNotice(target.checked ? "Os apps abrirão em tela cheia." : "Os apps abrirão em janela.");
       return;
     }
     if (target.id && /-theme$/.test(target.id)) {
