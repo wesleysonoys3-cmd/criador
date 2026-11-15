@@ -947,19 +947,44 @@
           <div id="psq-toasts" class="pointer-events-none absolute right-3 bottom-3 z-30 flex flex-col gap-2 items-end max-w-[86%]"></div>
         </div>
 
-        <!-- ===== 🎬 AutoClips AI · direitos + análise + edição + metadados + QA (render via ffmpeg quando disponível) ===== -->
-        <div data-editor-panel="autoclips" class="editor-panel hidden flex-1 flex-col min-h-0 bg-[#060918] relative" id="ac-panel">
+        <!-- ===== 🎬 AutoClips AI · estúdio de vídeo: entrada por URL, análise, cortes, revisão, publicação ===== -->
+        <div data-editor-panel="autoclips" class="editor-panel hidden flex-1 min-h-0 bg-[#060918] relative flex-col" id="ac-panel">
           <div class="shrink-0 border-b border-surface-border bg-sidebar/60 px-3 py-1.5 flex items-center justify-between gap-2 text-[10.5px]">
             <div class="flex items-center gap-2 text-fuchsia-300 font-bold uppercase tracking-wider min-w-0">
               <svg width="10.5" height="10.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="shrink-0"><rect x="2.5" y="5" width="13" height="14" rx="2.5"/><path d="m15.5 9.5 5-2.5v10l-5-2.5"/></svg>
-              <span class="truncate">AutoClips AI · produção automática de vídeos: direitos, análise, cortes, metadados e QA</span>
+              <span class="truncate">AutoClips AI</span>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
+              <span id="ac-ctx" class="hidden sm:inline text-[10px] text-slate-500 truncate max-w-[320px]"></span>
               <button data-ac-act="reload" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/5 transition" title="Recarregar dados do módulo">Recarregar</button>
             </div>
           </div>
-          <div id="ac-body" class="flex-1 min-h-0 overflow-auto p-3 md:p-4 text-slate-200"></div>
+
+          <div class="flex-1 min-h-0 flex flex-col md:flex-row">
+            <!-- Menu lateral (computador) / seletor (celular) -->
+            <aside class="shrink-0 md:w-[212px] border-b md:border-b-0 md:border-r border-surface-border bg-black/25">
+              <nav id="ac-menu" class="hidden md:flex md:flex-col p-2 gap-0.5"></nav>
+              <div class="md:hidden p-2">
+                <select id="ac-menu-mobile" class="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-[12.5px] text-slate-100"></select>
+              </div>
+            </aside>
+
+            <div id="ac-body" class="flex-1 min-h-0 overflow-auto p-3 md:p-5 text-slate-200"></div>
+          </div>
+
           <div id="ac-toasts" class="pointer-events-none absolute right-3 bottom-3 z-30 flex flex-col gap-2 items-end max-w-[86%]"></div>
+          <style>
+            /* Prévia de legendas do AutoClips (Etapa 4). São apenas prévias
+               visuais: a animação real só existe no render com ffmpeg. */
+            @keyframes acFade { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes acPop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+            @keyframes acType { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+            .ac-anim-aparecer { animation: acFade 900ms ease-in-out infinite alternate; }
+            .ac-anim-zoom { animation: acPop 1200ms ease-in-out infinite alternate; }
+            .ac-anim-palavra { animation: acFade 600ms steps(4, end) infinite alternate; }
+            .ac-anim-digitar { animation: acType 1600ms steps(18, end) infinite alternate; }
+            .ac-anim-karaoke { animation: acFade 750ms ease-in-out infinite alternate; }
+          </style>
         </div>
 
         <!-- ===== 📺 YouTube · conectar canal (OAuth 2.0) + publicação autorizada ===== -->

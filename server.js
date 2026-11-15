@@ -8121,6 +8121,27 @@ app.get('/api/autoclips/status', _JG_NO_CACHE, _ac(async () => AutoclipsSvc.stat
 app.get('/api/autoclips/profiles', _JG_NO_CACHE, _ac(async () => AutoclipsSvc.profiles()));
 app.get('/api/autoclips/jobs', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.list(_acOwner(req))));
 app.post('/api/autoclips/create', _AC_JSON, _ac(async (req) => AutoclipsSvc.create(req.body || {}, _acOwner(req))));
+app.post('/api/autoclips/ingest', _AC_JSON, _ac(async (req) => AutoclipsSvc.ingest(req.body || {}, _acOwner(req))));
+app.get('/api/autoclips/url/check', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.analyzeUrl(req.query && req.query.url)));
+app.get('/api/autoclips/overview', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.overview(_acOwner(req))));
+app.get('/api/autoclips/cuts', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.cuts(_acOwner(req))));
+app.post('/api/autoclips/job/:id/cut/:index/state', _AC_JSON, _ac(async (req) => AutoclipsSvc.setCutState(req.params.id, req.params.index, (req.body || {}).state, _acOwner(req))));
+app.post('/api/autoclips/job/:id/enrich', _AC_JSON, _ac(async (req) => AutoclipsSvc.enrichFromUrl(req.params.id, _acOwner(req))));
+app.get('/api/autoclips/job/:id/covers', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.covers(req.params.id, _acOwner(req))));
+app.post('/api/autoclips/job/:id/covers', _AC_JSON, _ac(async (req) => AutoclipsSvc.generateCovers(req.params.id, req.body || {}, _acOwner(req))));
+app.post('/api/autoclips/job/:id/formats', _AC_JSON, _ac(async (req) => AutoclipsSvc.setFormats(req.params.id, req.body || {}, _acOwner(req))));
+app.get('/api/autoclips/captions', _JG_NO_CACHE, _ac(async () => AutoclipsSvc.captions()));
+app.post('/api/autoclips/captions/default', _AC_JSON, _ac(async (req) => AutoclipsSvc.saveStyleDefaults(req.body || {})));
+app.post('/api/autoclips/job/:id/cut/:index', _AC_JSON, _ac(async (req) => AutoclipsSvc.updateCut(req.params.id, req.params.index, req.body || {}, _acOwner(req))));
+app.get('/api/autoclips/job/:id/cut/:index/srt', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.cutSrt(req.params.id, req.params.index, _acOwner(req))));
+app.post('/api/autoclips/job/:id/order', _AC_JSON, _ac(async (req) => AutoclipsSvc.reorderCuts(req.params.id, req.body || {}, _acOwner(req))));
+app.post('/api/autoclips/job/:id/captions', _AC_JSON, _ac(async (req) => AutoclipsSvc.setCaptions(req.params.id, req.body || {}, _acOwner(req))));
+app.post('/api/autoclips/job/:id/undo', _AC_JSON, _ac(async (req) => AutoclipsSvc.undo(req.params.id, _acOwner(req))));
+app.post('/api/autoclips/job/:id/redo', _AC_JSON, _ac(async (req) => AutoclipsSvc.redo(req.params.id, _acOwner(req))));
+app.get('/api/autoclips/music', _JG_NO_CACHE, _ac(async () => AutoclipsSvc.musicList()));
+app.post('/api/autoclips/music', _AC_JSON, _ac(async (req) => AutoclipsSvc.musicAdd(req.body || {})));
+app.put('/api/autoclips/music/:id', _AC_JSON, _ac(async (req) => AutoclipsSvc.musicUpdate(req.params.id, req.body || {})));
+app.delete('/api/autoclips/music/:id', _AC_JSON, _ac(async (req) => AutoclipsSvc.musicRemove(req.params.id)));
 app.get('/api/autoclips/job/:id', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.get(req.params.id, _acOwner(req))));
 app.put('/api/autoclips/job/:id/rights', _AC_JSON, _ac(async (req) => AutoclipsSvc.setRights(req.params.id, req.body || {}, _acOwner(req))));
 app.post('/api/autoclips/job/:id/analyze', _AC_JSON, _ac(async (req) => AutoclipsSvc.analyze(req.params.id, req.body || {}, _acOwner(req))));
@@ -8152,16 +8173,24 @@ app.put('/api/youtube/config', _YT_JSON, _yt(async (req) => YouTubeSvc.saveConfi
 app.post('/api/youtube/emergency', _YT_JSON, _yt(async (req) => YouTubeSvc.setEmergencyStop((req.body || {}).on)));
 app.post('/api/youtube/connect', _YT_JSON, _yt(async (req) => {
   const hostBase = (req.body && req.body.hostBase) || (req.get('origin')) || (req.protocol + '://' + req.get('host'));
-  return YouTubeSvc.authUrl(hostBase);
+  const platform = (req.body && req.body.platform) || 'youtube';
+  return YouTubeSvc.authUrl(hostBase, platform);
 }));
+/* Redes sociais · contas conectadas (Etapa 5) */
+app.get('/api/youtube/platforms', _JG_NO_CACHE, _yt(async () => YouTubeSvc.platforms()));
+app.get('/api/youtube/accounts', _JG_NO_CACHE, _yt(async () => YouTubeSvc.listAccounts()));
+app.post('/api/youtube/accounts/:id/refresh', _YT_JSON, _yt(async (req) => YouTubeSvc.refreshAccount(req.params.id)));
+app.post('/api/youtube/accounts/:id/disconnect', _YT_JSON, _yt(async (req) => YouTubeSvc.disconnectAccount(req.params.id)));
+app.post('/api/youtube/accounts/:id/primary', _YT_JSON, _yt(async (req) => YouTubeSvc.setPrimaryAccount(req.params.id)));
 // O Google redireciona o navegador para cá após a autorização (GET com ?code&state).
 app.get('/api/youtube/oauth/callback', async (req, res) => {
   const page = (title, msg, ok) => `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b0f17;color:#e6e9ef;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}main{max-width:520px;padding:32px;border-radius:16px;background:#141b26;border:1px solid #232d3d;text-align:center}h1{font-size:20px;margin:0 0 12px;color:${ok ? '#4ade80' : '#f87171'}}p{color:#9aa6b8;line-height:1.5;margin:0 0 20px}a{display:inline-block;padding:10px 18px;border-radius:10px;background:#a21caf;color:#fff;text-decoration:none;font-weight:600}</style></head><body><main><h1>${title}</h1><p>${msg}</p><a href="/">Voltar ao TIAgente OS</a></main></body></html>`;
   try {
     const r = await YouTubeSvc.handleCallback({ code: req.query.code, state: req.query.state, error: req.query.error });
     if (!r.ok) return res.status(400).send(page('Não foi possível conectar', String(r.reason || 'Falha na autorização.'), false));
-    const ch = r.connection && r.connection.channel ? r.connection.channel.title : 'canal';
-    return res.send(page('Canal conectado!', 'O canal "' + ch + '" foi conectado com sucesso. Você já pode publicar pelo TIAgente OS.', true));
+    const accName = (r.account && r.account.account && r.account.account.name)
+      || (r.connection && r.connection.channel && r.connection.channel.title) || 'conta';
+    return res.send(page('Conta conectada!', 'A conta "' + accName + '" foi conectada com sucesso. Você já pode publicar pelo TIAgente OS.', true));
   } catch (e) {
     console.error('[YOUTUBE] callback erro:', String(e && e.message || e));
     return res.status(500).send(page('Erro na conexão', 'Ocorreu um erro ao concluir a autorização. Tente novamente.', false));
@@ -8175,6 +8204,18 @@ app.post('/api/youtube/publication/:id/republish', _YT_JSON, _yt(async (req) => 
 app.delete('/api/youtube/publication/:id', _YT_JSON, _yt(async (req) => YouTubeSvc.removePublication(req.params.id, _ytOwner(req))));
 app.get('/api/youtube/activity', _JG_NO_CACHE, _yt(async (req) => YouTubeSvc.activity(req.query && req.query.limit)));
 app.post('/api/youtube/auto/run', _YT_JSON, _yt(async () => YouTubeSvc.autoPublishOnce()));
+/* Publicação em lote, agendamento e central de publicações (Etapa 6) */
+app.get('/api/youtube/timezones', _JG_NO_CACHE, _yt(async () => YouTubeSvc.timezones()));
+app.post('/api/youtube/publish/preview', _YT_JSON, _yt(async (req) => YouTubeSvc.previewBatch(req.body || {}, _ytOwner(req))));
+app.post('/api/youtube/publish/batch', _YT_JSON, _yt(async (req) => YouTubeSvc.publishBatch(req.body || {}, _ytOwner(req))));
+app.get('/api/youtube/publications/center', _JG_NO_CACHE, _yt(async (req) => YouTubeSvc.publicationsCenter(_ytOwner(req))));
+app.get('/api/youtube/publications/calendar', _JG_NO_CACHE, _yt(async (req) => YouTubeSvc.scheduleCalendar(_ytOwner(req), {
+  from: (req.query && req.query.from) || null,
+  to: (req.query && req.query.to) || null,
+  timezone: (req.query && req.query.timezone) || null,
+})));
+app.post('/api/youtube/publication/:id/retry', _YT_JSON, _yt(async (req) => YouTubeSvc.retryPublication(req.params.id, _ytOwner(req))));
+app.post('/api/youtube/retry/run', _YT_JSON, _yt(async () => YouTubeSvc.retryTick()));
 
 /* =============== HISTÓRICO E ANALYTICS · AutoClips + YouTube (módulo isolado, PARTE 9) =============== */
 const _an = (fn) => async (req, res) => {

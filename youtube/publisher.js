@@ -71,9 +71,22 @@ export function validatePublish({ snippet, filePath, fileExists }) {
   return { ok: issues.length === 0, issues };
 }
 
-/* Chave de deduplicação: mesmo job + mesmo arquivo não publica 2x. */
-export function dedupeKey({ jobId, filePath, size, mtimeMs }) {
-  return [String(jobId || '-'), String(filePath || ''), String(size == null ? '' : size), String(mtimeMs == null ? '' : mtimeMs)].join('|');
+/* Chave de deduplicação: mesmo corte + mesma conta não publica 2x. */
+export function dedupeKey({ jobId, accountId, filePath, size, mtimeMs }) {
+  return [String(accountId || '-'), String(jobId || '-'), String(filePath || ''), String(size == null ? '' : size), String(mtimeMs == null ? '' : mtimeMs)].join('|');
+}
+
+/* Códigos de falha considerados potencialmente transitórios (retentáveis). */
+export const RETRYABLE_CODES = ['upload', 'cota_api'];
+export const MAX_RETRY_ATTEMPTS = 3;
+
+/* Espera crescente entre tentativas (2 min, 8 min, …). */
+export function nextAttemptFor(attempts, code) {
+  if (RETRYABLE_CODES.indexOf(String(code || '')) < 0) return null;
+  const n = Math.max(1, Number(attempts) || 1);
+  if (n >= MAX_RETRY_ATTEMPTS) return null;
+  const minutes = Math.min(120, Math.pow(2, n) * 2);
+  return new Date(Date.now() + minutes * 60000).toISOString();
 }
 
 export function findDuplicate(state, key) {
@@ -111,18 +124,20 @@ export async function fileFingerprint(filePath) {
  * registra o resultado no estado — inclusive nos bloqueios (honesto).
  */
 export async function publish(ctx) {
-  const { state, accessToken, filePath, metadata, visibility, scheduledAt, jobId, owner, config, reasonLabel } = ctx;
+  const { state, accessToken, filePath, metadata, visibility, scheduledAt, jobId, owner, config, reasonLabel, accountId, platform, reuse, authError, authCode } = ctx;
   const cfg = config || {};
   const snippet = buildSnippet(metadata, jobId ? ('Corte ' + jobId) : 'Corte');
   const status = buildStatus({ visibility, scheduledAt });
 
   const fp = await fileFingerprint(filePath);
-  const key = dedupeKey({ jobId, filePath, size: fp.size, mtimeMs: fp.mtimeMs });
+  const key = dedupeKey({ jobId, accountId, filePath, size: fp.size, mtimeMs: fp.mtimeMs });
 
-  const pub = {
+  const pub = reuse || {
     id: newPublicationId(),
     owner: owner || 'local',
     jobId: jobId || null,
+    accountId: accountId || null,
+    platform: platform || 'youtube',
     filePath: filePath || null,
     createdAt: nowIso(),
     visibility: status.privacyStatus,
@@ -136,6 +151,15 @@ export async function publish(ctx) {
     snippet: { title: snippet.title, description: snippet.description, tags: snippet.tags },
     note: reasonLabel || 'manual',
   };
+  if (reuse) {
+    pub.visibility = status.privacyStatus;
+    pub.scheduledAt = status.publishAt || null;
+    pub.dedupeKey = key;
+    pub.status = 'rascunho';
+    pub.error = null;
+    pub.code = null;
+    pub.nextAttemptAt = null;
+  }
 
   const block = (reason, code) => {
     pub.status = 'bloqueado';
@@ -156,19 +180,20 @@ export async function publish(ctx) {
   if (cfg.dailyLimit && cfg.dailyLimit > 0 && countToday(state) >= cfg.dailyLimit) {
     return await persist(state, block('Limite diário de publicações atingido (' + cfg.dailyLimit + ').', 'cota_diaria'));
   }
-  if (!accessToken) return await persist(state, block('Canal do YouTube não conectado.', 'sem_conexao'));
+  if (!accessToken) return await persist(state, block(authError || 'Canal do YouTube não conectado.', authCode || 'sem_conexao'));
 
   pub.status = 'enviando';
-  pub.attempts = 1;
+  pub.attempts = (pub.attempts || 0) + 1;
   await state.savePublication(pub);
-  state.appendActivity({ type: 'publicacao_iniciada', id: pub.id, visibility: pub.visibility, scheduled: !!pub.scheduledAt });
+  state.appendActivity({ type: 'publicacao_iniciada', id: pub.id, visibility: pub.visibility, scheduled: !!pub.scheduledAt, attempts: pub.attempts });
 
   const r = await uploadVideo({ accessToken, filePath, snippet, status });
   if (!r.ok) {
     pub.status = 'erro';
     pub.error = r.reason || 'Falha no envio.';
     pub.code = r.quota ? 'cota_api' : 'upload';
-    state.appendActivity({ type: 'publicacao_erro', id: pub.id, error: pub.error, quota: !!r.quota });
+    pub.nextAttemptAt = nextAttemptFor(pub.attempts, pub.code);
+    state.appendActivity({ type: 'publicacao_erro', id: pub.id, error: pub.error, quota: !!r.quota, attempts: pub.attempts });
     return await persist(state, { ok: false, code: pub.code, reason: pub.error, publication: pub });
   }
 

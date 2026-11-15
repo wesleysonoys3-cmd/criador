@@ -10,6 +10,7 @@
  * =======================================================*/
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
+import { forceStyle } from './captions.js';
 
 const execAsync = promisify(exec);
 const _log = (...a) => console.log('[AUTOCLIPS][render]', ...a);
@@ -74,9 +75,12 @@ export function buildCommands({ plan, inputPath, outputDir }) {
   const vf = plan.aspect === '9:16'
     ? 'crop=ih*9/16:ih,scale=1080:1920'
     : (plan.aspect === '1:1' ? 'crop=ih:ih,scale=1080:1080' : 'scale=1920:1080');
+  const style = plan.captionConfig ? forceStyle(plan.captionConfig) : '';
   (plan.cuts || []).forEach((c) => {
     const out = outputDir + '/cut_' + String(c.index).padStart(2, '0') + '.mp4';
-    const subs = plan.captionsEnabled ? ",subtitles='cut_" + c.index + ".srt'" : '';
+    const subs = plan.captionsEnabled
+      ? ",subtitles='cut_" + c.index + ".srt'" + (style ? ":force_style='" + style + "'" : '')
+      : '';
     cmds.push({
       kind: 'cut',
       index: c.index,
