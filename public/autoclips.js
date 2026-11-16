@@ -1099,12 +1099,13 @@ function platformCard(p) {
   const accounts = (STATE.accounts || []).filter((a) => a.platform === p.id);
   const connected = accounts.length > 0;
   const implemented = p.canConnect !== undefined ? p.canConnect : !!p.oauthImplemented;
+  const ready = !!p.configured;
   const statusTone = !implemented
     ? 'border-slate-500/30 bg-white/5 text-slate-400'
-    : (connected ? 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200' : 'border-amber-400/30 bg-amber-500/15 text-amber-200');
+    : (connected ? 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200' : (ready ? 'border-amber-400/30 bg-amber-500/15 text-amber-200' : 'border-rose-400/30 bg-rose-500/10 text-rose-200'));
   const statusText = !implemented
     ? 'não implementado'
-    : (connected ? connected + ' conta(s)' : (p.configured ? 'pronto para conectar' : 'credenciais ausentes'));
+    : (connected ? connected + ' conta(s)' : (ready ? 'pronto para conectar' : 'não configurado'));
 
   return `<div class="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
     <div class="flex items-center gap-2 flex-wrap">
@@ -1112,12 +1113,16 @@ function platformCard(p) {
       <span class="text-[10.5px] px-2 py-0.5 rounded-full border ${statusTone}">${esc(statusText)}</span>
       <div class="ml-auto">
         ${implemented
-          ? `<button data-ac-act="yt-connect" data-platform="${esc(p.id)}" class="text-[11px] px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold">Conectar conta</button>`
+          ? (ready
+              ? `<button data-ac-act="yt-connect" data-platform="${esc(p.id)}" class="text-[11px] px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold">Conectar conta</button>`
+              : `<button disabled title="Defina ${esc((p.envVars || []).join(', '))} no servidor" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 text-slate-500 cursor-not-allowed">Conectar conta</button>`)
           : `<span class="text-[10.5px] text-slate-500">requer aprovação/credenciais</span>`}
       </div>
     </div>
     <div class="text-[10.5px] text-slate-500 mt-1">Escopos: ${esc((p.scopes || []).join(', ') || '—')} · Variáveis: ${esc((p.envVars || []).join(', ') || '—')}</div>
+    ${implemented && p.redirectUri ? `<div class="text-[10.5px] text-slate-500 mt-0.5">URL de callback: <code class="text-slate-400">${esc(p.redirectUri)}</code></div>` : ''}
     ${p.blockedReason ? `<div class="mt-1 rounded-lg border border-amber-400/20 bg-amber-500/5 px-2.5 py-1.5 text-[11px] text-amber-200">${esc(p.blockedReason)}</div>` : ''}
+    ${implemented ? `<div class="mt-1 text-[10.5px] text-slate-500">${esc(p.publishNote || '')}</div>` : ''}
     ${connected ? `<div class="space-y-2 mt-2">${accounts.map(accountRow).join('')}</div>` : ''}
   </div>`;
 }
@@ -1590,8 +1595,11 @@ async function doYtConnect(platform = 'youtube') {
     if (!w) { toast('O navegador bloqueou a janela. Abra a autorização em uma nova aba.', 'warn'); window.open(r.url, '_blank'); }
     else toast('Conclua a autorização na janela aberta.', 'info');
   } catch (e) {
-    if (e.code === 'sem_credenciais') toast('Credenciais OAuth ausentes: defina YT_CLIENT_ID e YT_CLIENT_SECRET.', 'warn');
-    else if (e.code === 'nao_implementado') toast(e.message || 'Integração ainda não implementada para esta rede.', 'warn');
+    if (e.code === 'sem_credenciais') {
+      const p = (STATE.platforms || []).find((x) => x.id === platform);
+      const vars = (p && p.envVars && p.envVars.length) ? p.envVars.filter((v) => !/opcional/.test(v)).join(' e ') : 'as credenciais OAuth';
+      toast('Credenciais OAuth ausentes: defina ' + vars + ' no servidor.', 'warn');
+    } else if (e.code === 'nao_implementado') toast(e.message || 'Integração ainda não implementada para esta rede.', 'warn');
     else toast(e.message || 'Falha ao iniciar a conexão.', 'err');
   }
 }

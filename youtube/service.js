@@ -11,16 +11,17 @@
  * Sem credenciais, o módulo informa isso de forma honesta — sem botão falso.
  * =======================================================*/
 import path from 'node:path';
-import state, { SCHEMA, normalizeOwner } from './state.js';
+import state, { SCHEMA, normalizeOwner, newPublicationId } from './state.js';
 import { encryptJson, decryptJson, maskSecret, setKeyFile } from './crypto.js';
 import { oauthConfig, isConfigured, makePkce, newState, buildAuthUrl, exchangeCode, ensureFresh, revokeToken } from './oauth.js';
 import { fetchMyChannel, fetchVideosStats } from './client.js';
-import { publish as publishOne, republishStatus, countToday, findDuplicate, dedupeKey, fileFingerprint, VISIBILITIES, PUB_STATUS, MAX_RETRY_ATTEMPTS } from './publisher.js';
+import { publish as publishOne, republishStatus, countToday, findDuplicate, dedupeKey, fileFingerprint, nextAttemptFor, VISIBILITIES, PUB_STATUS, MAX_RETRY_ATTEMPTS } from './publisher.js';
 import * as scheduler from './scheduler.js';
 import { normalizeConfig, DEFAULT_CONFIG, shouldRun } from './scheduler.js';
 import { validateSchedule, TIMEZONES, DEFAULT_TIMEZONE, isValidTimezone, utcToZonedParts } from './batch.js';
 import { listProfiles } from '../autoclips/profiles.js';
 import { list as listPlatformCatalog, byId as platformById, implementedIds } from './platforms.js';
+import { providerFor } from './providers/index.js';
 
 const _log = (...a) => console.log('[YOUTUBE][service]', ...a);
 
@@ -164,14 +165,26 @@ export function status() {
 export function platforms() {
   const ocfg = oauthConfig();
   const items = listPlatformCatalog().map((p) => {
-    const configured = p.oauthImplemented
-      ? (p.id === 'youtube' ? ocfg.configured : false)
-      : false;
+    const prov = providerFor(p.id);
+    const pcfg = prov ? prov.config() : null;
+    const configured = p.id === 'youtube' ? ocfg.configured : (pcfg ? pcfg.configured : false);
     const connected = state.accountsFor(p.id).length;
+    const missing = [];
+    if (p.id === 'youtube') {
+      if (!ocfg.clientId) missing.push('YT_CLIENT_ID');
+      if (!ocfg.clientSecret) missing.push('YT_CLIENT_SECRET');
+    } else if (pcfg) {
+      const vars = (prov.envVars || []).filter((v) => !/opcional/.test(v));
+      if (!pcfg.clientId) missing.push(vars[0]);
+      if (!pcfg.clientSecret) missing.push(vars[1]);
+    }
     return Object.assign({}, p, {
       configured,
       canConnect: !!p.oauthImplemented,
+      provider: !!prov,
       connectedCount: connected,
+      missingEnv: missing,
+      redirectUri: p.id === 'youtube' ? ocfg.redirectUri : (pcfg ? pcfg.redirectUri : null),
       blockedReason: !p.oauthImplemented
         ? ('Integração oficial com ' + p.label + ' não implementada: ' + p.requirement)
         : (configured ? null : 'Credenciais ausentes: defina ' + p.envVars.join(' e ') + '.'),
@@ -193,6 +206,11 @@ export async function setPrimaryAccount(id) {
   return { ok: true, items: state.allAccounts().map(publicAccount) };
 }
 
+const CALLBACK_PATH = '/api/youtube/oauth/callback';
+function redirectFor(hostBase, fallback) {
+  return hostBase ? (hostBase.replace(/\/$/, '') + CALLBACK_PATH) : fallback;
+}
+
 export async function authUrl(hostBase, platform) {
   const pid = String(platform || 'youtube').trim().toLowerCase();
   const plat = platformById(pid);
@@ -200,27 +218,65 @@ export async function authUrl(hostBase, platform) {
   if (!plat.oauthImplemented) {
     return { ok: false, code: 'nao_implementado', reason: 'Integração oficial com ' + plat.label + ' ainda não implementada. ' + plat.requirement };
   }
-  const cfg = oauthConfig();
+  const prov = providerFor(pid);
+  const cfg = prov ? prov.config() : oauthConfig();
   if (!cfg.configured) {
-    return { ok: false, code: 'sem_credenciais', reason: 'Credenciais OAuth do Google não configuradas (YT_CLIENT_ID / YT_CLIENT_SECRET).' };
+    const needed = prov ? (prov.envVars || []).filter((v) => !/opcional/.test(v)) : ['YT_CLIENT_ID', 'YT_CLIENT_SECRET'];
+    return { ok: false, code: 'sem_credenciais', reason: 'Credenciais OAuth ausentes: defina ' + needed.join(' e ') + '.' };
   }
-  const redirectUri = hostBase ? (hostBase.replace(/\/$/, '') + '/api/youtube/oauth/callback') : cfg.redirectUri;
-  const pkce = makePkce();
+  const redirectUri = redirectFor(hostBase, cfg.redirectUri);
+  const pkce = prov ? null : makePkce(); // Google usa PKCE; Meta/TikTok não
   const st = newState();
-  state.oauthSessions[st] = { verifier: pkce.verifier, createdAt: nowIso(), redirectUri, platform: pid };
+  state.oauthSessions[st] = { verifier: pkce ? pkce.verifier : null, createdAt: nowIso(), redirectUri, platform: pid };
   await state.saveOauthSessions(state.oauthSessions);
-  const url = buildAuthUrl({ clientId: cfg.clientId, redirectUri, state: st, codeChallenge: pkce.challenge });
+  const url = prov
+    ? prov.buildAuthUrl({ clientId: cfg.clientId, redirectUri, state: st })
+    : buildAuthUrl({ clientId: cfg.clientId, redirectUri, state: st, codeChallenge: pkce.challenge });
   return { ok: true, url, platform: pid };
 }
 
+/* Conclui a autorização de um provedor não-YouTube (Instagram/TikTok). */
+async function connectProviderAccount({ prov, pid, code, cfg, redirectUri }) {
+  const ex = await prov.exchangeCode({ code, clientId: cfg.clientId, clientSecret: cfg.clientSecret, redirectUri });
+  if (!ex.ok) return { ok: false, reason: ex.reason };
+  const tokens = ex.tokens;
+  const ident = await prov.identity(tokens.accessToken);
+  if (!ident.ok) return { ok: false, reason: ident.reason };
+  const a = ident.account || {};
+  const conn = {
+    schema: SCHEMA,
+    id: pid + ':' + (a.id || Date.now().toString(36)),
+    platform: pid,
+    owner: 'local',
+    status: 'conectado',
+    account: { id: a.id || null, name: a.name || '', handle: a.handle || '', avatar: a.avatar || '', kind: a.kind || '' },
+    scopes: String(tokens.scope || '').split(/[,\s]+/).filter(Boolean),
+    authorizedAt: nowIso(),
+    connectedAt: nowIso(),
+    lastRefreshAt: nowIso(),
+    expiresAt: tokens.expiresAt || null,
+    tokensEnc: await encryptJson({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, expiresAt: tokens.expiresAt }),
+  };
+  await state.saveAccount(conn);
+  state.appendActivity({ type: 'conta_conectada', platform: pid, account: a.name, accountId: a.id });
+  _log('conta conectada:', pid, '→', a.name, '(' + a.id + ')');
+  return { ok: true, account: publicAccount(state.getAccount(conn.id)), connection: publicConnection() };
+}
+
 export async function handleCallback({ code, state: st, error }) {
-  const cfg = oauthConfig();
-  if (error) return { ok: false, reason: 'Autorização recusada pelo Google: ' + String(error) };
-  if (!cfg.configured) return { ok: false, reason: 'Credenciais OAuth não configuradas.' };
+  if (error) return { ok: false, reason: 'Autorização recusada pela plataforma: ' + String(error) };
   const sess = st && state.oauthSessions ? state.oauthSessions[st] : null;
   if (!sess) return { ok: false, reason: 'Sessão de autorização inválida ou expirada. Tente conectar novamente.' };
+
+  const pid = sess.platform || 'youtube';
+  const prov = providerFor(pid);
+  const cfg = prov ? prov.config() : oauthConfig();
+  if (!cfg.configured) return { ok: false, reason: 'Credenciais OAuth não configuradas.' };
+
   delete state.oauthSessions[st];
   await state.saveOauthSessions(state.oauthSessions);
+
+  if (prov) return connectProviderAccount({ prov, pid, code, cfg, redirectUri: sess.redirectUri });
 
   const ex = await exchangeCode({ code, clientId: cfg.clientId, clientSecret: cfg.clientSecret, redirectUri: sess.redirectUri, codeVerifier: sess.verifier });
   if (!ex.ok) return { ok: false, reason: ex.reason };
@@ -229,7 +285,6 @@ export async function handleCallback({ code, state: st, error }) {
   const ch = await fetchMyChannel(tokens.accessToken);
   if (!ch.ok) return { ok: false, reason: ch.reason || 'Não foi possível ler o canal conectado.' };
 
-  const pid = sess.platform || 'youtube';
   const c = ch.channel;
   const conn = {
     schema: SCHEMA,
@@ -270,11 +325,43 @@ async function ensureAccessToken(accountId) {
       : { ok: false, code: 'sem_conexao', reason: 'Nenhuma conta conectada.' };
   }
   if (conn.status !== 'conectado') return { ok: false, code: 'sem_conexao', reason: 'Conta não está conectada (' + conn.status + ').' };
-  const cfg = oauthConfig();
-  if (!cfg.configured) return { ok: false, code: 'sem_credenciais', reason: 'Credenciais OAuth não configuradas.' };
+
+  const platform = conn.platform || 'youtube';
+  const prov = providerFor(platform);
+
+  // YouTube: exige credenciais do Google (comportamento original preservado).
+  if (!prov) {
+    const ycfg = oauthConfig();
+    if (!ycfg.configured) return { ok: false, code: 'sem_credenciais', reason: 'Credenciais OAuth não configuradas.' };
+  }
+
   const tokens = await decryptJson(conn.tokensEnc);
   if (!tokens || !tokens.accessToken) return { ok: false, code: 'sem_tokens', reason: 'Tokens indisponíveis: reconecte a conta.' };
 
+  /* Provedores (Instagram/TikTok): renovam com a própria API do provedor. */
+  if (prov) {
+    const expiresAt = tokens.expiresAt ? Date.parse(tokens.expiresAt) : 0;
+    const margin = 7 * 24 * 60 * 60 * 1000; // renova com 7 dias de folga
+    if (expiresAt && Date.now() < expiresAt - margin) {
+      return { ok: true, accessToken: tokens.accessToken, account: publicAccount(conn) };
+    }
+    const r = await prov.refresh({ refreshToken: tokens.refreshToken, accessToken: tokens.accessToken });
+    if (!r.ok) {
+      conn.status = r.revoked ? 'revogado' : 'expirado';
+      conn.updatedAt = nowIso();
+      await state.saveAccount(conn);
+      state.appendActivity({ type: 'conexao_invalida', id: conn.id, status: conn.status, platform });
+      return { ok: false, code: conn.status, reason: r.reason || 'Falha ao renovar o acesso da conta.' };
+    }
+    conn.tokensEnc = await encryptJson(Object.assign({}, tokens, r.tokens));
+    conn.expiresAt = r.tokens.expiresAt || conn.expiresAt;
+    conn.lastRefreshAt = nowIso();
+    conn.status = 'conectado';
+    await state.saveAccount(conn);
+    return { ok: true, accessToken: r.tokens.accessToken, account: publicAccount(conn) };
+  }
+
+  const cfg = oauthConfig();
   const fresh = await ensureFresh({ tokens, clientId: cfg.clientId, clientSecret: cfg.clientSecret });
   if (!fresh.ok) {
     conn.status = fresh.revoked ? 'revogado' : 'expirado';
@@ -299,6 +386,27 @@ export async function refreshAccount(accountId) {
   if (!conn) return { ok: false, reason: 'Conta não encontrada.' };
   const r = await ensureAccessToken(conn.id);
   if (!r.ok) return r;
+
+  const platform = conn.platform || 'youtube';
+  const prov = providerFor(platform);
+  if (prov) {
+    const ident = await prov.identity(r.accessToken);
+    if (ident.ok && ident.account) {
+      const a = ident.account;
+      conn.account = Object.assign({}, conn.account || {}, {
+        id: a.id || (conn.account && conn.account.id) || null,
+        name: a.name || (conn.account && conn.account.name) || '',
+        handle: a.handle || (conn.account && conn.account.handle) || '',
+        avatar: a.avatar || (conn.account && conn.account.avatar) || '',
+        kind: a.kind || (conn.account && conn.account.kind) || '',
+      });
+      conn.status = 'conectado';
+      await state.saveAccount(conn);
+      state.appendActivity({ type: 'conta_atualizada', id: conn.id, platform, account: conn.account.name });
+    }
+    return { ok: true, account: publicAccount(state.getAccount(conn.id)), items: state.allAccounts().map(publicAccount) };
+  }
+
   const ch = await fetchMyChannel(r.accessToken);
   if (ch.ok) {
     conn.channel = ch.channel;
@@ -318,12 +426,16 @@ export async function refreshConnection() { return refreshAccount(null); }
 export async function disconnectAccount(accountId) {
   const conn = accountId ? state.getAccount(accountId) : state.connection;
   if (!conn) return { ok: false, reason: 'Conta não encontrada.' };
+  const platform = conn.platform || 'youtube';
+  const prov = providerFor(platform);
   let revoked = false;
   const tokens = await decryptJson(conn.tokensEnc);
   const tok = (tokens && (tokens.refreshToken || tokens.accessToken)) || null;
-  if (tok) { const r = await revokeToken(tok); revoked = !!r.ok; }
+  if (tok) {
+    const r = prov ? await prov.revoke(tok) : await revokeToken(tok);
+    revoked = !!r.ok;
+  }
   const wasPrimary = !!conn.primary;
-  const platform = conn.platform || 'youtube';
   await state.removeAccount(conn.id);
   if (wasPrimary) {
     const next = state.accountsFor(platform)[0];
@@ -381,6 +493,13 @@ export async function publish(input = {}, owner) {
   const targetAccountId = input.accountId || (input.account && input.account.id) || null;
   const auth = await ensureAccessToken(targetAccountId);
   const accessToken = auth.ok ? auth.accessToken : null;
+  const platform = (auth.account && auth.account.platform) || 'youtube';
+
+  /* Redes com provedor próprio (Instagram/TikTok) seguem o mesmo registro
+   * de publicação, mas chamam a API oficial do provedor. */
+  if (providerFor(platform)) {
+    return publishProvider({ input, owner: o, cfg, auth, platform, filePath, metadata, jobId, targetAccountId });
+  }
 
   /* Reaproveita um registro existente (retry do lote/fila) para não duplicar. */
   const reuse = input.reuseId ? state.getPublication(input.reuseId) : null;
@@ -388,7 +507,7 @@ export async function publish(input = {}, owner) {
   const res = await publishOne({
     state, accessToken, filePath, metadata, jobId, owner: o,
     accountId: targetAccountId || (auth.account && auth.account.id) || null,
-    platform: (auth.account && auth.account.platform) || 'youtube',
+    platform,
     visibility: input.visibility || cfg.defaultVisibility,
     scheduledAt: input.scheduledAt || null,
     config: cfg,
@@ -400,6 +519,107 @@ export async function publish(input = {}, owner) {
 
   // Recontagem para a próxima trava diária já refletir este resultado.
   return { ok: res.ok, code: res.code || null, reason: res.reason || null, publication: res.publication };
+}
+
+/* URL pública opcional para redes que exigem que a plataforma baixe o vídeo. */
+function publicUrlFor(jobId) {
+  const base = String(process.env.AUTOCLIPS_PUBLIC_BASE_URL || '').trim().replace(/\/$/, '');
+  if (!base || !jobId) return null;
+  const safe = String(jobId).replace(/[^a-zA-Z0-9_.-]/g, '_');
+  return base + '/autoclips-media/' + safe + '/final.mp4';
+}
+
+/* Publica via provedor (Instagram/TikTok/…) registrando o mesmo formato de
+ * publicação usado pelo painel — mesma dedupe, cota, retry e estados. */
+async function publishProvider({ input, owner, cfg, auth, platform, filePath, metadata, jobId, targetAccountId }) {
+  const prov = providerFor(platform);
+  if (!prov) return { ok: false, reason: 'Rede não suportada para publicação: ' + platform };
+
+  const fp = await fileFingerprint(filePath);
+  const key = dedupeKey({ jobId, accountId: targetAccountId, filePath, size: fp.size, mtimeMs: fp.mtimeMs });
+  const reuse = input.reuseId ? state.getPublication(input.reuseId) : null;
+
+  const pub = reuse || {
+    id: newPublicationId(),
+    owner,
+    jobId: jobId || null,
+    accountId: targetAccountId || null,
+    platform,
+    filePath: filePath || null,
+    createdAt: nowIso(),
+    visibility: input.visibility || cfg.defaultVisibility,
+    scheduledAt: input.scheduledAt || null,
+    dedupeKey: key,
+    attempts: 0,
+    status: 'rascunho',
+    videoId: null,
+    url: null,
+    error: null,
+    snippet: {
+      title: String((metadata && metadata.title) || (jobId ? ('Corte ' + jobId) : 'Corte')),
+      description: String((metadata && metadata.description) || ''),
+      tags: Array.isArray(metadata && metadata.tags) ? metadata.tags : [],
+    },
+    note: input.note || 'manual',
+  };
+  if (reuse) {
+    pub.dedupeKey = key; pub.status = 'rascunho'; pub.error = null; pub.code = null;
+    pub.nextAttemptAt = null; pub.visibility = input.visibility || cfg.defaultVisibility;
+    pub.scheduledAt = input.scheduledAt || null;
+  }
+
+  const persist = async (res) => { try { await state.savePublication(pub); } catch (e) { _log('erro ao salvar publicação:', String((e && e.message) || e)); } return res; };
+  const block = (reason, code) => {
+    pub.status = 'bloqueado'; pub.error = reason; pub.code = code || 'bloqueado';
+    state.appendActivity({ type: 'publicacao_bloqueada', id: pub.id, platform, reason, code: code || 'bloqueado' });
+    return { ok: false, code: code || 'bloqueado', reason, publication: pub };
+  };
+
+  if (cfg.emergencyStop) return persist(block('Publicações interrompidas pelo botão de emergência.', 'emergencia'));
+  if (!filePath || fp.exists === false) return persist(block('Arquivo de vídeo não encontrado no servidor.', 'validacao'));
+  const dup = findDuplicate(state, key);
+  if (dup) return persist(block('Este corte já foi publicado/agendado para esta conta (evitando duplicidade).', 'duplicado'));
+  if (cfg.dailyLimit && cfg.dailyLimit > 0 && countToday(state) >= cfg.dailyLimit) {
+    return persist(block('Limite diário de publicações atingido (' + cfg.dailyLimit + ').', 'cota_diaria'));
+  }
+  if (!auth.ok) return persist(block(auth.reason || 'Conta não conectada.', auth.code || 'sem_conexao'));
+
+  pub.status = 'enviando';
+  pub.attempts = (pub.attempts || 0) + 1;
+  await state.savePublication(pub);
+  state.appendActivity({ type: 'publicacao_iniciada', id: pub.id, platform, scheduled: !!pub.scheduledAt, attempts: pub.attempts });
+
+  const account = state.getAccount(targetAccountId) || state.connection;
+  const acct = account ? { account: account.account || {} } : { account: {} };
+  const publicVideoUrl = input.publicVideoUrl || publicUrlFor(jobId);
+
+  const r = await prov.publish({
+    accessToken: auth.accessToken,
+    account: acct,
+    filePath,
+    publicVideoUrl,
+    metadata,
+    visibility: pub.visibility,
+    scheduledAt: pub.scheduledAt,
+  });
+
+  if (!r.ok) {
+    pub.status = 'erro';
+    pub.error = r.reason || 'Falha no envio.';
+    pub.code = r.code || 'upload';
+    pub.nextAttemptAt = nextAttemptFor(pub.attempts, (r.code === 'upload' || r.code === 'cota_api') ? r.code : null);
+    state.appendActivity({ type: 'publicacao_erro', id: pub.id, platform, error: pub.error, attempts: pub.attempts });
+    return persist({ ok: false, code: pub.code, reason: pub.error, publication: pub });
+  }
+
+  pub.videoId = r.videoId || null;
+  pub.url = r.url || null;
+  pub.status = r.scheduled ? 'agendado' : 'publicado';
+  pub.publishedAt = nowIso();
+  pub.error = null;
+  state.appendActivity({ type: 'publicacao_ok', id: pub.id, platform, videoId: pub.videoId, status: pub.status });
+  _log('publicado:', pub.id, '→', platform, '(' + pub.status + ')');
+  return persist({ ok: true, publication: pub });
 }
 
 export async function republish(id, visibility, owner) {

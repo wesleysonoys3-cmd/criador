@@ -1667,6 +1667,11 @@ app.get('/__ti_config.js', (req, res) => {
 });
 app.use(express.json({ limit: '20mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
+/* AutoClips: expõe de forma pública os vídeos renderizados (autoclips/out/<id>/final.mp4).
+ * Necessário para redes que exigem que a plataforma BAIXE a mídia (ex.: Reels do Instagram).
+ * Só é usado quando AUTOCLIPS_PUBLIC_BASE_URL aponta para este servidor. */
+const AUTOCLIPS_MEDIA_DIR = path.resolve(process.cwd(), 'autoclips/out');
+app.use('/autoclips-media', express.static(AUTOCLIPS_MEDIA_DIR, { dotfiles: 'deny', index: false }));
 // ============================================================
 //  RC20  RENDER single-port preview: /preview/:slug/*
 //  No desktop local continua igual (cada projeto com sua porta 3001+),
