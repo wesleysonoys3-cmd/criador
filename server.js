@@ -8246,16 +8246,20 @@ app.post('/api/youtube/accounts/:id/disconnect', _YT_JSON, _yt(async (req) => Yo
 app.post('/api/youtube/accounts/:id/primary', _YT_JSON, _yt(async (req) => YouTubeSvc.setPrimaryAccount(req.params.id)));
 // O Google redireciona o navegador para cá após a autorização (GET com ?code&state).
 app.get('/api/youtube/oauth/callback', async (req, res) => {
-  const page = (title, msg, ok) => `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b0f17;color:#e6e9ef;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}main{max-width:520px;padding:32px;border-radius:16px;background:#141b26;border:1px solid #232d3d;text-align:center}h1{font-size:20px;margin:0 0 12px;color:${ok ? '#4ade80' : '#f87171'}}p{color:#9aa6b8;line-height:1.5;margin:0 0 20px}a{display:inline-block;padding:10px 18px;border-radius:10px;background:#a21caf;color:#fff;text-decoration:none;font-weight:600}</style></head><body><main><h1>${title}</h1><p>${msg}</p><a href="/">Voltar ao TIAgente OS</a></main></body></html>`;
+  const page = (title, msg, ok, redirectTo) => {
+    const meta = (ok && redirectTo) ? `<meta http-equiv="refresh" content="2;url=${redirectTo}">` : '';
+    const btn = redirectTo ? `<a href="${redirectTo}">${ok ? 'Voltar ao AutoClips' : 'Tentar novamente'}</a>` : '';
+    return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${meta}<title>${title}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b0f17;color:#e6e9ef;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}main{max-width:520px;padding:32px;border-radius:16px;background:#141b26;border:1px solid #232d3d;text-align:center}h1{font-size:20px;margin:0 0 12px;color:${ok ? '#4ade80' : '#f87171'}}p{color:#9aa6b8;line-height:1.5;margin:0 0 20px}a{display:inline-block;padding:10px 18px;border-radius:10px;background:#a21caf;color:#fff;text-decoration:none;font-weight:600}</style></head><body><main><h1>${title}</h1><p>${msg}</p>${btn}</main></body></html>`;
+  };
   try {
     const r = await YouTubeSvc.handleCallback({ code: req.query.code, state: req.query.state, error: req.query.error });
-    if (!r.ok) return res.status(400).send(page('Não foi possível conectar', String(r.reason || 'Falha na autorização.'), false));
+    if (!r.ok) return res.status(400).send(page('Não foi possível conectar', String(r.reason || 'Falha na autorização.'), false, '/'));
     const accName = (r.account && r.account.account && r.account.account.name)
       || (r.connection && r.connection.channel && r.connection.channel.title) || 'conta';
-    return res.send(page('Conta conectada!', 'A conta "' + accName + '" foi conectada com sucesso. Você já pode publicar pelo TIAgente OS.', true));
+    return res.send(page('Conta conectada!', 'A conta "' + accName + '" foi conectada com sucesso. Você já pode publicar pelo TIAgente OS.', true, '/'));
   } catch (e) {
     console.error('[YOUTUBE] callback erro:', String(e && e.message || e));
-    return res.status(500).send(page('Erro na conexão', 'Ocorreu um erro ao concluir a autorização. Tente novamente.', false));
+    return res.status(500).send(page('Erro na conexão', 'Ocorreu um erro ao concluir a autorização. Tente novamente.', false, '/'));
   }
 });
 app.post('/api/youtube/refresh', _YT_JSON, _yt(async () => YouTubeSvc.refreshConnection()));

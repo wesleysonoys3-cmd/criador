@@ -1591,9 +1591,10 @@ async function doRemoveMusic(id) {
 async function doYtConnect(platform = 'youtube') {
   try {
     const r = await api('/connect', { method: 'POST', body: { hostBase: location.origin, platform }, base: YT });
-    const w = window.open(r.url, 'tiagente-oauth', 'width=520,height=680');
-    if (!w) { toast('O navegador bloqueou a janela. Abra a autorização em uma nova aba.', 'warn'); window.open(r.url, '_blank'); }
-    else toast('Conclua a autorização na janela aberta.', 'info');
+    if (!r || !r.url) throw new Error('URL de autorização não retornada.');
+    // Redirecionamento de página inteira — mais confiável que popup
+    // (evita ERR_BLOCKED_BY_RESPONSE / bloqueio de popups em mobile e túnel).
+    location.href = r.url;
   } catch (e) {
     if (e.code === 'sem_credenciais') {
       const p = (STATE.platforms || []).find((x) => x.id === platform);
