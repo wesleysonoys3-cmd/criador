@@ -13,6 +13,9 @@
  * Sem dependências novas: usa o fetch nativo do Node (>= 18).
  * =======================================================*/
 import crypto from 'node:crypto';
+import os from 'node:os';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const _log = (...a) => console.log('[YOUTUBE][oauth]', ...a);
 
@@ -45,8 +48,45 @@ export function makePkce() {
 
 export function newState() { return crypto.randomBytes(16).toString('hex'); }
 
+/* Detecta se a redirect URI usa IP privado (192.168.x.x, 10.x.x.x, 172.16-31.x.x).
+   localhost / 127.0.0.1 são isentos e não precisam de device_id. */
+function redirectUsesPrivateIp(redirectUri) {
+  try {
+    const host = new URL(redirectUri).hostname;
+    if (host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]') return false;
+    const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (!m) return false;
+    const o = m.slice(1, 5).map(Number);
+    return (o[0] === 10) ||
+      (o[0] === 172 && o[1] >= 16 && o[1] <= 31) ||
+      (o[0] === 192 && o[1] === 168);
+  } catch { return false; }
+}
+
+/* device_id estável (exigido pelo Google para callback em IP privado).
+   Persistido em disco para não mudar a cada reinício. */
+function deviceId() {
+  const file = path.resolve(process.cwd(), 'youtube/data/.device_id');
+  try {
+    if (fs.existsSync(file)) {
+      const id = fs.readFileSync(file, 'utf8').trim();
+      if (id) return id;
+    }
+  } catch {}
+  const id = crypto.randomUUID();
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, id, { mode: 0o600 });
+  } catch {}
+  return id;
+}
+
+function deviceName() {
+  try { return os.hostname() || 'TI Agente OS'; } catch { return 'TI Agente OS'; }
+}
+
 export function buildAuthUrl({ clientId, redirectUri, state, codeChallenge }) {
-  const p = new URLSearchParams({
+  const params = {
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: 'code',
@@ -57,7 +97,13 @@ export function buildAuthUrl({ clientId, redirectUri, state, codeChallenge }) {
     state,
     code_challenge: codeChallenge,
     code_challenge_method: 'S256',
-  });
+  };
+  // Google exige device_id/device_name quando o callback aponta para IP privado.
+  if (redirectUsesPrivateIp(redirectUri)) {
+    params.device_id = deviceId();
+    params.device_name = deviceName();
+  }
+  const p = new URLSearchParams(params);
   return AUTH_URL + '?' + p.toString();
 }
 

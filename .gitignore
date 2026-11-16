@@ -27,3 +27,7 @@ _mock_desktop/
 node-v*/
 
 uploads/
+
+# AutoClips / YouTube: dados de runtime (contas, tokens, sessões, jobs)
+youtube/data/
+autoclips/data/
