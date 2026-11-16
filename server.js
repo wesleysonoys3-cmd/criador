@@ -8153,6 +8153,63 @@ app.post('/api/autoclips/job/:id/cancel', _AC_JSON, _ac(async (req) => Autoclips
 app.get('/api/autoclips/job/:id/report', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.report(req.params.id, _acOwner(req))));
 app.delete('/api/autoclips/job/:id', _AC_JSON, _ac(async (req) => AutoclipsSvc.remove(req.params.id, _acOwner(req))));
 
+/* Upload de VÍDEO LOCAL do AutoClips: o arquivo é gravado em
+ * ./autoclips/uploads e o caminho real vira fonte "local" da tarefa. */
+const AUTOCLIPS_UPLOAD_DIR = path.resolve(process.cwd(), 'autoclips/uploads');
+const _acVideoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    try { fsc.mkdirSync(AUTOCLIPS_UPLOAD_DIR, { recursive: true }); } catch (_) { /* ignorado */ }
+    cb(null, AUTOCLIPS_UPLOAD_DIR);
+  },
+  filename: (req, file, cb) => {
+    const ext = (path.extname(file.originalname) || '.mp4').toLowerCase();
+    cb(null, Date.now() + '_' + crypto.randomBytes(4).toString('hex') + ext);
+  },
+});
+const _AC_VIDEO_MAX_BYTES = Math.max(1, Number(process.env.AUTOCLIPS_MAX_UPLOAD_MB || 2048)) * 1024 * 1024;
+const _acVideoUpload = multer({
+  storage: _acVideoStorage,
+  limits: { fileSize: _AC_VIDEO_MAX_BYTES },
+  fileFilter: (req, file, cb) => {
+    const name = String(file.originalname || '');
+    const okType = /^(video\/|application\/octet-stream)/i.test(String(file.mimetype || ''));
+    const okExt = /\.(mp4|mov|mkv|webm|avi|m4v|mpe?g|wmv|flv|3gp)$/i.test(name);
+    if (okType || okExt) return cb(null, true);
+    cb(new Error('Envie um arquivo de vídeo (mp4, mov, mkv, webm…).'));
+  },
+});
+app.post('/api/autoclips/upload', (req, res, next) => {
+  _acVideoUpload.single('file')(req, res, (err) => {
+    if (err) {
+      const msg = err.code === 'LIMIT_FILE_SIZE'
+        ? 'Vídeo maior que o limite de ' + Math.round(_AC_VIDEO_MAX_BYTES / (1024 * 1024)) + ' MB.'
+        : (err.message || 'Falha ao enviar o arquivo de vídeo.');
+      return res.status(400).json({ ok: false, reason: msg });
+    }
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ ok: false, reason: 'Nenhum arquivo de vídeo foi enviado.' });
+    const b = req.body || {};
+    const out = await AutoclipsSvc.createLocal({
+      path: req.file.path,
+      label: req.file.originalname,
+      title: b.title,
+      description: b.description,
+      profileKey: b.profileKey,
+      maxCuts: b.maxCuts,
+      cutDuration: b.cutDuration,
+      formats: b.formats !== undefined ? b.formats : b.aspect,
+    }, _acOwner(req));
+    if (out && out.ok === false && out.reason) return res.status(400).json(out);
+    res.json(out);
+  } catch (e) {
+    console.error('[AUTOCLIPS] upload erro:', String((e && e.message) || e));
+    res.status(400).json({ ok: false, reason: e.message || 'Não foi possível registrar o vídeo enviado.' });
+  }
+});
+
 /* =============== YOUTUBE · Conexão do canal (OAuth 2.0) + publicação autorizada (módulo isolado) =============== */
 const _YT_JSON = express.json({ limit: '2mb' });
 const _ytOwner = (req) => String((req.query && req.query.owner) || (req.body && req.body.owner) || '');

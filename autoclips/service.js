@@ -772,6 +772,55 @@ export async function create(input = {}, owner = null) {
   return { ok: true, job: summary(rec), profile: rec.profile };
 }
 
+/* Cria uma tarefa a partir de um ARQUIVO DE VÍDEO LOCAL (upload).
+ * O caminho real do arquivo é registrado como fonte "local" e a duração
+ * é medida com o ffprobe quando disponível (best-effort, sem simular). */
+export async function createLocal(input = {}, owner = null) {
+  const filePath = String(input.path || input.file || '').trim();
+  if (!filePath) return { ok: false, reason: 'Arquivo de vídeo não informado.' };
+  try {
+    const st = await fs.stat(filePath);
+    if (!st.isFile() || st.size <= 0) return { ok: false, reason: 'Arquivo de vídeo inválido ou vazio.' };
+  } catch {
+    return { ok: false, reason: 'Arquivo de vídeo não encontrado no servidor.' };
+  }
+
+  // Ajustes de corte (mesma semântica do ingest por URL).
+  const overrides = {};
+  const mc = Number(input.maxCuts);
+  if (Number.isFinite(mc)) overrides.maxCuts = Math.round(Math.max(1, Math.min(50, mc)));
+  const dur = Number(input.cutDuration);
+  if (Number.isFinite(dur) && dur > 0) {
+    overrides.minDuration = Math.max(5, Math.round(dur * 0.8));
+    overrides.maxDuration = Math.min(900, Math.round(dur * 1.2));
+  }
+
+  let duration = null;
+  try {
+    const p = await probeDuration(filePath);
+    if (p && p.ok && Number.isFinite(p.duration) && p.duration > 0) duration = p.duration;
+  } catch { /* best-effort: sem ffprobe segue sem duração */ }
+
+  const title = String(input.title || path.basename(filePath)).trim().slice(0, 120) || 'Vídeo enviado';
+  const profKey = String((input.profile && input.profile.key) || input.profileKey || 'podcast');
+
+  const src = { kind: 'local', value: filePath, label: String(input.label || path.basename(filePath)).slice(0, 120) };
+  if (duration) src.duration = duration;
+
+  const r = await create({
+    title,
+    description: input.description,
+    sources: [src],
+    formats: input.formats !== undefined ? input.formats : input.aspect,
+    profile: Object.assign({ key: profKey }, overrides),
+    rights: input.rights,
+    transcript: input.transcript,
+  }, owner);
+
+  if (r.ok) r.local = { path: filePath, duration, hasFfmpeg: duration !== null };
+  return r;
+}
+
 function normalizeSources(list) {
   const arr = Array.isArray(list) ? list : [];
   const out = [];

@@ -359,6 +359,43 @@ function renderOverview() {
       </div>
     </section>
 
+    <section class="rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/10 to-transparent p-4">
+      <h2 class="text-[14px] font-bold text-violet-100">Ou envie um vídeo do seu computador</h2>
+      <p class="text-[11.5px] text-slate-400 mt-0.5 mb-3">Selecione um arquivo de vídeo. Ele é enviado ao servidor e registrado como fonte local da tarefa.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <label class="text-[10.5px] text-slate-400">Arquivo de vídeo
+          <input id="ac-upload-file" type="file" accept="video/*,.mp4,.mov,.mkv,.webm,.avi,.m4v" class="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-[11.5px] text-slate-300 file:mr-2 file:rounded-md file:border-0 file:bg-violet-600 file:px-2.5 file:py-1 file:text-white"></label>
+        <label class="text-[10.5px] text-slate-400">Título (opcional)
+          <input id="ac-upload-title" type="text" class="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-[11.5px] text-slate-100" placeholder="Usa o nome do arquivo se vazio"></label>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+        <label class="text-[10.5px] text-slate-400">Perfil de edição
+          <select id="ac-upload-profile" class="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-[11.5px] text-slate-100">${profileOptions('podcast')}</select></label>
+        <label class="text-[10.5px] text-slate-400">Máximo de cortes
+          <input id="ac-upload-maxcuts" type="number" min="1" max="50" value="6" class="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-[11.5px] text-slate-100"></label>
+        <label class="text-[10.5px] text-slate-400">Duração dos cortes
+          <select id="ac-upload-duration" class="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-[11.5px] text-slate-100">
+            <option value="30">30 segundos</option>
+            <option value="45">45 segundos</option>
+            <option value="60" selected>60 segundos</option>
+            <option value="90">90 segundos</option>
+            <option value="0">Personalizada</option>
+          </select></label>
+        <label class="text-[10.5px] text-slate-400">Formato
+          <select id="ac-upload-aspect" class="mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-[11.5px] text-slate-100">
+            <option value="9:16" selected>Vertical 9:16</option>
+            <option value="1:1">Quadrado 1:1</option>
+            <option value="16:9">Horizontal 16:9</option>
+          </select></label>
+      </div>
+      <label id="ac-upload-custom-wrap" class="hidden text-[10.5px] text-slate-400 mt-2 block">Duração personalizada (segundos)
+        <input id="ac-upload-custom" type="number" min="5" max="600" value="60" class="mt-1 w-[160px] rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-[11.5px] text-slate-100"></label>
+      <div class="flex flex-wrap items-center gap-2 mt-3">
+        <button data-ac-act="upload-local" class="text-[12px] px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold">Enviar vídeo e criar tarefa</button>
+        <span class="text-[10.5px] text-slate-500">A duração real é detectada quando o ffprobe está disponível.</span>
+      </div>
+    </section>
+
     <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
       ${card('Vídeos', ov.videos.total, 'tarefas registradas', 'violet')}
       ${card('Cortes', ov.cuts.total, ov.cuts.pending + ' aguardando revisão', 'sky')}
@@ -1276,6 +1313,32 @@ async function doIngest() {
   } catch (e) { toast(e.message || 'Falha ao adicionar as URLs.', 'err'); }
 }
 
+async function doUploadLocal() {
+  const input = $('#ac-upload-file');
+  const file = input && input.files && input.files[0];
+  if (!file) { toast('Selecione um arquivo de vídeo.', 'warn'); return; }
+  const durSel = $('#ac-upload-duration') ? $('#ac-upload-duration').value : '60';
+  const durNum = durSel === '0' ? Number($('#ac-upload-custom') ? $('#ac-upload-custom').value : 60) : Number(durSel);
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('title', $('#ac-upload-title') ? $('#ac-upload-title').value.trim() : '');
+  fd.append('profileKey', $('#ac-upload-profile') ? $('#ac-upload-profile').value : 'podcast');
+  fd.append('maxCuts', String(Number($('#ac-upload-maxcuts') ? $('#ac-upload-maxcuts').value : 6)));
+  fd.append('cutDuration', String(Number.isFinite(durNum) && durNum > 0 ? durNum : 0));
+  fd.append('aspect', $('#ac-upload-aspect') ? $('#ac-upload-aspect').value : '9:16');
+  toast('Enviando vídeo… aguarde.', 'info');
+  try {
+    const r = await fetch(API + '/upload', { method: 'POST', body: fd });
+    const data = await r.json().catch(() => ({ ok: false, reason: 'Resposta inválida do servidor.' }));
+    if (!r.ok || data.ok === false) throw new Error(data.reason || 'Não foi possível enviar o vídeo.');
+    if (input) input.value = '';
+    const dur = data.local && data.local.duration ? ' (' + Math.round(data.local.duration) + 's)' : '';
+    toast('Vídeo enviado e tarefa criada' + dur + '. Envie a transcrição para analisar.', 'ok');
+    await refreshAll();
+    if (data.job && data.job.id) await openJob(data.job.id);
+  } catch (e) { toast(e.message || 'Falha ao enviar o vídeo.', 'err'); }
+}
+
 async function doCreate() {
   const title = $('#ac-title') ? $('#ac-title').value.trim() : '';
   if (!title) { toast('Informe um título para a tarefa.', 'warn'); return; }
@@ -1667,6 +1730,7 @@ function onClick(ev) {
   if (act === 'go') goSection(t.getAttribute('data-section'));
   else if (act === 'reload') refreshAll().then(() => toast('Dados atualizados.', 'ok')).catch(() => {});
   else if (act === 'ingest') doIngest();
+  else if (act === 'upload-local') doUploadLocal();
   else if (act === 'new-manual') { STATE.manual = true; STATE.job = null; render(); }
   else if (act === 'cancel-manual') { STATE.manual = false; render(); }
   else if (act === 'create') doCreate();
@@ -1718,6 +1782,10 @@ document.addEventListener('change', (ev) => {
   }
   if (el.id === 'ac-ingest-duration') {
     const wrap = $('#ac-ingest-custom-wrap');
+    if (wrap) wrap.classList.toggle('hidden', el.value !== '0');
+  }
+  if (el.id === 'ac-upload-duration') {
+    const wrap = $('#ac-upload-custom-wrap');
     if (wrap) wrap.classList.toggle('hidden', el.value !== '0');
   }
 });
