@@ -26,6 +26,11 @@ const MAX_BUFFER = 16 * 1024 * 1024;
 const CUT_TIMEOUT_MS = 20 * 60 * 1000;
 const BIN_DIRS = ['/usr/local/bin', '/opt/homebrew/bin', '/usr/bin'];
 
+/* Filtros que o render usa para queimar legendas e título. Dependem da
+ * libass e NÃO existem em todo build de ffmpeg (alguns recortes do
+ * Homebrew saem sem ela) — por isso a capacidade é sondada, não suposta. */
+const NEEDED_FILTERS = ['subtitles'];
+
 let _cache = null;
 
 /* Descobre o binário informado por env ou o padrão do sistema. */
@@ -71,31 +76,56 @@ async function probeBin(bin) {
   }
 }
 
-/* Tenta cada candidato e guarda o que realmente funciona. */
-async function resolveBin(name, extra = []) {
+/* Sonda quais filtros o binário oferece (a lista é lida de "ffmpeg -filters"). */
+async function probeFilters(bin) {
+  const have = {};
+  for (const f of NEEDED_FILTERS) have[f] = false;
+  try {
+    const { stdout } = await execAsync(bin + ' -hide_banner -filters', { timeout: 10000, maxBuffer: MAX_BUFFER });
+    const text = String(stdout || '');
+    for (const f of NEEDED_FILTERS) have[f] = new RegExp('(^|\\s)' + f + '\\s').test(text);
+  } catch { /* lista indisponível: assume sem os filtros */ }
+  return have;
+}
+
+/* Tenta cada candidato e guarda o que realmente funciona. Quando
+ * `needFilters` é informado, prefere um binário que ofereça TODOS esses
+ * filtros (ex.: subtitles/libass); se nenhum tiver, devolve o primeiro
+ * que ao menos executa, para não inviabilizar o corte sem legendas. */
+async function resolveBin(name, extra = [], needFilters = null) {
   let lastError = null;
+  let firstOk = null;
   for (const bin of candidatesFor(name, extra)) {
     const p = await probeBin(bin);
-    if (p.ok) return { bin, ok: true, version: p.version, error: null };
-    lastError = p.error;
+    if (!p.ok) { lastError = p.error; continue; }
+    const filters = needFilters ? await probeFilters(bin) : null;
+    const found = { bin, ok: true, version: p.version, error: null, filters };
+    if (!needFilters || needFilters.every((f) => filters[f])) return found;
+    if (!firstOk) firstOk = found;
   }
-  return { bin: binFor(name), ok: false, version: null, error: lastError };
+  if (firstOk) return firstOk;
+  return { bin: binFor(name), ok: false, version: null, error: lastError, filters: null };
 }
 
 /* Detecta ferramentas (com cache em memória). */
 export async function detectFfmpeg({ refresh = false } = {}) {
   if (_cache && !refresh) return _cache;
   const [ffExtra, fpExtra] = await Promise.all([staticBinCandidates('ffmpeg'), staticBinCandidates('ffprobe')]);
-  const [ff, fp] = await Promise.all([resolveBin('ffmpeg', ffExtra), resolveBin('ffprobe', fpExtra)]);
+  const ff = await resolveBin('ffmpeg', ffExtra, NEEDED_FILTERS);
+  const fp = await resolveBin('ffprobe', fpExtra);
+  const subtitles = !!(ff.filters && ff.filters.subtitles);
   _cache = {
     available: ff.ok,
-    ffmpeg: { bin: ff.bin, ok: ff.ok, version: ff.version, error: ff.error },
+    ffmpeg: { bin: ff.bin, ok: ff.ok, version: ff.version, error: ff.error, filters: ff.filters || null },
     ffprobe: { bin: fp.bin, ok: fp.ok, version: fp.version, error: fp.error },
+    subtitles,
     checkedAt: new Date().toISOString(),
     installHint: 'Instale o ffmpeg (ex.: "brew install ffmpeg" no macOS) ou defina AUTOCLIPS_FFMPEG com o caminho do binário.',
     probedAsync: true,
   };
-  _log('detectFfmpeg: ffmpeg=' + (ff.ok ? 'OK ' + ff.version + ' (' + ff.bin + ')' : 'AUSENTE') + ' · ffprobe=' + (fp.ok ? 'OK ' + fp.version : 'AUSENTE'));
+  _log('detectFfmpeg: ffmpeg=' + (ff.ok ? 'OK ' + ff.version + ' (' + ff.bin + ')' : 'AUSENTE')
+    + ' · legendas=' + (subtitles ? 'OK' : 'INDISPONÍVEL (build sem libass)')
+    + ' · ffprobe=' + (fp.ok ? 'OK ' + fp.version : 'AUSENTE'));
   return _cache;
 }
 
@@ -211,14 +241,17 @@ export function buildAssets({ plan, captions = null, titleBurn = true }) {
 }
 
 /* ---------------- Comandos (auditáveis e executáveis) ---------------- */
-export function buildCommands({ plan, inputPath, outputDir, captions = null, titleBurn = true }) {
+export function buildCommands({ plan, inputPath, outputDir, captions = null, titleBurn = true, burnSubtitles = true }) {
   const cmds = [];
   const vfBase = videoFilter(plan);
   const style = captions ? forceStyle(captions) : '';
-  const burn = !!titleBurn;
+  // Sem o filtro `subtitles` (ffmpeg sem libass) queimar legendas/título
+  // derrubaria o comando inteiro: nesse caso o corte sai limpo.
+  const burn = !!titleBurn && burnSubtitles;
+  const capsOn = plan.captionsEnabled !== false && burnSubtitles;
   for (const c of plan.cuts || []) {
     const chain = [vfBase, 'setsar=1'];
-    if (plan.captionsEnabled !== false && (c.captions || []).length) {
+    if (capsOn && (c.captions || []).length) {
       chain.push("subtitles='" + srtName(c.index) + "'" + (style ? ":force_style='" + style + "'" : ''));
     }
     if (burn && String(c.title || '').trim()) chain.push("subtitles='" + titleName(c.index) + "'");
@@ -270,8 +303,6 @@ export async function renderPlan({ plan, inputPath, outputDir, captions = null, 
   }
 
   const dir = outputDir || path.join(process.cwd(), 'autoclips/out');
-  const assets = buildAssets({ plan, captions, titleBurn });
-  const commands = buildCommands({ plan, inputPath, outputDir: dir, captions, titleBurn });
 
   const t = await detectFfmpeg();
   if (!t.available) {
@@ -282,9 +313,13 @@ export async function renderPlan({ plan, inputPath, outputDir, captions = null, 
       reason: 'Render não executado: o ffmpeg não está instalado nesta máquina. O plano de edição está pronto e pode ser renderizado assim que o ffmpeg estiver disponível.',
       hint: t.installHint,
       plan: { cutsCount: plan.cutsCount, totalDuration: plan.totalDuration, aspect: plan.aspect },
-      commands,
+      commands: buildCommands({ plan, inputPath, outputDir: dir, captions, titleBurn }),
     };
   }
+
+  const burnSubtitles = t.subtitles !== false;
+  const assets = buildAssets({ plan, captions, titleBurn });
+  const commands = buildCommands({ plan, inputPath, outputDir: dir, captions, titleBurn, burnSubtitles });
 
   // 1. Insumos do render (legendas .srt, títulos .txt, lista de concatenação).
   try {
@@ -336,6 +371,7 @@ export async function renderPlan({ plan, inputPath, outputDir, captions = null, 
   const cutResults = results.filter((r) => r.kind === 'cut');
   const cutFailures = cutResults.filter((r) => !r.ok);
   const concat = results.find((r) => r.kind === 'concat');
+  if (!burnSubtitles) warnings.push('O ffmpeg em uso (' + bin + ') não oferece o filtro de legendas (libass): os cortes saíram sem legendas nem título queimados.');
   if (concat && !concat.ok) warnings.push('A junção final falhou (os cortes individuais estão prontos): ' + (concat.error || ''));
   for (const f of cutFailures) warnings.push('Corte #' + f.index + ' falhou: ' + (f.error || 'erro desconhecido'));
 

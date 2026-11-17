@@ -26,8 +26,16 @@ const MAX_BUFFER = 32 * 1024 * 1024;
 const DEFAULT_CHUNK_SECONDS = 55;
 const STT_TIMEOUT_MS = 120000;
 
-function sttModel() {
-  return String(process.env.GEMINI_STT_MODEL || process.env.GEMINI_MODEL || process.env.GOOGLE_MODEL || 'gemini-3.5-flash-lite').trim();
+/* Modelos de STT em ordem de preferência: o configurado no .env primeiro e,
+ * se ele estiver indisponível (ex.: 503 de alta demanda ou 404), os
+ * alternativos que respondem em JSON. */
+const FALLBACK_STT_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
+
+function sttModels() {
+  const configured = [process.env.GEMINI_STT_MODEL, process.env.GEMINI_MODEL, process.env.GOOGLE_MODEL]
+    .map((m) => String(m || '').trim())
+    .filter(Boolean);
+  return [...new Set([...configured, ...FALLBACK_STT_MODELS])];
 }
 
 function apiKey() {
@@ -185,16 +193,24 @@ export async function transcribeVideo(inputPath, { workDir, chunkSeconds = DEFAU
   }
   if (!chunks.length) return { ok: false, code: 'audio_vazio', reason: 'O vídeo não produziu faixas de áudio para transcrever.' };
 
-  const model = sttModel();
+  const models = sttModels();
   const segments = [];
   const failures = [];
   let parsedBlocks = 0;
-  _log('transcribeVideo: ' + chunks.length + ' bloco(s) de ~' + chunkSeconds + 's · modelo=' + model);
+  let active = 0;
+  _log('transcribeVideo: ' + chunks.length + ' bloco(s) de ~' + chunkSeconds + 's · modelo=' + models[0]);
 
   for (let i = 0; i < chunks.length; i++) {
     const c = chunks[i];
-    const r = await transcribeChunk(c.file, model, key, c.duration);
-    if (r.ok) {
+    // Usa o modelo atual; se ele falhar (ex.: 503 do provedor), tenta os
+    // alternativos e passa a usar o que responder.
+    let r = null;
+    for (let k = 0; k < models.length; k++) {
+      const idx = (active + k) % models.length;
+      r = await transcribeChunk(c.file, models[idx], key, c.duration);
+      if (r.ok) { active = idx; break; }
+    }
+    if (r && r.ok) {
       if (r.parsed) parsedBlocks++;
       for (const s of r.segments) {
         segments.push({
@@ -204,7 +220,7 @@ export async function transcribeVideo(inputPath, { workDir, chunkSeconds = DEFAU
         });
       }
     } else {
-      failures.push({ bloco: i + 1, inicio: c.start, reason: r.reason });
+      failures.push({ bloco: i + 1, inicio: c.start, reason: (r && r.reason) || 'falha desconhecida no STT.' });
     }
     if (typeof onProgress === 'function') onProgress(i + 1, chunks.length);
   }
@@ -213,7 +229,9 @@ export async function transcribeVideo(inputPath, { workDir, chunkSeconds = DEFAU
   try { await fs.rm(audioDir, { recursive: true, force: true }); } catch { /* ok */ }
 
   if (!segments.length) {
-    return { ok: false, code: 'stt_vazio', reason: 'Nenhum trecho foi transcrito.', failures, chunks: chunks.length, model };
+    // O motivo real do provedor é devolvido junto: sem ele o erro fica opaco.
+    const why = (failures[0] && failures[0].reason) ? ' Motivo do STT: ' + failures[0].reason : '';
+    return { ok: false, code: 'stt_vazio', reason: 'Nenhum trecho foi transcrito.' + why, failures, chunks: chunks.length, model: models[active] };
   }
 
   const approximate = parsedBlocks < chunks.length;
@@ -222,7 +240,7 @@ export async function transcribeVideo(inputPath, { workDir, chunkSeconds = DEFAU
     segments,
     chunks: chunks.length,
     failedChunks: failures,
-    model,
+    model: models[active],
     approximate,
     note: approximate
       ? 'Transcrição parcial/estimada: ' + failures.length + ' bloco(s) sem tempos confiáveis — os tempos desses trechos foram estimados pela duração do áudio.'
