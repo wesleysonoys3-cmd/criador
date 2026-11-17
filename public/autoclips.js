@@ -511,9 +511,28 @@ function renderJobDetail() {
     `<span class="text-[10.5px] px-2 py-0.5 rounded-full border ${d.qa.ok ? 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200' : 'border-amber-400/30 bg-amber-500/15 text-amber-200'}">${esc(d.qa.passed)}/${esc(d.qa.checks.length)} · nota ${esc(d.qa.score)}</span>`) : '';
 
   const renderBlock = d.render ? block('Render',
-    `<div class="text-[11.5px] ${d.render.state === 'renderizado' ? 'text-emerald-200' : 'text-amber-200'}">${esc(d.render.reason || ('estado: ' + d.render.state))}</div>
+    `<div class="text-[11.5px] ${d.render.state === 'renderizado' ? 'text-emerald-200' : 'text-amber-200'}">${esc(d.render.reason || (d.render.state === 'renderizado' ? (d.render.outputs || []).length + ' corte(s) renderizado(s)' : 'estado: ' + d.render.state))}</div>
+     ${(d.render.warnings || []).length ? `<ul class="mt-1 space-y-0.5">${(d.render.warnings || []).map((w) => `<li class="text-[10.5px] text-amber-200/80">${esc(w)}</li>`).join('')}</ul>` : ''}
      ${d.render.hint ? `<div class="text-[10.5px] text-amber-200/80 mt-1">${esc(d.render.hint)}</div>` : ''}
-     ${(d.render.commands || []).length ? `<details class="mt-2"><summary class="text-[10.5px] text-slate-400 cursor-pointer">${(d.render.commands || []).length} comando(s) prontos para execução manual</summary><pre class="mt-1 text-[10px] text-slate-400 whitespace-pre-wrap break-all">${(d.render.commands || []).map((c) => esc(c.command)).join('\n')}</pre></details>` : ''}`) : '';
+     ${(d.render.commands || []).length ? `<details class="mt-2"><summary class="text-[10.5px] text-slate-400 cursor-pointer">${(d.render.commands || []).length} comando(s) do render</summary><pre class="mt-1 text-[10px] text-slate-400 whitespace-pre-wrap break-all">${(d.render.commands || []).map((c) => esc(c.command)).join('\n')}</pre></details>` : ''}`) : '';
+
+  const outs = (d.render && d.render.outputs) || [];
+  const cutsBlock = outs.length ? block('Cortes prontos para publicar',
+    `<div class="space-y-3">${outs.map((o) => `<div class="rounded-xl border border-white/10 bg-black/30 p-2">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-[10.5px] text-slate-500">#${esc(o.index)}</span>
+          <span class="text-[11.5px] text-slate-100 truncate">${esc(o.title || ('Corte ' + o.index))}</span>
+          <span class="text-[10.5px] text-slate-500 shrink-0">${esc(fmtDur(o.duration || 0))}</span>
+          <a class="ml-auto shrink-0 text-[10.5px] px-2 py-0.5 rounded-lg border border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20" href="${esc(o.url)}" download>baixar</a>
+        </div>
+        <video class="w-full max-h-72 rounded-lg bg-black" controls preload="metadata" src="${esc(o.url)}"></video>
+      </div>`).join('')}</div>
+     ${d.render.final ? `<div class="mt-2"><a class="text-[11px] text-sky-300 hover:underline" href="${esc(d.render.final.url)}" download>baixar vídeo completo (final.mp4)</a></div>` : ''}
+     <div class="flex items-center gap-2 mt-3 flex-wrap">
+       <button data-ac-act="reveal" data-id="${esc((d.job || {}).id || '')}" class="text-[11px] px-2.5 py-1.5 rounded-lg border border-sky-400/30 bg-sky-500/10 text-sky-200 hover:bg-sky-500/20">Abrir pasta no Finder</button>
+       <span class="text-[10.5px] text-slate-500 break-all">${esc(d.render.folder || '')}</span>
+     </div>`,
+    `<span class="text-[10.5px] px-2 py-0.5 rounded-full border border-emerald-400/30 bg-emerald-500/15 text-emerald-200">${outs.length} corte(s)</span>`) : '';
 
   const log = (d.log || []).slice(-14).reverse();
 
@@ -544,7 +563,7 @@ function renderJobDetail() {
     ${renderSource(d)}
     ${renderFormats(d)}
     ${renderRights(d)}
-    ${analysis}${plan}${renderEditor(d)}${renderCovers(d)}${meta}${qa}${renderBlock}
+    ${analysis}${plan}${renderEditor(d)}${renderCovers(d)}${meta}${qa}${renderBlock}${cutsBlock}
 
     ${block('Histórico', `<ul class="space-y-0.5">${log.map((l) => `<li class="text-[10.5px] text-slate-500"><span class="text-slate-400">[${esc(l.stage)}]</span> ${esc(l.message)}</li>`).join('')}</ul>`)}
   </div>`;
@@ -1412,6 +1431,15 @@ async function doRun(id) {
   }
 }
 
+async function doReveal(id) {
+  try {
+    await api('/job/' + encodeURIComponent(id) + '/reveal', { method: 'POST', body: {} });
+    toast('Pasta dos cortes aberta no Finder.', 'ok');
+  } catch (e) {
+    toast('Abrir pasta: ' + (e.message || 'falha ao abrir.'), 'warn');
+  }
+}
+
 async function doCutState(jobId, index, state) {
   try {
     await api('/job/' + encodeURIComponent(jobId) + '/cut/' + encodeURIComponent(index) + '/state', { method: 'POST', body: { state } });
@@ -1721,7 +1749,8 @@ function startPolling(id) {
         stopPolling();
         await refreshAll();
         if (st === 'concluido') toast('Produção concluída. Render: ' + (r.render && r.render.state === 'pendente' ? 'pendente (ffmpeg ausente).' : 'ok.'), 'ok');
-        else if (st === 'erro') toast('A tarefa terminou com erro.', 'err');
+        else if (st === 'renderizado') toast('Pronto: ' + (((r.render || {}).outputs || []).length) + ' corte(s) renderizado(s) para publicar.', 'ok');
+        else if (st === 'erro') toast('A tarefa terminou com erro' + (r.job && r.job.error ? ': ' + r.job.error : '.'), 'err');
       }
     } catch { stopPolling(); }
   }, 1500);
@@ -1751,6 +1780,7 @@ function onClick(ev) {
   else if (act === 'metadata') doStep(id, 'metadata', 'Metadados');
   else if (act === 'qa') doStep(id, 'qa', 'Controle de qualidade');
   else if (act === 'run') doRun(id);
+  else if (act === 'reveal') doReveal(id);
   else if (act === 'remove') doRemove(id);
   else if (act === 'cut-state') doCutState(id, index, t.getAttribute('data-state'));
   else if (act === 'enrich') doEnrich(id);

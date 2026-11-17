@@ -28,6 +28,9 @@ node-v*/
 
 uploads/
 
+# Binários locais (yt-dlp ~37 MB): instale com "brew install yt-dlp" ou defina AUTOCLIPS_YTDLP
+bin/
+
 # AutoClips / YouTube: dados de runtime (contas, tokens, sessões, jobs)
 youtube/data/
 autoclips/data/

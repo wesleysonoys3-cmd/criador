@@ -8156,6 +8156,16 @@ app.post('/api/autoclips/job/:id/qa', _AC_JSON, _ac(async (req) => AutoclipsSvc.
 app.post('/api/autoclips/job/:id/process', _AC_JSON, _ac(async (req) => AutoclipsSvc.startJob(req.params.id, _acOwner(req))));
 app.post('/api/autoclips/job/:id/cancel', _AC_JSON, _ac(async (req) => AutoclipsSvc.cancel(req.params.id, _acOwner(req))));
 app.get('/api/autoclips/job/:id/report', _JG_NO_CACHE, _ac(async (req) => AutoclipsSvc.report(req.params.id, _acOwner(req))));
+app.post('/api/autoclips/job/:id/reveal', _AC_JSON, _ac(async (req) => {
+  const f = AutoclipsSvc.folderFor(req.params.id, _acOwner(req));
+  if (!f.ok) return f;
+  try {
+    await execAsync('open ' + JSON.stringify(f.folder));
+    return { ok: true, folder: f.folder };
+  } catch (e) {
+    return { ok: false, folder: f.folder, reason: 'Não foi possível abrir a pasta: ' + String((e && e.message) || e) };
+  }
+}));
 app.delete('/api/autoclips/job/:id', _AC_JSON, _ac(async (req) => AutoclipsSvc.remove(req.params.id, _acOwner(req))));
 
 /* Upload de VÍDEO LOCAL do AutoClips: o arquivo é gravado em

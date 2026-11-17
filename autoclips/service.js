@@ -25,6 +25,8 @@ import { buildPlan, buildCaptions } from './editor.js';
 import { buildMetadata } from './metadata.js';
 import { runQA } from './qa.js';
 import { detectFfmpeg, renderPlan, probeDuration, ffmpegStatus } from './render.js';
+import { downloadVideo, detectYtDlp } from './download.js';
+import { transcribeVideo } from './transcribe.js';
 import queue, { MAX_ATTEMPTS } from './queue.js';
 import { fetchVideoInfo } from './url_info.js';
 import { buildCovers, dimensionsFor } from './covers.js';
@@ -41,6 +43,8 @@ export const JOB_STATUS = [
 export const STAGES = ['direitos', 'analise', 'edicao', 'metadados', 'qa', 'render'];
 const STAGE_LABELS = {
   direitos: 'Verificação de direitos',
+  entrada: 'Vídeo de origem (download)',
+  transcricao: 'Transcrição automática',
   analise: 'Análise inteligente',
   edicao: 'Edição automática',
   metadados: 'Geração de metadados',
@@ -119,7 +123,7 @@ function summary(rec) {
     plan: rec.plan ? { cutsCount: rec.plan.cutsCount, totalDuration: rec.plan.totalDuration, aspect: rec.plan.aspect, averageScore: rec.plan.averageScore } : null,
     metadata: rec.metadata ? { title: rec.metadata.title, tags: (rec.metadata.tags || []).length, chapters: (rec.metadata.chapters || []).length } : null,
     qa: rec.qa ? { ok: !!rec.qa.ok, score: rec.qa.score, failed: rec.qa.failed } : null,
-    render: rec.render ? { state: rec.render.state, code: rec.render.code, pending: !!rec.render.pending } : null,
+    render: rec.render ? { state: rec.render.state, code: rec.render.code, pending: !!rec.render.pending, outputs: (rec.render.outputs || []).length, folder: rec.render.folder || null } : null,
     attempts: rec.attempts || 0,
     queued: queue.isQueued(rec.id),
     error: rec.error || null,
@@ -720,7 +724,7 @@ export async function create(input = {}, owner = null) {
 
   const sources = normalizeSources(input.sources);
   const transcript = normalizeTranscript(input.transcript || input.segments);
-  const prof = normalizeProfile(input.profile || input.profileKey || {});
+  const prof = normalizeProfile(Object.assign({}, input.profile || {}, input.profileKey ? { key: input.profileKey } : {}));
 
   let formats = input.formats !== undefined ? input.formats : input.aspect;
   if (typeof formats === 'string') formats = formats.split(/[\s,;]+/);
@@ -1015,7 +1019,13 @@ export async function startJob(id, owner = null) {
     return { ok: false, code: 'direitos_insuficientes', reason: cp.message };
   }
   if (!(rec.transcript || []).length) {
-    return { ok: false, code: 'transcricao_ausente', reason: 'Sem transcrição. Envie os segmentos para processar.' };
+    // Sem transcrição trazida pelo usuário, a tarefa ainda pode rodar se
+    // houver um vídeo de origem: o pipeline baixa (quando é link) e
+    // transcreve automaticamente antes da análise.
+    const hasMedia = (rec.sources || []).some((s) => s && s.value && (s.kind === 'local' || s.kind === 'url'));
+    if (!hasMedia) {
+      return { ok: false, code: 'transcricao_ausente', reason: 'Sem transcrição e sem vídeo de origem. Envie os segmentos ou informe um arquivo/URL de vídeo.' };
+    }
   }
 
   rec.status = 'processando';
@@ -1037,6 +1047,17 @@ async function runJob(jobId) {
   try {
     rec.status = 'processando';
     rec.attempts = (rec.attempts || 0) + 1;
+    // Encerra uma etapa obrigatória que não pode continuar (sem simular
+    // sucesso): grava o motivo real e para o processamento.
+    const fail = async (stage, code, message) => {
+      rec.status = 'erro';
+      rec.error = message;
+      setProgress(rec, 100, null);
+      logStep(rec, stage, 'FALHA' + (code ? ' (' + code + ')' : '') + ': ' + message);
+      rec.updatedAt = nowIso();
+      await state.save(rec);
+      _log('runJob: ' + rec.id + ' → erro (' + code + ')');
+    };
     setProgress(rec, 10, 'direitos');
     logStep(rec, 'direitos', 'Conferindo direitos...');
     const cp = canProcess(rec.rights);
@@ -1047,6 +1068,49 @@ async function runJob(jobId) {
       return;
     }
     setProgress(rec, 20, 'direitos');
+
+    // 7.1.1 Vídeo de origem: o render exige um ARQUIVO. Quando a fonte é
+    // um link, ele é baixado aqui (yt-dlp) e passa a valer como fonte local.
+    const work = outDirFor(rec.id);
+    let sourcePath = ((rec.sources || []).find((s) => s.kind === 'local' && s.value) || {}).value || null;
+    if (!sourcePath) {
+      const url = ((rec.sources || []).find((s) => s.kind === 'url' && s.value) || {}).value || null;
+      if (!url) {
+        await fail('entrada', 'origem_ausente', 'Nenhum vídeo de origem: envie um arquivo de vídeo ou informe uma URL.');
+        return;
+      }
+      setProgress(rec, 14, 'entrada');
+      logStep(rec, 'entrada', 'Baixando o vídeo do link informado...');
+      await state.save(rec);
+      const d = await downloadVideo(url, { outDir: work });
+      if (!d.ok) {
+        await fail('entrada', d.code, d.reason + (d.hint ? ' ' + d.hint : ''));
+        return;
+      }
+      sourcePath = d.path;
+      rec.sources.push({ kind: 'local', value: d.path, label: path.basename(d.path), duration: null });
+      logStep(rec, 'entrada', 'Vídeo baixado: ' + path.basename(d.path) + ' (' + Math.round(d.size / 1024) + ' KB).');
+      await state.save(rec);
+    }
+
+    // 7.1.2 Transcrição automática quando a tarefa não trouxe segmentos.
+    if (!(rec.transcript || []).length) {
+      setProgress(rec, 18, 'transcricao');
+      logStep(rec, 'transcricao', 'Transcrevendo o áudio do vídeo...');
+      await state.save(rec);
+      const tr = await transcribeVideo(sourcePath, {
+        workDir: work,
+        onProgress: (i, n) => { setProgress(rec, 18 + Math.round((i / Math.max(1, n)) * 8), 'transcricao'); },
+      });
+      if (!tr.ok) {
+        await fail('transcricao', tr.code, tr.reason + (tr.hint ? ' ' + tr.hint : ''));
+        return;
+      }
+      rec.transcript = tr.segments;
+      rec.transcriptSource = { kind: 'stt', model: tr.model, chunks: tr.chunks, approximate: !!tr.approximate, failedChunks: (tr.failedChunks || []).length, at: nowIso() };
+      logStep(rec, 'transcricao', tr.segments.length + ' segmento(s) transcrito(s) · ' + tr.note);
+      await state.save(rec);
+    }
 
     // 7.3 Análise
     setProgress(rec, 25, 'analise');
@@ -1088,14 +1152,31 @@ async function runJob(jobId) {
     setProgress(rec, 92, 'qa');
     logStep(rec, 'qa', qa.passed + '/' + qa.checks.length + ' verificações.');
 
-    // 7.8 Render (honesto: sem ffmpeg fica pendente)
+    // 7.8 Render real (corte, reenquadramento, legendas e título)
     setProgress(rec, 95, 'render');
-    const sourcePath = (rec.sources.find((s) => s.kind === 'local') || {}).value || null;
-    const r = await renderPlan({ plan: rec.plan, inputPath: sourcePath, outputDir: outDirFor(rec.id) });
+    logStep(rec, 'render', 'Renderizando ' + rec.plan.cutsCount + ' corte(s)...');
+    await state.save(rec);
+    const r = await renderPlan({
+      plan: rec.plan,
+      inputPath: sourcePath,
+      outputDir: work,
+      captions: captionConfigOf(rec),
+      titleBurn: true,
+    });
     rec.render = r.ok
-      ? { state: 'renderizado', at: nowIso() }
-      : { state: r.pending ? 'pendente' : 'erro', code: r.code, reason: r.reason, hint: r.hint || null, commands: r.commands || [], at: nowIso() };
-    logStep(rec, 'render', r.reason || 'Render concluído.');
+      ? {
+        state: 'renderizado', at: nowIso(),
+        folder: r.folder, outputs: r.outputs || [], final: r.final || null,
+        titleBurn: !!r.titleBurn, warnings: r.warnings || [], ffmpeg: r.ffmpeg || null,
+      }
+      : {
+        state: r.pending ? 'pendente' : 'erro', code: r.code, reason: r.reason,
+        hint: r.hint || null, commands: r.commands || [],
+        outputs: r.outputs || [], warnings: r.warnings || [], at: nowIso(),
+      };
+    logStep(rec, 'render', r.ok
+      ? (r.outputs.length + ' corte(s) renderizado(s) em ' + r.folder + (r.final ? ' (+ final.mp4)' : ''))
+      : (r.reason || 'Render não concluído.'));
 
     rec.status = qa.ok ? (r.ok ? 'renderizado' : 'concluido') : 'revisao';
     setProgress(rec, 100, null);
@@ -1122,6 +1203,17 @@ async function runJob(jobId) {
       await state.save(rec);
     }
   }
+}
+
+/* ---------------- 7.9 Entrega local (baixar no navegador) ----------------
+ * Os cortes já são servidos em /autoclips-media/<jobId>/<arquivo> (o render
+ * anexa "url" a cada corte). Esta função devolve a pasta real em disco para
+ * a UI abrir no Finder/Explorer. */
+export function folderFor(id, owner = null) {
+  const rec = getOwned(id, owner);
+  if (!rec) return { ok: false, reason: 'Tarefa do AutoClips não encontrada.' };
+  const folder = (rec.render && rec.render.folder) || outDirFor(rec.id);
+  return { ok: true, folder, jobId: rec.id, title: rec.title || null };
 }
 
 export function cancel(id, owner = null) {
