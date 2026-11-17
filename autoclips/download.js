@@ -26,6 +26,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const LOCAL_BIN = path.resolve(HERE, '..', 'bin');
 
 const MAX_BUFFER = 32 * 1024 * 1024;
+/* O primeiro "spawn" de um binário grande pode demorar bastante (verificação
+ * de segurança do macOS, leitura dos ~37 MB); a sondagem usa timeout generoso. */
+const PROBE_TIMEOUT_MS = Number(process.env.AUTOCLIPS_YTDLP_PROBE_TIMEOUT_MS || 180000) || 180000;
 const BIN_DIRS = ['/usr/local/bin', '/opt/homebrew/bin', '/usr/bin'];
 const INSTALL_HINT = 'Instale o yt-dlp (ex.: "brew install yt-dlp" no macOS) ou defina AUTOCLIPS_YTDLP com o caminho do binário.';
 
@@ -44,7 +47,7 @@ function candidates() {
 
 async function probeBin(bin) {
   try {
-    const { stdout } = await execFileAsync(bin, ['--version'], { timeout: 20000, maxBuffer: MAX_BUFFER });
+    const { stdout } = await execFileAsync(bin, ['--version'], { timeout: PROBE_TIMEOUT_MS, maxBuffer: MAX_BUFFER });
     const v = String(stdout || '').trim().split('\n')[0] || null;
     return { ok: true, version: v };
   } catch (e) {
@@ -106,7 +109,10 @@ export async function downloadVideo(url, { outDir, timeoutMs = 45 * 60 * 1000 } 
   if (!value) return { ok: false, code: 'url_ausente', reason: 'URL de vídeo vazia.' };
   if (!outDir) return { ok: false, code: 'destino_ausente', reason: 'Pasta de destino do download não informada.' };
 
-  const t = await detectYtDlp();
+  let t = await detectYtDlp();
+  // Reavalia quando parecia ausente: o usuário pode ter instalado depois do
+  // último teste (a sondagem fica em cache em memória).
+  if (!t.available) t = await detectYtDlp({ refresh: true });
   if (!t.available) {
     return {
       ok: false, code: 'ytdlp_ausente', pending: true,
